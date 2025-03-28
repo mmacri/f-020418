@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, Circle, Timer } from 'lucide-react';
 import { useWorkflow, WorkflowItem } from '@/context/WorkflowContext';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,34 @@ interface WorkflowProgressProps {
 
 export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({ className }) => {
   const { items, currentItemIndex, isAutoProgressing } = useWorkflow();
+  const [progressValues, setProgressValues] = useState<Record<string, number>>({});
+  
+  // Calculate progress percentage for the current item
+  useEffect(() => {
+    if (!isAutoProgressing || currentItemIndex >= items.length) return;
+    
+    const currentItem = items[currentItemIndex];
+    if (!currentItem) return;
+    
+    const startTime = Date.now();
+    const totalDuration = currentItem.completionDelay || 3000;
+    
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, Math.round((elapsed / totalDuration) * 100));
+      
+      setProgressValues(prev => ({
+        ...prev,
+        [currentItem.id]: progress
+      }));
+      
+      if (progress >= 100) {
+        clearInterval(timer);
+      }
+    }, 50);
+    
+    return () => clearInterval(timer);
+  }, [currentItemIndex, isAutoProgressing, items]);
 
   return (
     <div className={cn("flex flex-col space-y-4", className)}>
@@ -56,7 +84,10 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({ className })
             
             {index === currentItemIndex && isAutoProgressing && (
               <div className="mt-2">
-                <Progress value={50} className="h-1" />
+                <Progress 
+                  value={progressValues[item.id] || 0} 
+                  className="h-1" 
+                />
               </div>
             )}
           </div>
