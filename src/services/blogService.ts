@@ -1,3 +1,4 @@
+
 import { toast } from "@/hooks/use-toast";
 
 // Blog post type definition
@@ -16,7 +17,18 @@ export interface BlogPost {
 }
 
 // Create type without id field
-export type BlogPostInput = Omit<BlogPost, 'id'>;
+export type BlogPostInput = {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  author: string;
+  tags?: string[];
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
 
 // Mock blog posts data
 let BLOG_POSTS: BlogPost[] = [

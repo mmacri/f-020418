@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Image, 
@@ -152,14 +153,14 @@ const AdminProducts = () => {
     setCurrentProduct(product);
     
     form.reset({
-      name: product.name,
+      name: product.title,
       slug: product.slug,
       description: product.description,
       imageUrl: product.imageUrl,
       category: product.category,
       price: product.price.toString(),
       originalPrice: product.originalPrice ? product.originalPrice.toString() : "",
-      amazonLink: product.amazonLink,
+      amazonLink: product.affiliateUrl,
       rating: product.rating.toString(),
     });
     
@@ -178,12 +179,18 @@ const AdminProducts = () => {
     
     try {
       const newProduct = await createProduct({
-        ...data,
+        title: data.name,
+        slug: data.slug,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        category: data.category,
         rating: Number(data.rating),
         price: Number(data.price),
         originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
-        reviews: 0,
-        // Don't include id, will be assigned by the service
+        affiliateUrl: data.amazonLink,
+        asin: "", // Default empty string for ASIN
+        reviewCount: 0, // Default value
+        inStock: true // Default to in stock
       });
       
       setProducts([...products, newProduct]);
@@ -212,10 +219,15 @@ const AdminProducts = () => {
     
     try {
       const updatedProduct = await updateProduct(currentProduct.id, {
-        ...data,
+        title: data.name,
+        slug: data.slug,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        category: data.category,
         rating: Number(data.rating),
         price: Number(data.price),
         originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
+        affiliateUrl: data.amazonLink
       });
       
       setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
@@ -265,7 +277,7 @@ const AdminProducts = () => {
 
   // Filter products by search query
   const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -756,13 +768,13 @@ const ProductsTable: React.FC<ProductsTableProps> = ({ products, onEdit, onDelet
                       {product.imageUrl && (
                         <img
                           src={product.imageUrl}
-                          alt={product.name}
+                          alt={product.title}
                           className="h-full w-full object-cover"
                         />
                       )}
                     </div>
                     <div>
-                      <div className="font-medium">{product.name}</div>
+                      <div className="font-medium">{product.title}</div>
                       <div className="text-xs text-gray-500 truncate max-w-[200px]">
                         {product.description}
                       </div>

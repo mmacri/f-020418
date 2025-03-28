@@ -18,8 +18,19 @@ export interface Category {
 }
 
 // Create types without id field
-export type SubcategoryInput = Omit<Subcategory, 'id'>;
-export type CategoryInput = Omit<Category, 'id'>;
+export type SubcategoryInput = {
+  name: string;
+  slug: string;
+  description?: string;
+};
+
+export type CategoryInput = {
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  subcategories: Subcategory[];
+};
 
 // Mock categories data
 let CATEGORIES: Category[] = [
@@ -410,8 +421,9 @@ export const deleteSubcategory = async (categoryId: number, subcategoryId: numbe
   return true;
 };
 
-// Helper function to generate the next subcategory ID
+// Helper function to get next subcategory ID
 const getNextSubcategoryId = (): number => {
+  // Find the largest existing subcategory ID across all categories
   let maxId = 0;
   CATEGORIES.forEach(category => {
     category.subcategories.forEach(subcategory => {

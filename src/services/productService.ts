@@ -5,6 +5,7 @@ import { generateAffiliateLink } from "@/lib/amazon-api";
 export interface Product {
   id: number;
   title: string;
+  name?: string; // Add name as an alias for title for backwards compatibility
   slug: string;
   description: string;
   shortDescription?: string;
@@ -20,11 +21,144 @@ export interface Product {
   reviewCount: number;
   features?: string[];
   affiliateUrl: string;
+  amazonLink?: string; // Add as an alias for affiliateUrl
   bestSeller?: boolean;
   inStock: boolean;
   createdAt: string;
   updatedAt: string;
 }
+
+// Define types for product inputs 
+export type ProductInput = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Get all products
+export const getProducts = async (): Promise<Product[]> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return [...PRODUCTS];
+};
+
+// Get product by ID
+export const getProductById = async (id: number): Promise<Product | null> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const product = PRODUCTS.find(p => p.id === id);
+  return product || null;
+};
+
+// Get product by slug
+export const getProductBySlug = async (slug: string): Promise<Product | null> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  const product = PRODUCTS.find(p => p.slug === slug);
+  return product || null;
+};
+
+// Get products by category
+export const getProductsByCategory = async (category: string): Promise<Product[]> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 400));
+  return PRODUCTS.filter(p => p.category === category);
+};
+
+// Create new product
+export const createProduct = async (product: ProductInput): Promise<Product> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
+  // Generate affiliate URL if not provided
+  const affiliateUrl = product.affiliateUrl || product.amazonLink || generateAffiliateLink(product.asin);
+  
+  // Set title from name if provided
+  const title = product.title || product.name;
+  
+  // Create new product with ID and dates
+  const newProduct: Product = {
+    ...product,
+    title: title as string, // We know one of them must be defined
+    affiliateUrl,
+    id: Math.max(...PRODUCTS.map(p => p.id)) + 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  // Set the name property as an alias of title
+  newProduct.name = newProduct.title;
+  
+  // Set amazonLink as an alias of affiliateUrl
+  newProduct.amazonLink = newProduct.affiliateUrl;
+  
+  PRODUCTS.push(newProduct);
+  
+  toast({
+    title: "Product created",
+    description: `${newProduct.title} has been added successfully`
+  });
+  
+  return newProduct;
+};
+
+// Update product
+export const updateProduct = async (id: number, updates: Partial<ProductInput>): Promise<Product> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
+  const index = PRODUCTS.findIndex(p => p.id === id);
+  if (index === -1) {
+    throw new Error(`Product with ID ${id} not found`);
+  }
+  
+  // Handle title/name sync
+  if (updates.name && !updates.title) {
+    updates.title = updates.name;
+  } else if (updates.title && !updates.name) {
+    updates.name = updates.title;
+  }
+  
+  // Handle amazonLink/affiliateUrl sync
+  if (updates.amazonLink && !updates.affiliateUrl) {
+    updates.affiliateUrl = updates.amazonLink;
+  } else if (updates.affiliateUrl && !updates.amazonLink) {
+    updates.amazonLink = updates.affiliateUrl;
+  }
+  
+  // Update the product
+  const updatedProduct: Product = {
+    ...PRODUCTS[index],
+    ...updates,
+    updatedAt: new Date().toISOString()
+  };
+  
+  PRODUCTS[index] = updatedProduct;
+  
+  toast({
+    title: "Product updated",
+    description: `${updatedProduct.title} has been updated successfully`
+  });
+  
+  return updatedProduct;
+};
+
+// Delete product
+export const deleteProduct = async (id: number): Promise<boolean> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 400));
+  
+  const index = PRODUCTS.findIndex(p => p.id === id);
+  if (index === -1) {
+    throw new Error(`Product with ID ${id} not found`);
+  }
+  
+  const productTitle = PRODUCTS[index].title;
+  PRODUCTS = PRODUCTS.filter(p => p.id !== id);
+  
+  toast({
+    title: "Product deleted",
+    description: `${productTitle} has been removed successfully`
+  });
+  
+  return true;
+};
 
 // Mock product data
 let PRODUCTS: Product[] = [
@@ -118,111 +252,3 @@ let PRODUCTS: Product[] = [
     updatedAt: "2023-03-25T08:30:00Z"
   }
 ];
-
-// Define types for product inputs 
-export type ProductInput = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
-
-// Get all products
-export const getProducts = async (): Promise<Product[]> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return [...PRODUCTS];
-};
-
-// Get product by ID
-export const getProductById = async (id: number): Promise<Product | null> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const product = PRODUCTS.find(p => p.id === id);
-  return product || null;
-};
-
-// Get product by slug
-export const getProductBySlug = async (slug: string): Promise<Product | null> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const product = PRODUCTS.find(p => p.slug === slug);
-  return product || null;
-};
-
-// Get products by category
-export const getProductsByCategory = async (category: string): Promise<Product[]> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 400));
-  return PRODUCTS.filter(p => p.category === category);
-};
-
-// Create new product
-export const createProduct = async (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 600));
-  
-  // Generate affiliate URL if not provided
-  const affiliateUrl = product.affiliateUrl || generateAffiliateLink(product.asin);
-  
-  // Create new product with ID and dates
-  const newProduct: Product = {
-    ...product,
-    id: Math.max(...PRODUCTS.map(p => p.id)) + 1,
-    affiliateUrl,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  
-  PRODUCTS.push(newProduct);
-  
-  toast({
-    title: "Product created",
-    description: `${newProduct.title} has been added successfully`
-  });
-  
-  return newProduct;
-};
-
-// Update product
-export const updateProduct = async (id: number, updates: Partial<ProductInput>): Promise<Product> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 600));
-  
-  const index = PRODUCTS.findIndex(p => p.id === id);
-  if (index === -1) {
-    throw new Error(`Product with ID ${id} not found`);
-  }
-  
-  // Update the product
-  const updatedProduct: Product = {
-    ...PRODUCTS[index],
-    ...updates,
-    updatedAt: new Date().toISOString()
-  };
-  
-  PRODUCTS[index] = updatedProduct;
-  
-  toast({
-    title: "Product updated",
-    description: `${updatedProduct.title} has been updated successfully`
-  });
-  
-  return updatedProduct;
-};
-
-// Delete product
-export const deleteProduct = async (id: number): Promise<boolean> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 400));
-  
-  const index = PRODUCTS.findIndex(p => p.id === id);
-  if (index === -1) {
-    throw new Error(`Product with ID ${id} not found`);
-  }
-  
-  const productTitle = PRODUCTS[index].title;
-  PRODUCTS = PRODUCTS.filter(p => p.id !== id);
-  
-  toast({
-    title: "Product deleted",
-    description: `${productTitle} has been removed successfully`
-  });
-  
-  return true;
-};

@@ -54,7 +54,8 @@ import {
   createPost, 
   updatePost, 
   deletePost, 
-  BlogPost 
+  BlogPost,
+  BlogPostInput
 } from "@/services/blogService";
 import { useToast } from "@/hooks/use-toast";
 
@@ -159,10 +160,18 @@ const AdminBlog = () => {
     setIsLoading(true);
     
     try {
+      const now = new Date().toISOString();
       const newPost = await createPost({
-        ...data,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        coverImage: data.coverImage,
+        author: data.author,
+        tags: data.tags,
+        published: data.published,
+        createdAt: now,
+        updatedAt: now
       });
       
       setPosts([...posts, newPost]);
