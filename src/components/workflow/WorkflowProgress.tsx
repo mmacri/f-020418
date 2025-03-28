@@ -46,19 +46,19 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({ className })
         <div 
           key={item.id} 
           className={cn(
-            "flex items-center space-x-3 p-3 rounded-md transition-colors",
-            index === currentItemIndex && "bg-indigo-50 border-l-4 border-indigo-500",
+            "flex items-center space-x-3 p-4 rounded-md transition-all duration-300",
+            index === currentItemIndex && "bg-indigo-50 border-l-4 border-indigo-500 shadow-sm",
             item.completed && "text-gray-500"
           )}
         >
           <div className="flex-shrink-0">
             {item.completed ? (
-              <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center transition-colors">
                 <Check className="w-4 h-4 text-white" />
               </div>
             ) : (
               <div className={cn(
-                "w-6 h-6 rounded-full border-2 flex items-center justify-center",
+                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
                 index === currentItemIndex ? "border-indigo-500" : "border-gray-300"
               )}>
                 {index === currentItemIndex && (
@@ -86,8 +86,11 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({ className })
               <div className="mt-2">
                 <Progress 
                   value={progressValues[item.id] || 0} 
-                  className="h-1" 
+                  className="h-1.5 bg-gray-100" 
                 />
+                <div className="mt-1 text-xs text-right text-gray-500">
+                  {progressValues[item.id] || 0}%
+                </div>
               </div>
             )}
           </div>

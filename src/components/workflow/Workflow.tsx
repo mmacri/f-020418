@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { WorkflowProgress } from './WorkflowProgress';
 import { useWorkflow, WorkflowItem } from '@/context/WorkflowContext';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Pause, RotateCcw } from 'lucide-react';
+import { Play, Pause, RotateCcw, CheckCircle2 } from 'lucide-react';
 
 interface WorkflowProps {
   items: WorkflowItem[];
@@ -67,8 +67,48 @@ const Workflow: React.FC<WorkflowProps> = ({
     }
   };
 
+  const progressPercentage = items.length > 0 
+    ? Math.round(((currentItemIndex + (items[currentItemIndex]?.completed ? 1 : 0)) / items.length) * 100) 
+    : 0;
+
   return (
     <div className={className}>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-sm font-medium text-gray-500">
+          Progress: {progressPercentage}% ({items.filter(item => item.completed).length} of {items.length})
+        </div>
+        
+        {!isComplete && (
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleToggleAutoProgress}
+              className="flex items-center gap-1.5"
+            >
+              {isAutoProgressing ? (
+                <>
+                  <Pause className="w-3.5 h-3.5" /> Pause
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5" /> Auto-Run
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              onClick={resetWorkflow}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Reset
+            </Button>
+          </div>
+        )}
+      </div>
+      
       <div className="mb-8">
         <WorkflowProgress />
       </div>
@@ -97,15 +137,21 @@ const Workflow: React.FC<WorkflowProps> = ({
             
             <Button 
               onClick={completeCurrentItem}
-              className="bg-indigo-600 hover:bg-indigo-700"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
               disabled={isAutoProgressing}
             >
+              <CheckCircle2 className="w-4 h-4" />
               Complete & Continue
             </Button>
           </div>
         </div>
       ) : (
         <div className="bg-green-50 p-6 rounded-lg border border-green-200 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
           <h3 className="text-xl font-semibold mb-2 text-green-700">All Tasks Completed!</h3>
           <p className="text-gray-600 mb-6">You've successfully completed all tasks in this workflow.</p>
           

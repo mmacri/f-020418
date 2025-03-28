@@ -71,7 +71,8 @@ const SaveForLater: React.FC<SaveForLaterProps> = ({ productId, productName }) =
         title: data.saved ? "Saved to Wishlist" : "Removed from Wishlist",
         description: data.saved 
           ? `${productName} has been added to your wishlist` 
-          : `${productName} has been removed from your wishlist`
+          : `${productName} has been removed from your wishlist`,
+        variant: data.saved ? "default" : "destructive"
       });
     },
     onError: () => {
@@ -99,12 +100,21 @@ const SaveForLater: React.FC<SaveForLaterProps> = ({ productId, productName }) =
     <Button
       variant={isSaved ? "default" : "outline"}
       size="sm"
-      className={`flex items-center ${isSaved ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' : ''}`}
+      className={`flex items-center gap-1.5 transition-all ${
+        isSaved 
+          ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800' 
+          : 'hover:bg-gray-100'
+      }`}
       onClick={handleToggleSave}
       disabled={toggleSaveMutation.isPending || isLoading}
     >
-      <Heart className={`h-4 w-4 mr-1 ${isSaved ? 'fill-indigo-500' : ''}`} />
-      {toggleSaveMutation.isPending ? 'Updating...' : (isSaved ? 'Saved' : 'Save for Later')}
+      <Heart 
+        className={`h-4 w-4 ${isSaved ? 'fill-indigo-500 text-indigo-500' : ''} 
+        ${toggleSaveMutation.isPending ? 'animate-pulse' : ''}`} 
+      />
+      {toggleSaveMutation.isPending 
+        ? 'Updating...' 
+        : (isSaved ? 'Saved' : 'Save for Later')}
     </Button>
   );
 };
