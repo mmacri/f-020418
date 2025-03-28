@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, Search, User, ChevronDown } from "lucide-react";
+import { Menu, Search, Settings, ChevronDown } from "lucide-react";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,87 +22,116 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-gray-700 hover:text-indigo-600"
-            >
-              <Menu size={24} />
-            </button>
-          </div>
-
           {/* Main Navigation */}
-          <nav className="hidden md:block">
+          <nav className="hidden md:block" id="main-navigation">
             <ul className="flex space-x-6">
               <li className="relative group">
                 <Link to="/categories/massage-guns" className="font-medium text-gray-700 hover:text-indigo-600 py-2 inline-flex items-center">
                   Massage Guns <ChevronDown className="ml-1 h-4 w-4" />
                 </Link>
                 <ul className="absolute left-0 top-full bg-white border rounded-md shadow-md p-2 min-w-max hidden group-hover:block">
-                  <li><Link to="/categories/professional-massage-guns" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-md">Professional</Link></li>
-                  <li><Link to="/categories/home-massage-guns" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-md">Home Use</Link></li>
+                  <li>
+                    <Link to="/categories/massage-guns" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-md">
+                      All Massage Guns
+                    </Link>
+                  </li>
                 </ul>
               </li>
-              <li><Link to="/categories/foam-rollers" className="font-medium text-gray-700 hover:text-indigo-600 py-2 inline-block">Foam Rollers</Link></li>
-              <li className="relative group">
-                <Link to="/categories/compression-gear" className="font-medium text-gray-700 hover:text-indigo-600 py-2 inline-flex items-center">
-                  Compression Gear <ChevronDown className="ml-1 h-4 w-4" />
+              <li>
+                <Link to="/categories/foam-rollers" className="font-medium text-gray-700 hover:text-indigo-600 py-2 inline-block">
+                  Foam Rollers
                 </Link>
-                <ul className="absolute left-0 top-full bg-white border rounded-md shadow-md p-2 min-w-max hidden group-hover:block">
-                  <li><Link to="/categories/compression-socks" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-md">Compression Socks</Link></li>
-                  <li><Link to="/categories/compression-sleeves" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-md">Compression Sleeves</Link></li>
-                  <li><Link to="/categories/compression-tights" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-md">Compression Tights</Link></li>
-                </ul>
               </li>
-              <li><Link to="/categories/fitness-bands" className="font-medium text-gray-700 hover:text-indigo-600 py-2 inline-block">Fitness Bands</Link></li>
+              <li>
+                <Link to="/categories/fitness-bands" className="font-medium text-gray-700 hover:text-indigo-600 py-2 inline-block">
+                  Fitness Bands
+                </Link>
+              </li>
+              <li>
+                <Link to="/categories/compression-gear" className="font-medium text-gray-700 hover:text-indigo-600 py-2 inline-block">
+                  Compression Gear
+                </Link>
+              </li>
+              <li>
+                <Link to="/blog" className="font-medium text-gray-700 hover:text-indigo-600 py-2 inline-block">
+                  Blog
+                </Link>
+              </li>
             </ul>
           </nav>
 
-          <div className="hidden md:flex items-center">
+          <div className="flex items-center">
             <button className="text-gray-700 hover:text-indigo-600 mr-4">
               <Search size={20} />
             </button>
-            <button className="text-gray-700 hover:text-indigo-600">
-              <User size={20} />
+            <Link to="/admin" className="text-gray-700 hover:text-indigo-600 mr-4" title="Admin Dashboard">
+              <Settings size={20} />
+            </Link>
+            <button 
+              className="md:hidden text-gray-700 hover:text-indigo-600"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <Menu size={20} />
             </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 py-2 border-t">
-            <ul className="space-y-2">
+          <div className="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 flex items-center justify-center">
+            <button 
+              className="absolute top-4 right-4 text-white text-2xl"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              ✕
+            </button>
+            <ul className="flex flex-col space-y-4 text-white text-center text-xl">
               <li>
-                <Link to="/categories/massage-guns" className="block font-medium text-gray-700 hover:text-indigo-600 py-2">
+                <Link 
+                  to="/categories/massage-guns" 
+                  className="block py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   Massage Guns
                 </Link>
-                <ul className="pl-4 space-y-1 mt-1">
-                  <li><Link to="/categories/professional-massage-guns" className="block text-gray-700 hover:text-indigo-600 py-1">Professional</Link></li>
-                  <li><Link to="/categories/home-massage-guns" className="block text-gray-700 hover:text-indigo-600 py-1">Home Use</Link></li>
-                </ul>
               </li>
-              <li><Link to="/categories/foam-rollers" className="block font-medium text-gray-700 hover:text-indigo-600 py-2">Foam Rollers</Link></li>
               <li>
-                <Link to="/categories/compression-gear" className="block font-medium text-gray-700 hover:text-indigo-600 py-2">
+                <Link 
+                  to="/categories/foam-rollers" 
+                  className="block py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Foam Rollers
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/categories/fitness-bands" 
+                  className="block py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Fitness Bands
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/categories/compression-gear" 
+                  className="block py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   Compression Gear
                 </Link>
-                <ul className="pl-4 space-y-1 mt-1">
-                  <li><Link to="/categories/compression-socks" className="block text-gray-700 hover:text-indigo-600 py-1">Compression Socks</Link></li>
-                  <li><Link to="/categories/compression-sleeves" className="block text-gray-700 hover:text-indigo-600 py-1">Compression Sleeves</Link></li>
-                  <li><Link to="/categories/compression-tights" className="block text-gray-700 hover:text-indigo-600 py-1">Compression Tights</Link></li>
-                </ul>
               </li>
-              <li><Link to="/categories/fitness-bands" className="block font-medium text-gray-700 hover:text-indigo-600 py-2">Fitness Bands</Link></li>
+              <li>
+                <Link 
+                  to="/blog" 
+                  className="block py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Blog
+                </Link>
+              </li>
             </ul>
-            <div className="flex mt-4 pt-2 border-t">
-              <button className="text-gray-700 hover:text-indigo-600 mr-4">
-                <Search size={20} />
-              </button>
-              <button className="text-gray-700 hover:text-indigo-600">
-                <User size={20} />
-              </button>
-            </div>
           </div>
         )}
       </div>

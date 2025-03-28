@@ -8,6 +8,19 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CategoryPage from "./pages/CategoryPage";
 
+// Import all the pages needed
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+import AffiliateDisclosure from "./pages/AffiliateDisclosure";
+import Newsletter from "./pages/Newsletter";
+import ProductComparison from "./pages/ProductComparison";
+import RecoveryApps from "./pages/RecoveryApps";
+import Admin from "./pages/Admin";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -18,8 +31,28 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          
+          {/* Category pages */}
           <Route path="/categories/:categorySlug" element={<CategoryPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          
+          {/* Blog pages */}
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:articleSlug" element={<BlogPost />} />
+          
+          {/* Company/Info pages */}
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+          
+          {/* Additional pages */}
+          <Route path="/newsletter" element={<Newsletter />} />
+          <Route path="/products/comparison" element={<ProductComparison />} />
+          <Route path="/recovery-apps" element={<RecoveryApps />} />
+          <Route path="/admin" element={<Admin />} />
+          
+          {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
