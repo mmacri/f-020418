@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, Pinterest } from "lucide-react";
+import { Facebook, Twitter, Instagram, BookOpen } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -33,7 +33,7 @@ const Footer = () => {
                 <Instagram size={20} />
               </a>
               <a href="#" className="text-gray-400 hover:text-white transition">
-                <Pinterest size={20} />
+                <BookOpen size={20} />
               </a>
             </div>
           </div>
