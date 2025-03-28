@@ -1,27 +1,33 @@
 
 import React, { useState, useEffect } from 'react';
 import { Product } from '@/services/productService';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProductImagesProps {
   product: Product;
+  isLoading?: boolean;
 }
 
-const ProductImages: React.FC<ProductImagesProps> = ({ product }) => {
-  const [selectedImage, setSelectedImage] = useState<string>(product.imageUrl);
+const ProductImages: React.FC<ProductImagesProps> = ({ product, isLoading = false }) => {
+  const [selectedImage, setSelectedImage] = useState<string>('');
   const [imagesLoaded, setImagesLoaded] = useState<{[key: string]: boolean}>({});
 
-  // Initialize imagesLoaded state
+  // Initialize selected image and imagesLoaded state when product data changes
   useEffect(() => {
-    const initialLoadState: {[key: string]: boolean} = { [product.imageUrl]: false };
-    
-    if (product.additionalImages) {
-      product.additionalImages.forEach(img => {
-        initialLoadState[img] = false;
-      });
+    if (product && product.imageUrl) {
+      setSelectedImage(product.imageUrl);
+      
+      const initialLoadState: {[key: string]: boolean} = { [product.imageUrl]: false };
+      
+      if (product.additionalImages) {
+        product.additionalImages.forEach(img => {
+          initialLoadState[img] = false;
+        });
+      }
+      
+      setImagesLoaded(initialLoadState);
     }
-    
-    setImagesLoaded(initialLoadState);
-  }, [product.imageUrl, product.additionalImages]);
+  }, [product]);
 
   const handleImageLoad = (imageUrl: string) => {
     setImagesLoaded(prev => ({
@@ -29,6 +35,19 @@ const ProductImages: React.FC<ProductImagesProps> = ({ product }) => {
       [imageUrl]: true
     }));
   };
+
+  if (isLoading) {
+    return (
+      <div className="md:w-1/2">
+        <Skeleton className="aspect-square w-full rounded-lg mb-4" />
+        <div className="flex space-x-4 mt-4">
+          {[...Array(4)].map((_, index) => (
+            <Skeleton key={index} className="w-16 h-16 rounded-md" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="md:w-1/2">
@@ -56,13 +75,18 @@ const ProductImages: React.FC<ProductImagesProps> = ({ product }) => {
             }`}
             onClick={() => setSelectedImage(product.imageUrl)}
           >
-            <img 
-              src={product.imageUrl} 
-              alt={`${product.title} - main`}
-              className={`w-16 h-16 object-cover transition-opacity duration-300 ${imagesLoaded[product.imageUrl] ? 'opacity-100' : 'opacity-20'}`}
-              loading="lazy"
-              onLoad={() => handleImageLoad(product.imageUrl)}
-            />
+            <div className="relative w-16 h-16">
+              {!imagesLoaded[product.imageUrl] && (
+                <Skeleton className="absolute inset-0" />
+              )}
+              <img 
+                src={product.imageUrl} 
+                alt={`${product.title} - main`}
+                className={`w-16 h-16 object-cover transition-opacity duration-300 ${imagesLoaded[product.imageUrl] ? 'opacity-100' : 'opacity-0'}`}
+                loading="lazy"
+                onLoad={() => handleImageLoad(product.imageUrl)}
+              />
+            </div>
           </div>
           
           {product.additionalImages.map((image, index) => (
@@ -73,13 +97,18 @@ const ProductImages: React.FC<ProductImagesProps> = ({ product }) => {
               }`}
               onClick={() => setSelectedImage(image)}
             >
-              <img 
-                src={image} 
-                alt={`${product.title} - ${index + 1}`}
-                className={`w-16 h-16 object-cover transition-opacity duration-300 ${imagesLoaded[image] ? 'opacity-100' : 'opacity-20'}`}
-                loading="lazy"
-                onLoad={() => handleImageLoad(image)}
-              />
+              <div className="relative w-16 h-16">
+                {!imagesLoaded[image] && (
+                  <Skeleton className="absolute inset-0" />
+                )}
+                <img 
+                  src={image} 
+                  alt={`${product.title} - ${index + 1}`}
+                  className={`w-16 h-16 object-cover transition-opacity duration-300 ${imagesLoaded[image] ? 'opacity-100' : 'opacity-0'}`}
+                  loading="lazy"
+                  onLoad={() => handleImageLoad(image)}
+                />
+              </div>
             </div>
           ))}
         </div>
