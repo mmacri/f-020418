@@ -1,23 +1,6 @@
 
 import { toast } from "@/hooks/use-toast";
-
-// In a real application, this would be stored in a database
-const DEMO_USERS = [
-  {
-    id: 1,
-    email: "admin@recoveryessentials.com",
-    password: "admin123", // In a real app, this would be hashed
-    role: "admin",
-    name: "Admin User"
-  },
-  {
-    id: 2,
-    email: "user@example.com",
-    password: "password123",
-    role: "user",
-    name: "Demo User"
-  }
-];
+import { getCurrentUser, login as userServiceLogin, logout as userServiceLogout } from "@/services/userService";
 
 // User type definition
 export interface User {
@@ -34,56 +17,23 @@ export interface AuthResult {
   message?: string;
 }
 
-// Store the current user in localStorage
-const getCurrentUser = (): User | null => {
-  const userJson = localStorage.getItem('currentUser');
-  if (!userJson) return null;
-  
-  try {
-    return JSON.parse(userJson);
-  } catch (error) {
-    return null;
-  }
-};
-
-// Login function
-export const login = (email: string, password: string): AuthResult => {
-  // Find the user
-  const user = DEMO_USERS.find(
-    u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-  );
-  
-  if (!user) {
-    return { 
-      success: false, 
-      message: "Invalid email or password" 
-    };
-  }
-  
-  // Create a sanitized user object (without password)
-  const sanitizedUser: User = {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    name: user.name
-  };
-  
-  // Store in localStorage
-  localStorage.setItem('currentUser', JSON.stringify(sanitizedUser));
+// Login function (wrapper around userService.login)
+export const login = async (email: string, password: string): Promise<AuthResult> => {
+  const result = await userServiceLogin({
+    email: email,
+    password: password
+  });
   
   return {
-    success: true,
-    user: sanitizedUser
+    success: result.success,
+    user: result.user,
+    message: result.message
   };
 };
 
-// Logout function
+// Logout function (wrapper around userService.logout)
 export const logout = (): void => {
-  localStorage.removeItem('currentUser');
-  toast({
-    title: "Logged out",
-    description: "You have been successfully logged out"
-  });
+  userServiceLogout();
 };
 
 // Check if user is authenticated

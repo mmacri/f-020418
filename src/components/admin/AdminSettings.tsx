@@ -1,304 +1,251 @@
 
-import { useState } from "react";
-import { Download, Upload, Settings, Database, Save, AlertCircle, RotateCw, FileJson } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "@/hooks/use-toast";
+import { api } from "@/lib/api-client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { User, getCurrentUser, updateUserProfile, updateUserPassword } from "@/services/userService";
+import { SlidersHorizontal, KeyRound, User as UserIcon, ShieldCheck, Save, RefreshCw } from "lucide-react";
 
-// Schema for Amazon settings
-const amazonSettingsSchema = z.object({
-  associateId: z.string().min(1, { message: "Associate ID is required" }),
-  apiAccessKey: z.string().min(1, { message: "API Access Key is required" }),
-  apiSecretKey: z.string().min(1, { message: "API Secret Key is required" }),
-  marketplace: z.enum(["US", "CA", "UK", "DE", "FR", "ES", "IT", "JP", "AU"], {
-    message: "Please select a marketplace",
-  }),
+// Profile form schema
+const profileFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  avatar: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
 });
 
-type AmazonSettingsValues = z.infer<typeof amazonSettingsSchema>;
-
-// Schema for site settings
-const siteSettingsSchema = z.object({
-  siteName: z.string().min(1, { message: "Site name is required" }),
-  siteDescription: z.string().min(1, { message: "Site description is required" }),
-  contactEmail: z.string().email({ message: "Please enter a valid email" }),
-  analyticsId: z.string().optional(),
-  enableAffiliateBadges: z.boolean().default(true),
-  showPricesWithTax: z.boolean().default(true),
-  showOutOfStockProducts: z.boolean().default(true),
+// Password form schema
+const passwordFormSchema = z.object({
+  currentPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  newPassword: z.string().min(8, { message: "New password must be at least 8 characters" }),
+  confirmPassword: z.string().min(8, { message: "Confirm password must be at least 8 characters" }),
+}).refine(data => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
-type SiteSettingsValues = z.infer<typeof siteSettingsSchema>;
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
+type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 const AdminSettings = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const { toast } = useToast();
-
-  // Initialize the form for Amazon settings
-  const amazonForm = useForm<AmazonSettingsValues>({
-    resolver: zodResolver(amazonSettingsSchema),
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [cacheSize, setCacheSize] = useState<string>("0 KB");
+  
+  // Load user data
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+    }
+    
+    // Calculate cache size
+    calculateCacheSize();
+  }, []);
+  
+  // Profile form
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      associateId: "recoveryessentials-20",
-      apiAccessKey: "",
-      apiSecretKey: "",
-      marketplace: "US",
+      name: user?.name || "",
+      email: user?.email || "",
+      avatar: user?.avatar || "",
+    },
+    values: {
+      name: user?.name || "",
+      email: user?.email || "",
+      avatar: user?.avatar || "",
     },
   });
-
-  // Initialize the form for site settings
-  const siteForm = useForm<SiteSettingsValues>({
-    resolver: zodResolver(siteSettingsSchema),
+  
+  // Password form
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordFormSchema),
     defaultValues: {
-      siteName: "Recovery Essentials",
-      siteDescription: "The best recovery products and reviews",
-      contactEmail: "contact@recoveryessentials.com",
-      analyticsId: "",
-      enableAffiliateBadges: true,
-      showPricesWithTax: true,
-      showOutOfStockProducts: true,
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     },
   });
-
-  // Handle Amazon settings save
-  const handleSaveAmazonSettings = (data: AmazonSettingsValues) => {
+  
+  // Calculate cache size
+  const calculateCacheSize = () => {
+    const keys = Object.keys(localStorage);
+    const cacheKeys = keys.filter(key => key.startsWith('api_cache_'));
+    
+    let totalSize = 0;
+    cacheKeys.forEach(key => {
+      const item = localStorage.getItem(key);
+      if (item) {
+        totalSize += item.length * 2; // Approximate size in bytes (2 bytes per character)
+      }
+    });
+    
+    // Convert to human-readable format
+    let size = "0 KB";
+    if (totalSize < 1024) {
+      size = `${totalSize} B`;
+    } else if (totalSize < 1024 * 1024) {
+      size = `${(totalSize / 1024).toFixed(2)} KB`;
+    } else {
+      size = `${(totalSize / (1024 * 1024)).toFixed(2)} MB`;
+    }
+    
+    setCacheSize(size);
+  };
+  
+  // Handle profile form submission
+  const onProfileSubmit = async (data: ProfileFormValues) => {
     setIsLoading(true);
     
-    // Simulate saving
-    setTimeout(() => {
-      // In a real app, we would save this to an API
-      localStorage.setItem("amazonSettings", JSON.stringify(data));
-      
-      setIsLoading(false);
-      toast({
-        title: "Settings Saved",
-        description: "Your Amazon affiliate settings have been saved.",
-      });
-    }, 1000);
-  };
-
-  // Handle site settings save
-  const handleSaveSiteSettings = (data: SiteSettingsValues) => {
-    setIsLoading(true);
-    
-    // Simulate saving
-    setTimeout(() => {
-      // In a real app, we would save this to an API
-      localStorage.setItem("siteSettings", JSON.stringify(data));
-      
-      setIsLoading(false);
-      toast({
-        title: "Settings Saved",
-        description: "Your site settings have been saved.",
-      });
-    }, 1000);
-  };
-
-  // Handle database export
-  const handleExportDatabase = () => {
-    setIsExporting(true);
-    
-    // Simulate export
-    setTimeout(() => {
-      try {
-        // Get all data from localStorage
-        const data = {
-          products: JSON.parse(localStorage.getItem("products") || "[]"),
-          categories: JSON.parse(localStorage.getItem("categories") || "[]"),
-          blogPosts: JSON.parse(localStorage.getItem("blogPosts") || "[]"),
-          amazonSettings: JSON.parse(localStorage.getItem("amazonSettings") || "{}"),
-          siteSettings: JSON.parse(localStorage.getItem("siteSettings") || "{}"),
-        };
-        
-        // Create a JSON file for download
-        const dataStr = JSON.stringify(data, null, 2);
-        const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = `recovery-essentials-backup-${new Date().toISOString()}.json`;
-        
-        const linkElement = document.createElement("a");
-        linkElement.setAttribute("href", dataUri);
-        linkElement.setAttribute("download", exportFileDefaultName);
-        linkElement.click();
-        
-        toast({
-          title: "Export Successful",
-          description: "Your database has been exported successfully.",
+    try {
+      if (user) {
+        const updatedUser = await updateUserProfile({
+          id: user.id,
+          name: data.name,
+          email: data.email,
+          avatar: data.avatar || undefined,
         });
-      } catch (error) {
-        console.error("Export error:", error);
-        toast({
-          title: "Export Failed",
-          description: "There was an error exporting your database.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsExporting(false);
-      }
-    }, 1500);
-  };
-
-  // Handle file input change for import
-  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    setIsImporting(true);
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const jsonData = JSON.parse(e.target?.result as string);
         
-        // Validate the imported data (simple check)
-        if (!jsonData.products || !jsonData.categories) {
-          throw new Error("Invalid backup file format");
-        }
-        
-        // Store the imported data in localStorage
-        if (jsonData.products) localStorage.setItem("products", JSON.stringify(jsonData.products));
-        if (jsonData.categories) localStorage.setItem("categories", JSON.stringify(jsonData.categories));
-        if (jsonData.blogPosts) localStorage.setItem("blogPosts", JSON.stringify(jsonData.blogPosts));
-        if (jsonData.amazonSettings) localStorage.setItem("amazonSettings", JSON.stringify(jsonData.amazonSettings));
-        if (jsonData.siteSettings) localStorage.setItem("siteSettings", JSON.stringify(jsonData.siteSettings));
-        
-        toast({
-          title: "Import Successful",
-          description: "Your database has been imported successfully. Refresh the page to see changes.",
-        });
-      } catch (error) {
-        console.error("Import error:", error);
-        toast({
-          title: "Import Failed",
-          description: "There was an error importing your database. Please check the file format.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsImporting(false);
-        // Reset the file input
-        event.target.value = "";
-      }
-    };
-    
-    reader.readAsText(file);
-  };
-
-  // Handle database reset
-  const handleResetDatabase = () => {
-    if (confirm("Are you sure you want to reset the database? This action cannot be undone.")) {
-      setIsResetting(true);
-      
-      // Simulate reset
-      setTimeout(() => {
-        try {
-          // Clear all app data from localStorage
-          localStorage.removeItem("products");
-          localStorage.removeItem("categories");
-          localStorage.removeItem("blogPosts");
-          localStorage.removeItem("amazonSettings");
-          localStorage.removeItem("siteSettings");
-          
+        if (updatedUser) {
+          setUser(updatedUser);
           toast({
-            title: "Database Reset",
-            description: "Your database has been reset successfully. Refresh the page to see changes.",
+            title: "Profile updated",
+            description: "Your profile has been updated successfully",
           });
-        } catch (error) {
-          console.error("Reset error:", error);
-          toast({
-            title: "Reset Failed",
-            description: "There was an error resetting your database.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsResetting(false);
         }
-      }, 1500);
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-
+  
+  // Handle password form submission
+  const onPasswordSubmit = async (data: PasswordFormValues) => {
+    setIsLoading(true);
+    
+    try {
+      if (user) {
+        const success = await updateUserPassword(user.id, data.currentPassword, data.newPassword);
+        
+        if (success) {
+          toast({
+            title: "Password updated",
+            description: "Your password has been updated successfully",
+          });
+          passwordForm.reset();
+        } else {
+          toast({
+            title: "Error",
+            description: "Current password is incorrect",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Clear cache
+  const handleClearCache = () => {
+    api.clearCache();
+    calculateCacheSize();
+  };
+  
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <p>Loading user information...</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Settings</h2>
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+        <p className="text-muted-foreground">
+          Manage your account settings and preferences.
+        </p>
+      </div>
       
-      <Tabs defaultValue="general">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="general">General Settings</TabsTrigger>
-          <TabsTrigger value="amazon">Amazon Affiliate</TabsTrigger>
-          <TabsTrigger value="database">Database</TabsTrigger>
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="profile" className="flex items-center gap-2">
+            <UserIcon className="h-4 w-4" />
+            <span>Profile</span>
+          </TabsTrigger>
+          <TabsTrigger value="password" className="flex items-center gap-2">
+            <KeyRound className="h-4 w-4" />
+            <span>Password</span>
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4" />
+            <span>Preferences</span>
+          </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="general" className="space-y-4 mt-6">
+      
+        {/* Profile Tab */}
+        <TabsContent value="profile" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Site Settings</CardTitle>
+              <CardTitle>Profile Information</CardTitle>
               <CardDescription>
-                Configure general settings for your affiliate website
+                Update your account information and public profile.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Form {...siteForm}>
-                <form id="site-settings-form" onSubmit={siteForm.handleSubmit(handleSaveSiteSettings)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={siteForm.control}
-                      name="siteName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Site Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={siteForm.control}
-                      name="contactEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Email</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
+              <Form {...profileForm}>
+                <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
                   <FormField
-                    control={siteForm.control}
-                    name="siteDescription"
+                    control={profileForm.control}
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Site Description</FormLabel>
+                        <FormLabel>Name</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={profileForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" />
+                        </FormControl>
                         <FormDescription>
-                          Used in SEO meta tags and site header
+                          This is the email address you'll use to log in.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -306,349 +253,199 @@ const AdminSettings = () => {
                   />
                   
                   <FormField
-                    control={siteForm.control}
-                    name="analyticsId"
+                    control={profileForm.control}
+                    name="avatar"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Google Analytics ID (Optional)</FormLabel>
+                        <FormLabel>Avatar URL</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="G-XXXXXXXXXX" />
+                          <Input {...field} placeholder="https://example.com/avatar.jpg" />
                         </FormControl>
                         <FormDescription>
-                          For tracking website traffic
+                          Enter a URL for your profile avatar.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   
-                  <Separator />
+                  {user.avatar && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium mb-2">Current Avatar:</p>
+                      <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-200">
+                        <img 
+                          src={user.avatar} 
+                          alt="Profile avatar" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://ext.same-assets.com/2651616194/3622592620.jpeg";
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Display Options</h3>
-                    
-                    <FormField
-                      control={siteForm.control}
-                      name="enableAffiliateBadges"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Show Affiliate Badges
-                            </FormLabel>
-                            <FormDescription>
-                              Display "Affiliate Link" badges next to product links
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={siteForm.control}
-                      name="showPricesWithTax"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Show Prices With Tax
-                            </FormLabel>
-                            <FormDescription>
-                              Include estimated taxes in displayed prices
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={siteForm.control}
-                      name="showOutOfStockProducts"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Show Out of Stock Products
-                            </FormLabel>
-                            <FormDescription>
-                              Display products that are currently unavailable
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                  <div>
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading}
+                      className="flex items-center gap-2"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>{isLoading ? "Saving..." : "Save Changes"}</span>
+                    </Button>
                   </div>
                 </form>
               </Form>
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button 
-                type="submit" 
-                form="site-settings-form" 
-                disabled={isLoading}
-                className="w-32"
-              >
-                {isLoading ? (
-                  <>
-                    <Settings className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save
-                  </>
-                )}
-              </Button>
-            </CardFooter>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="amazon" className="space-y-4 mt-6">
+          
           <Card>
             <CardHeader>
-              <CardTitle>Amazon Affiliate Settings</CardTitle>
+              <CardTitle>Role and Permissions</CardTitle>
               <CardDescription>
-                Configure your Amazon Associates account for affiliate link generation
+                View your current role and access level.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Alert className="mb-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Demo Mode</AlertTitle>
-                <AlertDescription>
-                  In this demo, no real API calls are made. In a production environment, 
-                  these settings would be used to connect to the Amazon Product Advertising API.
-                </AlertDescription>
-              </Alert>
+              <div className="flex items-center gap-2 p-3 rounded-md bg-primary/10">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium text-primary">
+                    {user.role === "admin" ? "Administrator" : 
+                     user.role === "editor" ? "Editor" : "Regular User"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {user.role === "admin" ? "Full access to all areas of the platform." : 
+                     user.role === "editor" ? "Can manage content but not system settings." : 
+                     "Limited access to platform features."}
+                  </p>
+                </div>
+              </div>
               
-              <Form {...amazonForm}>
-                <form id="amazon-settings-form" onSubmit={amazonForm.handleSubmit(handleSaveAmazonSettings)} className="space-y-6">
+              {user.role === "admin" && (
+                <Alert className="mt-4">
+                  <AlertTitle>Admin Account</AlertTitle>
+                  <AlertDescription>
+                    You have administrator privileges. Be careful when making changes 
+                    to system settings and user accounts.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Password Tab */}
+        <TabsContent value="password" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Change Password</CardTitle>
+              <CardDescription>
+                Update your password to keep your account secure.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...passwordForm}>
+                <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
                   <FormField
-                    control={amazonForm.control}
-                    name="associateId"
+                    control={passwordForm.control}
+                    name="currentPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Amazon Associate ID</FormLabel>
+                        <FormLabel>Current Password</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="yourname-20" />
+                          <Input {...field} type="password" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Separator className="my-4" />
+                  
+                  <FormField
+                    control={passwordForm.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Password</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="password" />
                         </FormControl>
                         <FormDescription>
-                          Your Amazon Associates tracking ID
+                          Password must be at least 8 characters.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={amazonForm.control}
-                      name="apiAccessKey"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>API Access Key</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="password" placeholder="•••••••••••••••••" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={amazonForm.control}
-                      name="apiSecretKey"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>API Secret Key</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="password" placeholder="•••••••••••••••••" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
                   <FormField
-                    control={amazonForm.control}
-                    name="marketplace"
+                    control={passwordForm.control}
+                    name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Amazon Marketplace</FormLabel>
-                        <div className="grid grid-cols-3 gap-2">
-                          {["US", "CA", "UK", "DE", "FR", "ES", "IT", "JP", "AU"].map((country) => (
-                            <div key={country} className="flex items-center space-x-2">
-                              <input
-                                type="radio"
-                                id={`marketplace-${country}`}
-                                value={country}
-                                checked={field.value === country}
-                                onChange={() => field.onChange(country)}
-                                className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                              />
-                              <Label htmlFor={`marketplace-${country}`}>{country}</Label>
-                            </div>
-                          ))}
-                        </div>
+                        <FormLabel>Confirm New Password</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="password" />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  
+                  <div>
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading}
+                      className="flex items-center gap-2"
+                    >
+                      <KeyRound className="h-4 w-4" />
+                      <span>{isLoading ? "Updating..." : "Update Password"}</span>
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button 
-                type="submit" 
-                form="amazon-settings-form" 
-                disabled={isLoading}
-                className="w-32"
-              >
-                {isLoading ? (
-                  <>
-                    <Settings className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save
-                  </>
-                )}
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
         
-        <TabsContent value="database" className="space-y-4 mt-6">
+        {/* Preferences Tab */}
+        <TabsContent value="preferences" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Database Management</CardTitle>
+              <CardTitle>Cache Management</CardTitle>
               <CardDescription>
-                Export, import, or reset your product database
+                Manage browser cache for better performance.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>LocalStorage Demo</AlertTitle>
-                <AlertDescription>
-                  This demo uses your browser's localStorage to store data. In a production environment,
-                  these functions would connect to a real database.
-                </AlertDescription>
-              </Alert>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Current Cache Size</p>
+                  <p className="text-muted-foreground text-sm">{cacheSize}</p>
+                </div>
+                <Button 
+                  onClick={handleClearCache} 
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Clear Cache</span>
+                </Button>
+              </div>
               
-              <div className="space-y-4">
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium flex items-center">
-                        <Database className="mr-2 h-5 w-5" />
-                        Export Database
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Download a backup of your products, categories, and settings
-                      </p>
-                    </div>
-                    <Button onClick={handleExportDatabase} disabled={isExporting}>
-                      {isExporting ? (
-                        <>
-                          <RotateCw className="mr-2 h-4 w-4 animate-spin" />
-                          Exporting...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="mr-2 h-4 w-4" />
-                          Export
-                        </>
-                      )}
-                    </Button>
-                  </div>
+              <Separator />
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <FormLabel>Use Data Caching</FormLabel>
+                  <FormDescription>
+                    Enable caching for faster page loads
+                  </FormDescription>
                 </div>
-                
-                <div className="rounded-lg border p-4">
-                  <div>
-                    <h3 className="text-lg font-medium flex items-center">
-                      <FileJson className="mr-2 h-5 w-5" />
-                      Import Database
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1 mb-4">
-                      Restore from a previously exported backup file
-                    </p>
-                    <div className="flex items-center">
-                      <Input
-                        type="file"
-                        accept=".json"
-                        onChange={handleFileInputChange}
-                        disabled={isImporting}
-                        className="flex-1 mr-2"
-                      />
-                      <Button disabled={isImporting} className="min-w-24">
-                        {isImporting ? (
-                          <>
-                            <RotateCw className="mr-2 h-4 w-4 animate-spin" />
-                            Importing...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="mr-2 h-4 w-4" />
-                            Import
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="rounded-lg border p-4 border-red-200 bg-red-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-red-700 flex items-center">
-                        <AlertCircle className="mr-2 h-5 w-5" />
-                        Reset Database
-                      </h3>
-                      <p className="text-sm text-red-600 mt-1">
-                        Warning: This will delete all your products, categories, and settings
-                      </p>
-                    </div>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleResetDatabase} 
-                      disabled={isResetting}
-                    >
-                      {isResetting ? (
-                        <>
-                          <RotateCw className="mr-2 h-4 w-4 animate-spin" />
-                          Resetting...
-                        </>
-                      ) : (
-                        <>
-                          Reset Database
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
+                <Switch checked />
               </div>
             </CardContent>
           </Card>

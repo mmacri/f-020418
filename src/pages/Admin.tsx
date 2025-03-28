@@ -124,6 +124,14 @@ const Admin = () => {
                 </div>
                 
                 <div className="space-y-2">
+                  <h3 className="text-lg font-medium">User Management</h3>
+                  <p className="text-gray-500">
+                    Update your profile details and password in the Settings tab.
+                    Admins can manage user accounts and permissions.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
                   <h3 className="text-lg font-medium">Data Storage</h3>
                   <p className="text-gray-500">
                     Currently, all data is stored in your browser's localStorage.

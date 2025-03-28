@@ -25,6 +25,14 @@ export interface LoginData {
   password: string;
 }
 
+// Profile update data
+export interface ProfileUpdateData {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
 // Auth response
 export interface AuthResponse {
   success: boolean;
@@ -192,6 +200,97 @@ export const logout = async (): Promise<void> => {
     title: "Logged out",
     description: "You have been successfully logged out"
   });
+};
+
+// Update user profile
+export const updateUserProfile = async (data: ProfileUpdateData): Promise<User | null> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
+  // Find the user
+  const userIndex = USERS.findIndex(u => u.id === data.id);
+  
+  if (userIndex === -1) {
+    toast({
+      title: "Error",
+      description: "User not found",
+      variant: "destructive"
+    });
+    return null;
+  }
+  
+  // Check if email is already taken by another user
+  const emailExists = USERS.some(u => 
+    u.id !== data.id && 
+    u.email.toLowerCase() === data.email.toLowerCase()
+  );
+  
+  if (emailExists) {
+    toast({
+      title: "Error",
+      description: "Email is already taken by another user",
+      variant: "destructive"
+    });
+    return null;
+  }
+  
+  // Update user data
+  USERS[userIndex] = {
+    ...USERS[userIndex],
+    name: data.name,
+    email: data.email,
+    avatar: data.avatar,
+    updatedAt: new Date().toISOString()
+  };
+  
+  // Create a sanitized user object
+  const updatedUser: User = {
+    id: USERS[userIndex].id,
+    name: USERS[userIndex].name,
+    email: USERS[userIndex].email,
+    role: USERS[userIndex].role,
+    avatar: USERS[userIndex].avatar,
+    createdAt: USERS[userIndex].createdAt,
+    updatedAt: USERS[userIndex].updatedAt
+  };
+  
+  // Update localStorage
+  localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+  
+  return updatedUser;
+};
+
+// Update user password
+export const updateUserPassword = async (
+  userId: number, 
+  currentPassword: string, 
+  newPassword: string
+): Promise<boolean> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Find the user
+  const userIndex = USERS.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) {
+    toast({
+      title: "Error",
+      description: "User not found",
+      variant: "destructive"
+    });
+    return false;
+  }
+  
+  // Verify current password
+  if (USERS[userIndex].password !== currentPassword) {
+    return false;
+  }
+  
+  // Update password
+  USERS[userIndex].password = newPassword;
+  USERS[userIndex].updatedAt = new Date().toISOString();
+  
+  return true;
 };
 
 // Check if user is authenticated
