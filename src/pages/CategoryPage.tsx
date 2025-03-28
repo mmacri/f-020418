@@ -10,7 +10,7 @@ import VideoSection from '@/components/VideoSection';
 import { getProductsByCategory } from '@/lib/product-utils';
 import { Button } from '@/components/ui/button';
 import { getCategoryContentBySlug, CategoryContent } from '@/services/categoryContentService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle, ShoppingCart, ArrowRight } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const CategoryPage = () => {
@@ -23,17 +23,21 @@ const CategoryPage = () => {
     const fetchData = async () => {
       setIsLoading(true);
       
-      // Get products for this category
-      const categoryProducts = categorySlug ? getProductsByCategory(categorySlug) : [];
-      setProducts(categoryProducts);
-      
-      // Get category content
-      if (categorySlug) {
-        const content = await getCategoryContentBySlug(categorySlug);
-        setCategoryContent(content);
+      try {
+        // Get products for this category
+        const categoryProducts = categorySlug ? getProductsByCategory(categorySlug) : [];
+        setProducts(categoryProducts);
+        
+        // Get category content
+        if (categorySlug) {
+          const content = await getCategoryContentBySlug(categorySlug);
+          setCategoryContent(content);
+        }
+      } catch (error) {
+        console.error('Error loading category data:', error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
     
     fetchData();
@@ -71,6 +75,8 @@ const CategoryPage = () => {
     );
   }
 
+  const formattedTitle = categorySlug?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
   return (
     <>
       <Header />
@@ -79,20 +85,25 @@ const CategoryPage = () => {
       <CategoryHero categorySlug={categorySlug || ''} description={content.description} />
       
       {/* Introduction */}
-      <section className="py-10 bg-white">
+      <section className="py-12 bg-white">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="prose lg:prose-xl">
-            <h1 className="text-3xl font-bold text-center mb-8">{content.title}</h1>
-            <p className="text-lg font-medium text-gray-800 mb-6">
-              {content.introduction}
-            </p>
+            <h1 className="text-3xl md:text-4xl font-bold text-center mb-8">{content.title}</h1>
+            <div className="text-lg font-medium text-gray-800 mb-8 leading-relaxed">
+              {content.introduction.split('\n').map((paragraph, index) => (
+                <p key={index} className="mb-4">{paragraph}</p>
+              ))}
+            </div>
 
             {content.benefits.length > 0 && (
               <div className="bg-indigo-50 p-6 rounded-lg my-8">
-                <h3 className="font-bold text-xl mb-3">Benefits of {categorySlug?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} for Recovery</h3>
-                <ul className="list-disc pl-6 space-y-2 text-gray-700">
+                <h3 className="font-bold text-xl mb-4">Key Benefits of {formattedTitle}</h3>
+                <ul className="space-y-3">
                   {content.benefits.map((benefit, index) => (
-                    <li key={index} dangerouslySetInnerHTML={{ __html: benefit }}></li>
+                    <li key={index} className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <span dangerouslySetInnerHTML={{ __html: benefit }}></span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -115,9 +126,9 @@ const CategoryPage = () => {
             <div className="flex flex-col md:flex-row gap-8 mb-10">
               <div className="md:w-1/2">
                 <img 
-                  src={products[1].images[0].url} 
+                  src={products[1].images[0]} 
                   alt={products[1].name} 
-                  className="rounded-lg shadow-md w-full"
+                  className="rounded-lg shadow-md w-full object-cover"
                 />
               </div>
               <div className="md:w-1/2">
@@ -139,11 +150,12 @@ const CategoryPage = () => {
                 <p className="text-gray-600 mb-6">
                   {products[1].description}
                 </p>
-                {products[1].asin && (
+                {products[1].affiliateLink && (
                   <Button 
-                    onClick={() => window.open(`https://www.amazon.com/dp/${products[1].asin}?tag=recoveryessentials-20`, '_blank')}
+                    onClick={() => window.open(products[1].affiliateLink, '_blank')}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg"
                   >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
                     Check Price on Amazon
                   </Button>
                 )}
@@ -166,11 +178,13 @@ const CategoryPage = () => {
       {content.buyingGuide && (
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8 text-center">Buying Guide</h2>
+            <h2 className="text-3xl font-bold mb-8 text-center">Buying Guide: How to Choose the Right {formattedTitle}</h2>
             <div className="bg-gray-50 p-8 rounded-lg shadow-sm">
-              <p className="text-gray-800 leading-relaxed">
-                {content.buyingGuide}
-              </p>
+              {content.buyingGuide.split('\n').map((paragraph, index) => (
+                <p key={index} className="text-gray-800 leading-relaxed mb-4">
+                  {paragraph}
+                </p>
+              ))}
             </div>
           </div>
         </section>
@@ -213,12 +227,14 @@ const CategoryPage = () => {
               className="bg-white text-indigo-600 hover:bg-gray-100 font-bold py-3 px-6 rounded-lg"
               variant="outline"
             >
+              <ShoppingCart className="h-4 w-4 mr-2" />
               Shop on Amazon
             </Button>
             <Button 
               onClick={() => window.location.href = '/blog'}
               className="bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 px-6 rounded-lg border border-white"
             >
+              <ArrowRight className="h-4 w-4 mr-2" />
               View Recovery Tips
             </Button>
           </div>

@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   getAllCategoryContent, 
   getCategoryContentBySlug, 
-  updateCategoryContent, 
+  updateCategoryContent,
+  importContentFromUrl,
   CategoryContent, 
   CategoryFAQ 
 } from '@/services/categoryContentService';
@@ -21,7 +23,9 @@ import {
   PlusCircle,
   AlertCircle,
   Video,
-  HelpCircle
+  HelpCircle,
+  Link,
+  RefreshCw
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -41,6 +45,8 @@ const AdminCategoryContent = () => {
   const [faqs, setFaqs] = useState<CategoryFAQ[]>([]);
   const [benefits, setBenefits] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [importUrl, setImportUrl] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -140,6 +146,47 @@ const AdminCategoryContent = () => {
     setFaqs(updatedFaqs);
   };
 
+  const handleImportFromUrl = async () => {
+    if (!selectedCategory || !importUrl) return;
+    
+    setIsImporting(true);
+    
+    try {
+      const importedContent = await importContentFromUrl(selectedCategory, importUrl);
+      
+      if (importedContent) {
+        setCurrentContent(importedContent);
+        setFaqs(importedContent.faqs || []);
+        setBenefits(importedContent.benefits || []);
+        
+        setCategoryContent(prev => 
+          prev.map(c => c.slug === selectedCategory ? importedContent : c)
+        );
+        
+        toast({
+          title: 'Success',
+          description: 'Content imported successfully',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to import content from URL',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error importing content:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to import content from URL',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsImporting(false);
+      setImportUrl('');
+    }
+  };
+
   const handleSaveContent = async () => {
     if (!selectedCategory) return;
     
@@ -212,6 +259,51 @@ const AdminCategoryContent = () => {
               </div>
             </CardContent>
           </Card>
+          
+          {selectedCategory && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle>Import Content</CardTitle>
+                <CardDescription>Import content from external sources</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="importUrl">Affiliate URL</Label>
+                  <div className="flex mt-1 gap-2">
+                    <Input
+                      id="importUrl"
+                      value={importUrl}
+                      onChange={(e) => setImportUrl(e.target.value)}
+                      placeholder="https://example.com/product"
+                      className="flex-grow"
+                    />
+                    <Button 
+                      variant="outline"
+                      onClick={handleImportFromUrl}
+                      disabled={isImporting || !importUrl}
+                    >
+                      <Link className="h-4 w-4 mr-1" />
+                      Import
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Import content from affiliate product pages
+                  </p>
+                </div>
+                
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => handleCategorySelect(selectedCategory)}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reset to Default
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         <div className="w-3/4">
