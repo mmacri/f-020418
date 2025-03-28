@@ -13,7 +13,7 @@ import AdminBlog from "@/components/admin/AdminBlog";
 import AdminCategories from "@/components/admin/AdminCategories";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminSettings from "@/components/admin/AdminSettings";
-import { isAdmin, isAuthenticated } from "@/services/userService";
+import { isAdmin, isAuthenticated } from "@/services/authService";
 
 const Admin = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);

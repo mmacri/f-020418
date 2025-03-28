@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, Search, Settings, ChevronDown, User, LogOut } from "lucide-react";
-import { getCurrentUser, logout, isAdmin } from "@/services/userService";
+import { getCurrentUser, logout, isAdmin } from "@/services/authService";
 import { getNavigationCategories } from "@/services/categoryService";
 import { Category } from "@/services/categoryService";
 import { Button } from "@/components/ui/button";
@@ -133,10 +134,10 @@ const Header = () => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Link to="/profile">My Profile</Link>
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    My Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/favorites')}>
+                  <DropdownMenuItem onClick={() => navigate('/wishlist')}>
                     Saved Products
                   </DropdownMenuItem>
                   {isAdmin() && (
@@ -227,6 +228,15 @@ const Header = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Blog
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/profile" 
+                  className="block py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  My Profile
                 </Link>
               </li>
               {!user && (

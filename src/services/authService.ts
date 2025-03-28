@@ -32,8 +32,8 @@ export const login = async (email: string, password: string): Promise<AuthResult
 };
 
 // Logout function (wrapper around userService.logout)
-export const logout = (): void => {
-  userServiceLogout();
+export const logout = async (): Promise<void> => {
+  await userServiceLogout();
   
   // Redirect to login page after logout
   window.location.href = '/login';

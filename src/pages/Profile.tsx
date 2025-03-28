@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { User, getCurrentUser, updateUserProfile, updateUserPassword, isAuthenticated } from "@/services/userService";
+import { User, getCurrentUser, updateUserProfile, updateUserPassword, isAuthenticated, logout } from "@/services/userService";
 import { UserCircle, KeyRound, Save, LogOut } from "lucide-react";
 
 // Profile form schema
@@ -64,9 +64,9 @@ const Profile = () => {
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: user?.name || "",
-      email: user?.email || "",
-      avatar: user?.avatar || "",
+      name: "",
+      email: "",
+      avatar: "",
     },
     values: {
       name: user?.name || "",
@@ -74,6 +74,17 @@ const Profile = () => {
       avatar: user?.avatar || "",
     },
   });
+
+  // Update form values when user data changes
+  useEffect(() => {
+    if (user) {
+      profileForm.reset({
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar || "",
+      });
+    }
+  }, [user, profileForm]);
 
   // Password form
   const passwordForm = useForm<PasswordFormValues>({
@@ -152,10 +163,9 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
-    // Implement logout
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
-    window.location.reload(); // Force reload to clear any state
   };
 
   if (!user) {
