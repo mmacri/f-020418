@@ -20,7 +20,11 @@ export interface BlogPost {
   updatedAt: string;
 }
 
-export type BlogPostInput = Omit<BlogPost, "id" | "createdAt" | "updatedAt">;
+export type BlogPostInput = Omit<BlogPost, "id" | "createdAt" | "updatedAt"> & {
+  // Allow createdAt and updatedAt to be passed, but they'll be overridden in addBlogPost
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 // Get blog posts from localStorage
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
@@ -73,14 +77,16 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
 export const getPostBySlug = getBlogPostBySlug;
 
 // Add blog post
-export const addBlogPost = async (post: Omit<BlogPost, "id" | "createdAt" | "updatedAt">): Promise<BlogPost> => {
+export const addBlogPost = async (post: BlogPostInput): Promise<BlogPost> => {
   try {
     const posts = await getBlogPosts();
+    const now = new Date().toISOString();
+    
     const newPost: BlogPost = {
       ...post,
       id: posts.length ? Math.max(...posts.map(p => p.id)) + 1 : 1,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now
     };
     
     localStorage.setItem(

@@ -32,6 +32,17 @@ export interface Product {
   updatedAt: string;
 }
 
+// Compatibility type for creating products with aliased property names
+export type ProductInput = Omit<Product, "id" | "createdAt" | "updatedAt"> | {
+  title?: string;
+  imageUrl?: string;
+  additionalImages?: string[];
+  originalPrice?: number;
+  affiliateUrl?: string;
+  inStock?: boolean;
+  [key: string]: any;
+};
+
 // Backward compatibility getter function
 const getProductWithBackwardsCompatibility = (product: Product): Product => {
   return {
@@ -42,6 +53,41 @@ const getProductWithBackwardsCompatibility = (product: Product): Product => {
     originalPrice: product.comparePrice, // Alias comparePrice as originalPrice
     affiliateUrl: product.affiliateLink, // Alias affiliateLink as affiliateUrl
     inStock: product.availability === "In Stock" || !product.availability, // Set inStock based on availability
+  };
+};
+
+// Convert aliased properties to the original property names
+const normalizeProductInput = (productInput: ProductInput): Omit<Product, "id" | "createdAt" | "updatedAt"> => {
+  // Extract aliased properties from input
+  const {
+    title,
+    imageUrl,
+    additionalImages,
+    originalPrice,
+    affiliateUrl,
+    inStock,
+    ...rest
+  } = productInput as any;
+
+  // Create normalized product with original property names
+  const images = imageUrl 
+    ? [imageUrl, ...(additionalImages || [])]
+    : rest.images || [];
+
+  return {
+    name: title || rest.name || '',
+    images,
+    description: rest.description || '',
+    slug: rest.slug || '',
+    price: rest.price || 0,
+    comparePrice: originalPrice || rest.comparePrice,
+    category: rest.category || '',
+    categoryId: rest.categoryId || 0,
+    rating: rest.rating || 0,
+    reviewCount: rest.reviewCount || 0,
+    affiliateLink: affiliateUrl || rest.affiliateLink,
+    availability: inStock !== undefined ? (inStock ? "In Stock" : "Out of Stock") : rest.availability,
+    ...rest
   };
 };
 
@@ -93,11 +139,13 @@ export const getProductsByCategory = async (categoryId: number): Promise<Product
 };
 
 // Add product
-export const addProduct = async (product: Omit<Product, "id" | "createdAt" | "updatedAt">): Promise<Product> => {
+export const addProduct = async (productInput: ProductInput): Promise<Product> => {
   try {
     const products = await getProducts();
+    const normalizedProduct = normalizeProductInput(productInput);
+    
     const newProduct: Product = {
-      ...product,
+      ...normalizedProduct,
       id: products.length ? Math.max(...products.map(p => p.id)) + 1 : 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -119,7 +167,7 @@ export const addProduct = async (product: Omit<Product, "id" | "createdAt" | "up
 export const createProduct = addProduct;
 
 // Update product
-export const updateProduct = async (id: number, productData: Partial<Product>): Promise<Product | null> => {
+export const updateProduct = async (id: number, productData: Partial<ProductInput>): Promise<Product | null> => {
   try {
     const products = await getProducts();
     const productIndex = products.findIndex(product => product.id === id);
@@ -128,9 +176,37 @@ export const updateProduct = async (id: number, productData: Partial<Product>): 
       return null;
     }
     
+    // Normalize the input data
+    const {
+      title,
+      imageUrl,
+      additionalImages,
+      originalPrice,
+      affiliateUrl,
+      inStock,
+      ...rest
+    } = productData as any;
+    
+    // Update with normalized data
+    const updatedData: Partial<Product> = {
+      ...rest
+    };
+    
+    // Handle aliased properties
+    if (title !== undefined) updatedData.name = title;
+    if (imageUrl !== undefined || additionalImages !== undefined) {
+      const currentImages = products[productIndex].images || [];
+      const newMainImage = imageUrl || (currentImages.length > 0 ? currentImages[0] : '');
+      const newAdditionalImages = additionalImages || (currentImages.length > 1 ? currentImages.slice(1) : []);
+      updatedData.images = [newMainImage, ...newAdditionalImages];
+    }
+    if (originalPrice !== undefined) updatedData.comparePrice = originalPrice;
+    if (affiliateUrl !== undefined) updatedData.affiliateLink = affiliateUrl;
+    if (inStock !== undefined) updatedData.availability = inStock ? "In Stock" : "Out of Stock";
+    
     const updatedProduct = {
       ...products[productIndex],
-      ...productData,
+      ...updatedData,
       updatedAt: new Date().toISOString()
     };
     
