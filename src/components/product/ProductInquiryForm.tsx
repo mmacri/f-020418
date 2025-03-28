@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Form,
   FormControl,
@@ -16,6 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -34,6 +37,9 @@ interface ProductInquiryFormProps {
 
 const ProductInquiryForm: React.FC<ProductInquiryFormProps> = ({ productName, productId }) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [formError, setFormError] = React.useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
 
   // Initialize the form with react-hook-form and zod resolver
   const form = useForm<FormValues>({
@@ -48,25 +54,64 @@ const ProductInquiryForm: React.FC<ProductInquiryFormProps> = ({ productName, pr
 
   // Form submission handler
   const onSubmit = async (data: FormValues) => {
-    console.log('Form data:', { ...data, productId });
-    
-    // In a real application, you would send this data to your backend
-    // Simulate API call with a timeout
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Show success toast
-    toast({
-      title: "Inquiry Sent",
-      description: "We've received your inquiry and will get back to you soon.",
-    });
-    
-    // Reset the form
-    form.reset();
+    try {
+      setIsSubmitting(true);
+      setFormError(null);
+      console.log('Submitting inquiry:', { ...data, productId });
+      
+      // In a real application, you would send this data to your backend
+      // Simulate API call with a timeout and potential for random error
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // Simulate occasional network failures (10% chance)
+          if (Math.random() < 0.1) {
+            reject(new Error("Network error occurred. Please try again."));
+            return;
+          }
+          resolve(true);
+        }, 1000);
+      });
+      
+      // Show success dialog
+      setShowSuccessDialog(true);
+      
+      // Reset the form
+      form.reset();
+    } catch (error) {
+      console.error('Form submission error:', error);
+      
+      // Set form error message
+      if (error instanceof Error) {
+        setFormError(error.message);
+      } else {
+        setFormError('An unexpected error occurred. Please try again.');
+      }
+      
+      // Show error toast
+      toast({
+        title: "Submission Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const closeSuccessDialog = () => {
+    setShowSuccessDialog(false);
   };
 
   return (
     <div className="border rounded-lg p-6 mt-6">
       <h3 className="text-lg font-semibold mb-4">Ask a Question About This Product</h3>
+      
+      {formError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{formError}</AlertDescription>
+        </Alert>
+      )}
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -138,12 +183,27 @@ const ProductInquiryForm: React.FC<ProductInquiryFormProps> = ({ productName, pr
           <Button 
             type="submit" 
             className="w-full md:w-auto"
-            disabled={form.formState.isSubmitting}
+            disabled={isSubmitting}
           >
-            {form.formState.isSubmitting ? "Sending..." : "Send Inquiry"}
+            {isSubmitting ? "Sending..." : "Send Inquiry"}
           </Button>
         </form>
       </Form>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Inquiry Submitted Successfully</DialogTitle>
+            <DialogDescription>
+              Thank you for your inquiry about {productName}. We've received your message and will get back to you shortly at your provided email address.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={closeSuccessDialog}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
