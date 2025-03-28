@@ -23,8 +23,18 @@ import Admin from "./pages/Admin";
 import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Wishlist from "./pages/Wishlist";
 
-const queryClient = new QueryClient();
+// Configure React Query with better defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -37,9 +47,12 @@ const App = () => (
           
           {/* Category pages */}
           <Route path="/categories/:categorySlug" element={<CategoryPage />} />
+          <Route path="/categories/:categorySlug/:subcategorySlug" element={<CategoryPage />} />
           
           {/* Product pages */}
           <Route path="/products/:productSlug" element={<ProductDetail />} />
+          <Route path="/products/comparison" element={<ProductComparison />} />
+          <Route path="/wishlist" element={<Wishlist />} />
           
           {/* Blog pages */}
           <Route path="/blog" element={<Blog />} />
@@ -58,7 +71,6 @@ const App = () => (
           
           {/* Additional pages */}
           <Route path="/newsletter" element={<Newsletter />} />
-          <Route path="/products/comparison" element={<ProductComparison />} />
           <Route path="/recovery-apps" element={<RecoveryApps />} />
           <Route path="/admin" element={<Admin />} />
           

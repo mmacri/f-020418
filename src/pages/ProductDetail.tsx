@@ -1,90 +1,83 @@
 
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Star, Check, AlertCircle, ShoppingCart, ExternalLink } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Product, getProductBySlug } from "@/services/productService";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowUpRight, Share2, ShoppingCart, Check, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import BlogPostCard from "@/components/BlogPostCard";
-import { getBlogPosts } from "@/services/blogService";
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import ProductReviews from '@/components/product/ProductReviews';
+import SaveForLater from '@/components/product/SaveForLater';
+import ProductSkeleton from '@/components/product/ProductSkeleton';
+import { api } from '@/lib/api-client';
+import { useToast } from '@/hooks/use-toast';
 
 const ProductDetail = () => {
   const { productSlug } = useParams<{ productSlug: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
   const { toast } = useToast();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      if (!productSlug) return;
-      
-      try {
-        setLoading(true);
-        const productData = await getProductBySlug(productSlug);
-        
-        if (productData) {
-          setProduct(productData);
-          setSelectedImage(productData.imageUrl);
-          
-          // Fetch related blog posts
-          const allPosts = await getBlogPosts();
-          const related = allPosts.filter(post => 
-            post.tags?.some(tag => 
-              productData.title.toLowerCase().includes(tag.toLowerCase()) ||
-              productData.category.toLowerCase().includes(tag.toLowerCase())
-            )
-          ).slice(0, 3);
-          
-          setRelatedPosts(related);
-        } else {
-          setError("Product not found");
-        }
-      } catch (err) {
-        setError("Failed to load product");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProduct();
-  }, [productSlug]);
-
-  const handleImageClick = (imageUrl: string) => {
-    setSelectedImage(imageUrl);
-  };
+  // Fetch product data
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: ['product', productSlug],
+    queryFn: () => api.get(`/products/${productSlug}`),
+    enabled: !!productSlug
+  });
 
   const handleBuyNow = () => {
     if (!product) return;
     
-    // Track click in analytics
-    console.log(`Affiliate link clicked for ${product.title}`);
+    // Track click for analytics
+    console.log('Buy Now clicked:', product.title);
     
-    // Open the affiliate link in a new tab
+    // Open affiliate link in new tab
     window.open(product.affiliateUrl, '_blank');
     
+    // Show toast notification
     toast({
-      title: "Redirecting to retailer",
-      description: "You're being redirected to purchase this product",
+      title: "Opening Amazon",
+      description: "You're being redirected to complete your purchase"
     });
   };
 
-  if (loading) {
+  const handleShare = () => {
+    if (navigator.share && product) {
+      navigator.share({
+        title: product.title,
+        text: `Check out this product: ${product.title}`,
+        url: window.location.href
+      })
+      .then(() => {
+        console.log('Shared successfully');
+      })
+      .catch((error) => {
+        console.log('Error sharing:', error);
+        // Fallback for browsers that don't support navigator.share
+        navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied",
+          description: "Product link copied to clipboard"
+        });
+      });
+    } else if (product) {
+      // Fallback for browsers that don't support navigator.share
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied",
+        description: "Product link copied to clipboard"
+      });
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="flex flex-col min-h-screen">
         <Header />
-        <div className="container mx-auto px-4 py-16 flex-grow flex justify-center items-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading product information...</p>
-          </div>
-        </div>
+        <main className="flex-grow">
+          <ProductSkeleton />
+        </main>
         <Footer />
       </div>
     );
@@ -92,72 +85,114 @@ const ProductDetail = () => {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="flex flex-col min-h-screen">
         <Header />
-        <div className="container mx-auto px-4 py-16 flex-grow">
-          <div className="text-center">
-            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
-            <p className="text-gray-600 mb-8">{error || "The product you're looking for doesn't exist or has been removed."}</p>
-            <Link to="/products" className="bg-indigo-600 text-white px-6 py-3 rounded-lg inline-block hover:bg-indigo-700">
-              Browse Products
-            </Link>
+        <main className="flex-grow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
+              <p className="text-gray-500 mb-8">
+                Sorry, we couldn't find the product you're looking for.
+              </p>
+              <Button onClick={() => window.history.back()}>
+                Go Back
+              </Button>
+            </div>
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     );
   }
 
+  // Set the first image as selected if none is selected
+  if (!selectedImage && product.imageUrl) {
+    setSelectedImage(product.imageUrl);
+  }
+
+  // Calculate discount percentage
+  const discountPercentage = product.originalPrice && product.price < product.originalPrice
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : null;
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="flex flex-col min-h-screen">
       <Header />
       
-      {/* Breadcrumbs */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="text-sm text-gray-600">
-            <Link to="/" className="hover:text-indigo-600">Home</Link>
-            <span className="mx-2">/</span>
-            <Link to={`/categories/${product.category}`} className="hover:text-indigo-600">
-              {product.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-            </Link>
-            <span className="mx-2">/</span>
-            <span className="text-gray-900">{product.title}</span>
-          </div>
-        </div>
-      </div>
-      
-      {/* Product Details */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-6">
+      <main className="flex-grow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Breadcrumbs */}
+          <nav className="flex text-sm mb-8" aria-label="Breadcrumb">
+            <ol className="flex items-center space-x-1">
+              <li>
+                <a href="/" className="text-gray-500 hover:text-gray-700">Home</a>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <a href={`/categories/${product.category}`} className="ml-1 text-gray-500 hover:text-gray-700">
+                  {product.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                </a>
+              </li>
+              {product.subcategory && (
+                <li className="flex items-center">
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                  <a 
+                    href={`/categories/${product.category}/${product.subcategory}`} 
+                    className="ml-1 text-gray-500 hover:text-gray-700"
+                  >
+                    {product.subcategory.charAt(0).toUpperCase() + product.subcategory.slice(1)}
+                  </a>
+                </li>
+              )}
+              <li className="flex items-center">
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <span className="ml-1 text-gray-900 font-medium" aria-current="page">
+                  {product.title}
+                </span>
+              </li>
+            </ol>
+          </nav>
+          
+          <div className="flex flex-col md:flex-row gap-8">
             {/* Product Images */}
-            <div className="lg:col-span-1">
-              <div className="mb-4 rounded-lg overflow-hidden border">
+            <div className="md:w-1/2">
+              <div className="aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden mb-4">
                 <img 
                   src={selectedImage || product.imageUrl} 
                   alt={product.title}
-                  className="w-full h-auto object-cover"
+                  className="w-full h-full object-center object-contain"
                 />
               </div>
               
+              {/* Thumbnail gallery */}
               {product.additionalImages && product.additionalImages.length > 0 && (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="flex space-x-4 mt-4">
                   <div 
-                    className={`cursor-pointer rounded-md overflow-hidden border-2 ${selectedImage === product.imageUrl ? 'border-indigo-500' : 'border-gray-200'}`}
-                    onClick={() => handleImageClick(product.imageUrl)}
+                    className={`cursor-pointer border-2 rounded-md overflow-hidden ${
+                      selectedImage === product.imageUrl ? 'border-indigo-500' : 'border-transparent'
+                    }`}
+                    onClick={() => setSelectedImage(product.imageUrl)}
                   >
-                    <img src={product.imageUrl} alt={product.title} className="w-full h-auto" />
+                    <img 
+                      src={product.imageUrl} 
+                      alt={`${product.title} - main`}
+                      className="w-16 h-16 object-cover"
+                    />
                   </div>
                   
-                  {product.additionalImages.map((img, index) => (
+                  {product.additionalImages.map((image, index) => (
                     <div 
                       key={index}
-                      className={`cursor-pointer rounded-md overflow-hidden border-2 ${selectedImage === img ? 'border-indigo-500' : 'border-gray-200'}`}
-                      onClick={() => handleImageClick(img)}
+                      className={`cursor-pointer border-2 rounded-md overflow-hidden ${
+                        selectedImage === image ? 'border-indigo-500' : 'border-transparent'
+                      }`}
+                      onClick={() => setSelectedImage(image)}
                     >
-                      <img src={img} alt={`${product.title} - view ${index + 1}`} className="w-full h-auto" />
+                      <img 
+                        src={image} 
+                        alt={`${product.title} - ${index + 1}`}
+                        className="w-16 h-16 object-cover"
+                      />
                     </div>
                   ))}
                 </div>
@@ -165,238 +200,185 @@ const ProductDetail = () => {
             </div>
             
             {/* Product Info */}
-            <div className="lg:col-span-2">
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold mb-2 text-gray-900">{product.title}</h1>
-                
-                <div className="flex items-center mb-4">
-                  <div className="flex text-yellow-400 mr-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className="w-5 h-5" />
-                    ))}
-                  </div>
-                  <span className="text-gray-600 text-sm">{product.rating.toFixed(1)} ({product.reviewCount} reviews)</span>
+            <div className="md:w-1/2">
+              {product.bestSeller && (
+                <div className="inline-block bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-md mb-2">
+                  #1 Best Seller
                 </div>
-                
-                <div className="mb-6">
-                  <div className="flex items-center">
-                    <span className="text-3xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
-                    {product.originalPrice && (
-                      <>
-                        <span className="ml-2 text-lg text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-                        <span className="ml-2 text-sm font-semibold bg-green-100 text-green-800 px-2 py-1 rounded">
-                          Save {product.discount}%
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="mt-2 flex items-center">
-                    <div className={`w-3 h-3 rounded-full mr-2 ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                    <span className={product.inStock ? 'text-green-700' : 'text-red-700'}>
-                      {product.inStock ? 'In Stock' : 'Out of Stock'}
+              )}
+              
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.title}</h1>
+              
+              <div className="flex items-center mb-4">
+                <div className="flex text-amber-400 mr-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i}>
+                      {i < Math.floor(product.rating) ? "★" : 
+                       i === Math.floor(product.rating) && product.rating % 1 > 0 ? "★" : "☆"}
                     </span>
-                    {product.bestSeller && (
-                      <span className="ml-4 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">
-                        Best Seller
-                      </span>
-                    )}
-                  </div>
+                  ))}
                 </div>
-                
-                <div className="mb-6">
-                  <p className="text-gray-700">{product.shortDescription || product.description.slice(0, 150) + '...'}</p>
-                </div>
-                
-                {product.features && product.features.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-2">Key Features:</h3>
-                    <ul className="space-y-1">
-                      {product.features.map((feature, index) => (
-                        <li key={index} className="flex items-start">
-                          <Check className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                <span className="text-gray-600 text-sm">{product.rating.toFixed(1)} ({product.reviewCount} reviews)</span>
+              </div>
+              
+              <div className="mb-6">
+                <span className="text-2xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
+                {discountPercentage && (
+                  <>
+                    <span className="text-gray-500 line-through ml-2">${product.originalPrice!.toFixed(2)}</span>
+                    <span className="text-green-600 ml-2">Save {discountPercentage}%</span>
+                  </>
                 )}
-                
-                <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                  <Button 
-                    size="lg" 
-                    className="w-full sm:w-auto flex items-center justify-center"
-                    onClick={handleBuyNow}
-                  >
-                    <ShoppingCart className="mr-2 h-5 w-5" /> Buy on Amazon
-                  </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="w-full sm:w-auto flex items-center justify-center"
-                    onClick={handleBuyNow}
-                  >
-                    <ExternalLink className="mr-2 h-5 w-5" /> View on Retailer
-                  </Button>
-                </div>
-                
-                <p className="text-xs text-gray-500 mt-4">
-                  As an Amazon Associate, we earn from qualifying purchases. 
-                  <Link to="/affiliate-disclosure" className="text-indigo-600 hover:underline ml-1">
-                    Learn more
-                  </Link>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-700">
+                  {product.shortDescription || product.description.substring(0, 150) + '...'}
                 </p>
+              </div>
+              
+              <div className="mb-6 flex items-center">
+                <span className={`inline-flex items-center ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                  {product.inStock ? (
+                    <>
+                      <Check className="h-5 w-5 mr-1" />
+                      In Stock
+                    </>
+                  ) : (
+                    <>
+                      <span className="h-5 w-5 mr-1">✕</span>
+                      Out of Stock
+                    </>
+                  )}
+                </span>
+              </div>
+              
+              <div className="mb-8 flex space-x-4">
+                <Button 
+                  className="flex items-center"
+                  onClick={handleBuyNow}
+                  disabled={!product.inStock}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Buy on Amazon
+                  <ArrowUpRight className="ml-1 h-4 w-4" />
+                </Button>
+                
+                <SaveForLater 
+                  productId={product.id} 
+                  productName={product.title}
+                />
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleShare}
+                  className="rounded-full"
+                  aria-label="Share"
+                >
+                  <Share2 className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold mb-3">About this item</h3>
+                {product.features && product.features.length > 0 ? (
+                  <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                    {product.features.map((feature, index) => (
+                      <li key={index}>{feature}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-700">{product.description}</p>
+                )}
               </div>
             </div>
           </div>
           
-          {/* Product Details Tabs */}
-          <div className="border-t">
-            <div className="p-6">
-              <Tabs defaultValue="description">
-                <TabsList className="grid grid-cols-3 mb-6">
-                  <TabsTrigger value="description">Description</TabsTrigger>
-                  <TabsTrigger value="specs">Specifications</TabsTrigger>
-                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="description" className="prose max-w-none">
-                  <p>{product.description}</p>
-                </TabsContent>
-                
-                <TabsContent value="specs">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className="bg-gray-50 px-4 py-2 font-medium">Product Details</div>
-                      <div className="divide-y">
-                        <div className="px-4 py-3 grid grid-cols-2">
-                          <span className="text-gray-600">Brand</span>
-                          <span className="font-medium">{product.title.split(' ')[0]}</span>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-2">
-                          <span className="text-gray-600">Category</span>
-                          <span className="font-medium">
-                            {product.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                          </span>
-                        </div>
-                        {product.subcategory && (
-                          <div className="px-4 py-3 grid grid-cols-2">
-                            <span className="text-gray-600">Type</span>
-                            <span className="font-medium">
-                              {product.subcategory.charAt(0).toUpperCase() + product.subcategory.slice(1)}
-                            </span>
-                          </div>
-                        )}
-                        <div className="px-4 py-3 grid grid-cols-2">
-                          <span className="text-gray-600">ASIN</span>
-                          <span className="font-medium">{product.asin}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className="bg-gray-50 px-4 py-2 font-medium">Pricing</div>
-                      <div className="divide-y">
-                        <div className="px-4 py-3 grid grid-cols-2">
-                          <span className="text-gray-600">Current Price</span>
-                          <span className="font-medium">${product.price.toFixed(2)}</span>
-                        </div>
-                        {product.originalPrice && (
-                          <>
-                            <div className="px-4 py-3 grid grid-cols-2">
-                              <span className="text-gray-600">Original Price</span>
-                              <span className="font-medium">${product.originalPrice.toFixed(2)}</span>
-                            </div>
-                            <div className="px-4 py-3 grid grid-cols-2">
-                              <span className="text-gray-600">Discount</span>
-                              <span className="font-medium text-green-600">{product.discount}% off</span>
-                            </div>
-                          </>
-                        )}
-                        <div className="px-4 py-3 grid grid-cols-2">
-                          <span className="text-gray-600">Availability</span>
-                          <span className={`font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-                            {product.inStock ? 'In Stock' : 'Out of Stock'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="reviews">
-                  <div className="text-center py-8">
-                    <h3 className="text-xl font-semibold mb-2">Customer Reviews</h3>
-                    <div className="flex justify-center items-center mb-4">
-                      <div className="flex text-yellow-400 mr-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} className="w-5 h-5" />
+          {/* Tabs for Description, Specs, Reviews */}
+          <div className="mt-16">
+            <Tabs defaultValue="description">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="description">Description</TabsTrigger>
+                <TabsTrigger value="specifications">Specifications</TabsTrigger>
+                <TabsTrigger value="reviews">Reviews</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="description" className="p-6 border rounded-lg mt-4">
+                <h2 className="text-xl font-bold mb-4">Product Description</h2>
+                <div className="prose max-w-none">
+                  <p className="text-gray-700">{product.description}</p>
+                  
+                  {product.features && product.features.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold mb-3">Key Features</h3>
+                      <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                        {product.features.map((feature, index) => (
+                          <li key={index}>{feature}</li>
                         ))}
-                      </div>
-                      <span className="text-gray-700">{product.rating.toFixed(1)} out of 5</span>
+                      </ul>
                     </div>
-                    <p className="text-gray-600 mb-6">{product.reviewCount} global ratings</p>
-                    
-                    <div className="max-w-xl mx-auto mb-8">
-                      <p className="text-gray-700 mb-4">Reviews are loaded directly from the retailer and are not stored on our site.</p>
-                      <Button onClick={handleBuyNow}>
-                        Read Reviews on Retailer Site
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Related Blog Posts */}
-      {relatedPosts.length > 0 && (
-        <section className="container mx-auto px-4 py-12">
-          <h2 className="text-2xl font-bold mb-6">Related Articles</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {relatedPosts.map((post, index) => (
-              <BlogPostCard key={index} post={post} />
-            ))}
-          </div>
-        </section>
-      )}
-      
-      {/* Recommended Products */}
-      <section className="container mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* This would fetch from an API in a real implementation */}
-          {[1, 2, 3, 4].map((_, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 transition-transform hover:-translate-y-1 hover:shadow-lg">
-              <div className="h-48 bg-gray-200 relative overflow-hidden">
-                <img 
-                  src={`https://ext.same-assets.com/1001010${127 + index}/product-${index + 1}.jpg`}
-                  alt="Related product" 
-                  className="w-full h-full object-cover transition-transform hover:scale-105"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold">Related Product {index + 1}</h3>
-                <div className="flex items-center mt-1">
-                  <div className="flex text-yellow-400 mr-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} fill={i < 4 ? "currentColor" : "none"} className="w-3 h-3" />
-                    ))}
-                  </div>
-                  <span className="text-gray-600 text-xs">4.0 (120)</span>
+                  )}
                 </div>
-                <div className="mt-2 font-bold">$199.99</div>
-                <button className="mt-2 w-full text-center py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))}
+              </TabsContent>
+              
+              <TabsContent value="specifications" className="p-6 border rounded-lg mt-4">
+                <h2 className="text-xl font-bold mb-4">Technical Specifications</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-900 mb-2">Product Details</h3>
+                    <table className="w-full text-sm">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2 text-gray-500">Brand</td>
+                          <td className="py-2 text-gray-900 font-medium">{product.title.split(' ')[0]}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2 text-gray-500">Model</td>
+                          <td className="py-2 text-gray-900 font-medium">{product.title.split(' ').slice(1, 3).join(' ')}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2 text-gray-500">Category</td>
+                          <td className="py-2 text-gray-900 font-medium">
+                            {product.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 text-gray-500">ASIN</td>
+                          <td className="py-2 text-gray-900 font-medium">{product.asin}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-900 mb-2">Shipping & Returns</h3>
+                    <p className="text-gray-700 mb-4 text-sm">
+                      This product is fulfilled by Amazon. Free delivery on eligible orders and easy returns within 30 days of receipt.
+                    </p>
+                    <Button 
+                      variant="link" 
+                      className="text-indigo-600 p-0 h-auto text-sm"
+                      onClick={handleBuyNow}
+                    >
+                      View shipping details on Amazon
+                      <ArrowUpRight className="ml-1 h-3 w-3 inline" />
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="reviews" className="mt-4">
+                <ProductReviews 
+                  productId={product.id}
+                  productSlug={product.slug}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
-      </section>
-
+      </main>
+      
       <Footer />
     </div>
   );
