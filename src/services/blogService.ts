@@ -32,6 +32,9 @@ export type BlogPostInput = Partial<Omit<BlogPost, "id">> & {
   category?: string;
   image?: string;
   date?: string;
+  coverImage?: string;
+  author?: string;
+  tags?: string[];
 };
 
 // Get blog posts from localStorage
@@ -96,7 +99,10 @@ export const addBlogPost = async (post: BlogPostInput): Promise<BlogPost> => {
       id: posts.length ? Math.max(...posts.map(p => p.id)) + 1 : 1,
       category: post.category || "Uncategorized",
       image: post.image || post.coverImage || "",
+      coverImage: post.coverImage || post.image || "",
       date: post.date || now.split('T')[0],
+      author: post.author || "Admin",
+      tags: post.tags || [],
       createdAt: now,
       updatedAt: now
     };

@@ -1,27 +1,23 @@
 
 import { toast } from "@/hooks/use-toast";
-import { getCurrentUser as getUserFromService, login as userServiceLogin, logout as userServiceLogout } from "@/services/userService";
-
-// User type definition
-export interface User {
-  id: number;
-  email: string;
-  role: string;
-  name: string;
-}
-
-// Authentication result
-export interface AuthResult {
-  success: boolean;
-  user?: User;
-  message?: string;
-}
+import { 
+  User, 
+  getCurrentUser as getUserFromService, 
+  login as userServiceLogin, 
+  logout as userServiceLogout,
+  isAdmin as checkIsAdmin,
+  isEditorOrAdmin as checkIsEditorOrAdmin
+} from "@/services/userService";
 
 // Re-export getCurrentUser from userService
 export const getCurrentUser = getUserFromService;
 
 // Login function (wrapper around userService.login)
-export const login = async (email: string, password: string): Promise<AuthResult> => {
+export const login = async (email: string, password: string): Promise<{
+  success: boolean;
+  user?: User;
+  message?: string;
+}> => {
   const result = await userServiceLogin({
     email: email,
     password: password
@@ -44,7 +40,7 @@ export const logout = async (): Promise<void> => {
 
 // Check if user is authenticated
 export const isAuthenticated = (): boolean => {
-  return getCurrentUser() !== null;
+  return getCurrentUser() !== null && localStorage.getItem('authToken') !== null;
 };
 
 // Get current user
@@ -54,8 +50,12 @@ export const getUser = (): User | null => {
 
 // Check if user has admin role
 export const isAdmin = (): boolean => {
-  const user = getCurrentUser();
-  return user !== null && user.role === 'admin';
+  return checkIsAdmin();
+};
+
+// Check if user has editor or admin role
+export const isEditorOrAdmin = (): boolean => {
+  return checkIsEditorOrAdmin();
 };
 
 // Navigate to profile page
