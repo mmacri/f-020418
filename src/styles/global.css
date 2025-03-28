@@ -6,12 +6,50 @@
 
 body {
   font-family: 'Inter', sans-serif;
+  color: #333;
+  background-color: #f5f5f7;
 }
 
+/* Hero Background */
 .hero-bg {
   background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
   background-image: url('https://ext.same-assets.com/30303011/recovery-hero-bg.jpg'), linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
   background-blend-mode: overlay;
   background-size: cover;
   background-position: center;
+}
+
+/* Fix image rendering */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Card styling */
+.card-gradient {
+  background: linear-gradient(to bottom right, #fff, #f3f4f6);
+}
+
+/* Add container constraints */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }

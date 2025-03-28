@@ -1,4 +1,5 @@
 
+import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -7,110 +8,69 @@ const PrivacyPolicy = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
-      <main className="container mx-auto px-4 py-12 flex-grow">
-        <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+          <p className="text-gray-600 mb-4">
+            Last Updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
           
-          <div className="prose max-w-none text-gray-700">
-            <p className="mb-4">
-              Last Updated: June 1, 2023
+          <div className="prose max-w-none">
+            <h2 className="text-xl font-semibold mt-6 mb-3">Information We Collect</h2>
+            <p>
+              At Recovery Essentials, we take your privacy seriously. This Privacy Policy describes how we collect, use, and protect your personal information when you visit our website or use our services.
             </p>
             
-            <h2 className="text-xl font-semibold mt-8 mb-4">Introduction</h2>
-            <p className="mb-4">
-              Recovery Essentials ("we," "our," or "us") is committed to protecting your privacy. 
-              This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website, 
-              including any other media form, media channel, mobile website, or mobile application related or connected thereto 
-              (collectively, the "Site").
-            </p>
-            <p className="mb-4">
-              Please read this Privacy Policy carefully. If you do not agree with the terms of this Privacy Policy, please do not access the Site.
+            <h3 className="text-lg font-medium mt-5 mb-2">Personal Information</h3>
+            <p>
+              We may collect personal information such as your name, email address, and contact details when you subscribe to our newsletter, make a purchase, or contact us.
             </p>
             
-            <h2 className="text-xl font-semibold mt-8 mb-4">Information We Collect</h2>
-            <p className="mb-4">
-              We collect information about you in various ways when you use our Site.
+            <h3 className="text-lg font-medium mt-5 mb-2">Usage Data</h3>
+            <p>
+              We collect information about how you interact with our website, including pages visited, time spent on pages, and other browsing data. This helps us improve your experience and optimize our content.
             </p>
             
-            <h3 className="text-lg font-medium mt-6 mb-3">Personal Data</h3>
-            <p className="mb-4">
-              Personally identifiable information, such as your name, email address, and demographic information, 
-              that you voluntarily give to us when you register with the Site or when you choose to participate in various 
-              activities related to the Site, such as online chat, subscribing to our newsletter, and other similar activities.
+            <h2 className="text-xl font-semibold mt-6 mb-3">How We Use Your Information</h2>
+            <p>
+              We use the information we collect to:
             </p>
-            
-            <h3 className="text-lg font-medium mt-6 mb-3">Derivative Data</h3>
-            <p className="mb-4">
-              Information our servers automatically collect when you access the Site, such as your IP address, browser type, 
-              operating system, access times, and the pages you have viewed directly before and after accessing the Site.
-            </p>
-            
-            <h3 className="text-lg font-medium mt-6 mb-3">Financial Data</h3>
-            <p className="mb-4">
-              Financial information, such as data related to your payment method (e.g., valid credit card number, card brand, 
-              expiration date) that we may collect when you purchase, order, return, exchange, or request information about our 
-              services from the Site. We store only very limited, if any, financial information that we collect.
-            </p>
-            
-            <h2 className="text-xl font-semibold mt-8 mb-4">Use of Your Information</h2>
-            <p className="mb-4">
-              Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. 
-              Specifically, we may use information collected about you via the Site to:
-            </p>
-            <ul className="list-disc pl-6 mb-4">
-              <li className="mb-2">Create and manage your account.</li>
-              <li className="mb-2">Deliver targeted advertising, newsletters, and other information regarding promotions and the Site to you.</li>
-              <li className="mb-2">Email you regarding your account or order.</li>
-              <li className="mb-2">Fulfill and manage purchases, orders, payments, and other transactions related to the Site.</li>
-              <li className="mb-2">Generate a personal profile about you to make future visits to the Site more personalized.</li>
-              <li className="mb-2">Increase the efficiency and operation of the Site.</li>
-              <li className="mb-2">Monitor and analyze usage and trends to improve your experience with the Site.</li>
-              <li className="mb-2">Notify you of updates to the Site.</li>
-              <li className="mb-2">Offer new products, services, mobile applications, and/or recommendations to you.</li>
-              <li className="mb-2">Perform other business activities as needed.</li>
-              <li className="mb-2">Request feedback and contact you about your use of the Site.</li>
-              <li className="mb-2">Resolve disputes and troubleshoot problems.</li>
-              <li className="mb-2">Respond to product and customer service requests.</li>
-              <li className="mb-2">Send you a newsletter.</li>
+            <ul className="list-disc pl-5 mt-2 mb-4">
+              <li>Provide, operate, and maintain our website</li>
+              <li>Improve, personalize, and expand our website</li>
+              <li>Understand and analyze how you use our website</li>
+              <li>Develop new products, services, features, and functionality</li>
+              <li>Send you emails, including newsletters, updates, and marketing communications</li>
+              <li>Process transactions and send related information</li>
             </ul>
             
-            <h2 className="text-xl font-semibold mt-8 mb-4">Disclosure of Your Information</h2>
-            <p className="mb-4">
-              We may share information we have collected about you in certain situations. Your information may be disclosed as follows:
+            <h2 className="text-xl font-semibold mt-6 mb-3">Cookies and Tracking Technologies</h2>
+            <p>
+              We use cookies and similar tracking technologies to track activity on our website and hold certain information. Cookies are files with a small amount of data that may include an anonymous unique identifier.
+            </p>
+            <p>
+              You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, you may not be able to use some portions of our website.
             </p>
             
-            <h3 className="text-lg font-medium mt-6 mb-3">By Law or to Protect Rights</h3>
-            <p className="mb-4">
-              If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy 
-              potential violations of our policies, or to protect the rights, property, and safety of others, we may share your 
-              information as permitted or required by any applicable law, rule, or regulation.
+            <h2 className="text-xl font-semibold mt-6 mb-3">Affiliate Disclosure</h2>
+            <p>
+              Our website contains affiliate links, which means we may earn a commission if you click on a link and make a purchase. This does not affect your purchase price. As an Amazon Associate, we earn from qualifying purchases.
             </p>
             
-            <h3 className="text-lg font-medium mt-6 mb-3">Third-Party Service Providers</h3>
-            <p className="mb-4">
-              We may share your information with third parties that perform services for us or on our behalf, including payment 
-              processing, data analysis, email delivery, hosting services, customer service, and marketing assistance.
+            <h2 className="text-xl font-semibold mt-6 mb-3">Changes to This Privacy Policy</h2>
+            <p>
+              We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
             </p>
             
-            <h3 className="text-lg font-medium mt-6 mb-3">Marketing Communications</h3>
-            <p className="mb-4">
-              With your consent, or with an opportunity for you to withdraw consent, we may share your information with third 
-              parties for marketing purposes, as permitted by law.
-            </p>
-            
-            <h2 className="text-xl font-semibold mt-8 mb-4">Contact Us</h2>
-            <p className="mb-4">
-              If you have questions or comments about this Privacy Policy, please contact us at:
-            </p>
-            <p className="mb-4">
-              Recovery Essentials<br />
-              Email: privacy@recoveryessentials.com<br />
-              Address: 123 Recovery Lane, Fitness City, FC 12345
+            <h2 className="text-xl font-semibold mt-6 mb-3">Contact Us</h2>
+            <p>
+              If you have any questions about this Privacy Policy, please contact us at privacy@recoveryessentials.com.
             </p>
           </div>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
