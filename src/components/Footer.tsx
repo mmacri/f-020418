@@ -1,8 +1,10 @@
 
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram } from "lucide-react";
+import { Facebook, Twitter, Instagram, Pinterest } from "lucide-react";
 
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+  
   return (
     <footer className="bg-gray-900 text-white py-16">
       <div className="container mx-auto px-4">
@@ -29,6 +31,9 @@ const Footer = () => {
               </a>
               <a href="#" className="text-gray-400 hover:text-white transition">
                 <Instagram size={20} />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition">
+                <Pinterest size={20} />
               </a>
             </div>
           </div>
@@ -71,7 +76,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-gray-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} Recovery Essentials. All rights reserved.</p>
+          <p>&copy; {currentYear} Recovery Essentials. All rights reserved.</p>
           <p className="mt-2">Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.</p>
         </div>
       </div>
