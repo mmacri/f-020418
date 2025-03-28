@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import AdminAuth from "@/components/admin/AdminAuth";
 import AdminProducts from "@/components/admin/AdminProducts";
 import AdminBlog from "@/components/admin/AdminBlog";
@@ -38,6 +39,10 @@ const Admin = () => {
       description: "Welcome to the admin dashboard",
     });
   };
+  
+  const handleGoToProfile = () => {
+    navigate('/profile');
+  };
 
   if (!isAuthorized) {
     return (
@@ -58,6 +63,9 @@ const Admin = () => {
       <div className="container mx-auto px-4 py-8 flex-grow">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <Button variant="outline" onClick={handleGoToProfile}>
+            View My Profile
+          </Button>
         </div>
         
         <Tabs defaultValue="dashboard" className="space-y-6">

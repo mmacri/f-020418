@@ -34,6 +34,9 @@ export const login = async (email: string, password: string): Promise<AuthResult
 // Logout function (wrapper around userService.logout)
 export const logout = (): void => {
   userServiceLogout();
+  
+  // Redirect to login page after logout
+  window.location.href = '/login';
 };
 
 // Check if user is authenticated
@@ -50,4 +53,9 @@ export const getUser = (): User | null => {
 export const isAdmin = (): boolean => {
   const user = getCurrentUser();
   return user !== null && user.role === 'admin';
+};
+
+// Navigate to profile page
+export const goToProfile = (): void => {
+  window.location.href = '/profile';
 };

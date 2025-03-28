@@ -26,6 +26,7 @@ import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 import WorkflowDemo from "./pages/WorkflowDemo";
 import AutoWorkflowDemo from "./pages/AutoWorkflowDemo";
+import Profile from "./pages/Profile";
 
 // Configure React Query with better defaults
 const queryClient = new QueryClient({
@@ -63,6 +64,7 @@ const App = () => (
           {/* Authentication pages */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
           
           {/* Company/Info pages */}
           <Route path="/about" element={<About />} />

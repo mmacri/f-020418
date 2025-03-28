@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, Search, Settings, ChevronDown, User, LogOut } from "lucide-react";
@@ -134,8 +133,8 @@ const Header = () => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    Profile
+                  <DropdownMenuItem>
+                    <Link to="/profile">My Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/favorites')}>
                     Saved Products
