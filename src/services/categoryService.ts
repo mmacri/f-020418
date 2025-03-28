@@ -29,7 +29,8 @@ export type CategoryInput = {
   slug: string;
   description?: string;
   imageUrl?: string;
-  subcategories: Subcategory[];
+  subcategories: any[]; // Changed from Subcategory[] to any[] for more flexibility
+  parentId?: number | null; // Added to match the form data
 };
 
 // Mock categories data
@@ -226,6 +227,7 @@ export const createCategory = async (category: CategoryInput): Promise<Category>
   const newCategory: Category = {
     ...category,
     id: CATEGORIES.length > 0 ? Math.max(...CATEGORIES.map(c => c.id)) + 1 : 1,
+    subcategories: category.subcategories || [],
   };
   
   // Add to categories and update localStorage
@@ -261,10 +263,13 @@ export const updateCategory = async (id: number, updates: CategoryInput): Promis
     throw new Error(`Category with slug "${updates.slug}" already exists`);
   }
   
-  // Update the category
+  // Update the category but keep existing subcategories if not provided
+  const existingSubcategories = CATEGORIES[index].subcategories;
+  
   const updatedCategory: Category = {
     ...updates,
     id,
+    subcategories: updates.subcategories || existingSubcategories || [],
   };
   
   CATEGORIES[index] = updatedCategory;

@@ -4,7 +4,8 @@ import {
   getNavigationCategories, 
   createCategory, 
   updateCategory, 
-  deleteCategory 
+  deleteCategory,
+  CategoryInput
 } from "@/services/categoryService";
 import { getAllCategoryContent } from "@/services/categoryContentService";
 import { 
@@ -45,6 +46,8 @@ interface CategoryFormData {
   slug: string;
   description: string;
   parentId?: number | null;
+  // Add the missing subcategories field with a default empty array
+  subcategories: any[];
 }
 
 const AdminCategories = () => {
@@ -55,7 +58,8 @@ const AdminCategories = () => {
     name: "",
     slug: "",
     description: "",
-    parentId: null
+    parentId: null,
+    subcategories: [] // Initialize with empty array
   });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -96,7 +100,8 @@ const AdminCategories = () => {
       name: category.name,
       slug: category.slug,
       description: category.description || "",
-      parentId: category.parentId
+      parentId: category.parentId,
+      subcategories: category.subcategories || [] // Keep existing subcategories or use empty array
     });
     setEditingId(category.id);
     setShowDialog(true);
@@ -107,7 +112,8 @@ const AdminCategories = () => {
       name: "",
       slug: "",
       description: "",
-      parentId: null
+      parentId: null,
+      subcategories: [] // Initialize with empty array
     });
     setEditingId(null);
     setShowDialog(true);
@@ -359,3 +365,4 @@ const AdminCategories = () => {
 };
 
 export default AdminCategories;
+
