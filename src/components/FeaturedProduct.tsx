@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { formatPrice } from '@/lib/product-utils';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProductImage {
   url: string;
@@ -24,17 +25,29 @@ interface ProductProps {
 }
 
 const FeaturedProduct: React.FC<ProductProps> = ({ product }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const imageUrl = product.images && product.images.length ? product.images[0].url : '/placeholder.svg';
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4 max-w-4xl">
         <h2 className="text-3xl font-bold mb-10 text-center">Our Top Pick: {product.name}</h2>
 
         <div className="flex flex-col md:flex-row gap-8 mb-10">
-          <div className="md:w-1/2">
+          <div className="md:w-1/2 relative">
+            {!imageLoaded && (
+              <Skeleton className="absolute inset-0 rounded-lg" />
+            )}
             <img 
-              src={product.images && product.images.length ? product.images[0].url : '/placeholder.svg'}
+              src={imageUrl}
               alt={product.name} 
-              className="rounded-lg shadow-md w-full"
+              className={`rounded-lg shadow-md w-full transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              loading="lazy"
+              onLoad={handleImageLoad}
             />
           </div>
           <div className="md:w-1/2">

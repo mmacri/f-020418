@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPrice, generateProductUrl } from '@/lib/product-utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type ProductImage = {
   url: string;
@@ -23,13 +24,25 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const imageUrl = product.images && product.images.length ? product.images[0].url : '/placeholder.svg';
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
   return (
     <div className="card product-card rounded-lg shadow-sm overflow-hidden bg-white h-full flex flex-col">
-      <div className="product-card__image p-4 flex items-center justify-center h-48 bg-white">
+      <div className="product-card__image p-4 flex items-center justify-center h-48 bg-white relative">
+        {!imageLoaded && (
+          <Skeleton className="absolute inset-0 m-4" />
+        )}
         <img 
-          src={product.images && product.images.length ? product.images[0].url : '/placeholder.svg'} 
+          src={imageUrl} 
           alt={product.name} 
-          className="max-h-full object-contain"
+          className={`max-h-full object-contain transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          loading="lazy"
+          onLoad={handleImageLoad}
         />
       </div>
       <div className="product-card__content p-4 flex-grow flex flex-col">
