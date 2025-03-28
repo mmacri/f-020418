@@ -1,91 +1,115 @@
 
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import CategoryPage from "./pages/CategoryPage";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
+import CategoryPage from "@/pages/CategoryPage";
+import Profile from "@/pages/Profile";
+import ProductDetail from "@/pages/ProductDetail";
+import ProductComparison from "@/pages/ProductComparison";
+import NotFound from "@/pages/NotFound";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Terms from "@/pages/Terms";
+import AffiliateDisclosure from "@/pages/AffiliateDisclosure";
+import Admin from "@/pages/Admin";
+import Wishlist from "@/pages/Wishlist";
+import Search from "@/pages/Search";
 
-// Import all the pages needed
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Terms from "./pages/Terms";
-import AffiliateDisclosure from "./pages/AffiliateDisclosure";
-import Newsletter from "./pages/Newsletter";
-import ProductComparison from "./pages/ProductComparison";
-import RecoveryApps from "./pages/RecoveryApps";
-import Admin from "./pages/Admin";
-import ProductDetail from "./pages/ProductDetail";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Wishlist from "./pages/Wishlist";
-import WorkflowDemo from "./pages/WorkflowDemo";
-import AutoWorkflowDemo from "./pages/AutoWorkflowDemo";
-import Profile from "./pages/Profile";
+import "./styles/global.css";
+import "./index.css";
 
-// Configure React Query with better defaults
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
   },
-});
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
+  },
+  {
+    path: "/blog",
+    element: <Blog />,
+  },
+  {
+    path: "/blog/:slug",
+    element: <BlogPost />,
+  },
+  {
+    path: "/categories/:slug",
+    element: <CategoryPage />,
+  },
+  {
+    path: "/categories/:slug/:subSlug",
+    element: <CategoryPage />,
+  },
+  {
+    path: "/profile",
+    element: <Profile />,
+  },
+  {
+    path: "/products/:slug",
+    element: <ProductDetail />,
+  },
+  {
+    path: "/compare",
+    element: <ProductComparison />,
+  },
+  {
+    path: "/about",
+    element: <About />,
+  },
+  {
+    path: "/contact",
+    element: <Contact />,
+  },
+  {
+    path: "/privacy-policy",
+    element: <PrivacyPolicy />,
+  },
+  {
+    path: "/terms",
+    element: <Terms />,
+  },
+  {
+    path: "/affiliate-disclosure",
+    element: <AffiliateDisclosure />,
+  },
+  {
+    path: "/admin",
+    element: <Admin />,
+  },
+  {
+    path: "/wishlist",
+    element: <Wishlist />,
+  },
+  {
+    path: "/search",
+    element: <Search />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <ThemeProvider defaultTheme="light">
+      <RouterProvider router={router} />
       <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          
-          {/* Category pages */}
-          <Route path="/categories/:categorySlug" element={<CategoryPage />} />
-          <Route path="/categories/:categorySlug/:subcategorySlug" element={<CategoryPage />} />
-          
-          {/* Product pages */}
-          <Route path="/products/:productSlug" element={<ProductDetail />} />
-          <Route path="/products/comparison" element={<ProductComparison />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          
-          {/* Blog pages */}
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:articleSlug" element={<BlogPost />} />
-          
-          {/* Authentication pages */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
-          
-          {/* Company/Info pages */}
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
-          
-          {/* Additional pages */}
-          <Route path="/newsletter" element={<Newsletter />} />
-          <Route path="/recovery-apps" element={<RecoveryApps />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/workflow" element={<WorkflowDemo />} />
-          <Route path="/auto-workflow" element={<AutoWorkflowDemo />} />
-          
-          {/* Catch-all route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </ThemeProvider>
+  );
+}
 
 export default App;
