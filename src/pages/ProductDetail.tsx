@@ -17,6 +17,7 @@ import ProductInfo from '@/components/product/ProductInfo';
 import ProductInfoSkeleton from '@/components/product/ProductInfoSkeleton';
 import ProductDescription from '@/components/product/ProductDescription';
 import ProductSpecifications from '@/components/product/ProductSpecifications';
+import ProductInquiryForm from '@/components/product/ProductInquiryForm';
 import { api } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/services/productService';
@@ -155,6 +156,14 @@ const ProductDetail = () => {
               </Tabs>
             )}
           </div>
+          
+          {/* Product Inquiry Form */}
+          {!isLoading && product && (
+            <ProductInquiryForm 
+              productName={product.title} 
+              productId={product.id} 
+            />
+          )}
         </div>
       </main>
       
