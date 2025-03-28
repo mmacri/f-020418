@@ -1,14 +1,12 @@
 
 import { toast } from "@/hooks/use-toast";
 
-// Category type definitions
+// Type definitions
 export interface Subcategory {
   id: number;
   name: string;
   slug: string;
   description?: string;
-  imageUrl?: string;
-  order: number;
 }
 
 export interface Category {
@@ -17,245 +15,250 @@ export interface Category {
   slug: string;
   description?: string;
   imageUrl?: string;
-  heroImage?: string;
   subcategories: Subcategory[];
-  showInNavigation: boolean;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
-// Mock category data
+// Mock categories data
 let CATEGORIES: Category[] = [
   {
     id: 1,
     name: "Massage Guns",
     slug: "massage-guns",
-    description: "Discover the best percussion massage guns for recovery, pain relief, and muscle relaxation.",
-    imageUrl: "https://ext.same-assets.com/30303030/massage-gun-category.jpg",
-    heroImage: "https://ext.same-assets.com/30303035/massage-gun-hero.jpg",
+    description: "Percussion therapy devices for muscle recovery and pain relief",
+    imageUrl: "https://ext.same-assets.com/1001010126/massage-gun-category.jpg",
     subcategories: [
       {
         id: 1,
         name: "Percussion",
         slug: "percussion",
-        description: "Powerful percussion massage guns for deep tissue relief",
-        order: 1
+        description: "High-intensity percussion massage guns"
       },
       {
         id: 2,
         name: "Vibration",
         slug: "vibration",
-        description: "Vibration therapy massage guns for gentle muscle relaxation",
-        order: 2
+        description: "Vibration-based massage devices"
       },
       {
         id: 3,
         name: "Heated",
         slug: "heated",
-        description: "Heated massage guns that combine thermal therapy with percussion",
-        order: 3
+        description: "Massage guns with heat therapy"
       }
-    ],
-    showInNavigation: true,
-    order: 1,
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-01-01T00:00:00Z"
+    ]
   },
   {
     id: 2,
     name: "Foam Rollers",
     slug: "foam-rollers",
-    description: "Explore our selection of foam rollers for myofascial release, improved flexibility, and muscle recovery.",
+    description: "Self-myofascial release tools for mobility and recovery",
     imageUrl: "https://ext.same-assets.com/30303031/foam-roller-category.jpg",
-    heroImage: "https://ext.same-assets.com/30303036/foam-roller-hero.jpg",
     subcategories: [
       {
         id: 4,
         name: "Standard",
         slug: "standard",
-        description: "Classic foam rollers for general myofascial release",
-        order: 1
+        description: "Basic foam rollers of varying densities"
       },
       {
         id: 5,
         name: "Textured",
         slug: "textured",
-        description: "Textured foam rollers for targeted pressure point relief",
-        order: 2
+        description: "Foam rollers with textured surfaces for deeper massage"
       },
       {
         id: 6,
         name: "Vibrating",
         slug: "vibrating",
-        description: "Vibrating foam rollers that combine pressure with vibration therapy",
-        order: 3
+        description: "Foam rollers with vibration technology"
       }
-    ],
-    showInNavigation: true,
-    order: 2,
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-01-01T00:00:00Z"
+    ]
   },
   {
     id: 3,
-    name: "Fitness Bands",
-    slug: "fitness-bands",
-    description: "Find the perfect resistance bands for strength training, physical therapy, and mobility work.",
-    imageUrl: "https://ext.same-assets.com/30303032/fitness-bands-category.jpg",
-    heroImage: "https://ext.same-assets.com/30303037/fitness-bands-hero.jpg",
+    name: "Compression Gear",
+    slug: "compression-gear",
+    description: "Garments and devices that apply pressure to enhance circulation and recovery",
+    imageUrl: "https://ext.same-assets.com/30303032/compression-category.jpg",
     subcategories: [
       {
         id: 7,
-        name: "Resistance Loops",
-        slug: "resistance-loops",
-        description: "Small loop bands for targeted muscle activation",
-        order: 1
+        name: "Sleeves",
+        slug: "sleeves",
+        description: "Compression sleeves for arms and legs"
       },
       {
         id: 8,
-        name: "Pull-up Bands",
-        slug: "pull-up-bands",
-        description: "Long, heavy-duty bands for assisted pull-ups and strength training",
-        order: 2
+        name: "Socks",
+        slug: "socks",
+        description: "Compression socks for foot and calf recovery"
       },
       {
         id: 9,
-        name: "Therapy Bands",
-        slug: "therapy-bands",
-        description: "Flat bands for rehabilitation and physical therapy",
-        order: 3
+        name: "Full Body",
+        slug: "full-body",
+        description: "Full body compression suits and garments"
       }
-    ],
-    showInNavigation: true,
-    order: 3,
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-01-01T00:00:00Z"
+    ]
   },
   {
     id: 4,
-    name: "Compression Gear",
-    slug: "compression-gear",
-    description: "Browse our selection of compression clothing and accessories for improved circulation and recovery.",
-    imageUrl: "https://ext.same-assets.com/30303033/compression-gear-category.jpg",
-    heroImage: "https://ext.same-assets.com/30303038/compression-gear-hero.jpg",
+    name: "Resistance Bands",
+    slug: "resistance-bands",
+    description: "Elastic bands for strength training and mobility work",
+    imageUrl: "https://ext.same-assets.com/30303033/bands-category.jpg",
     subcategories: [
       {
         id: 10,
-        name: "Sleeves",
-        slug: "sleeves",
-        description: "Compression sleeves for targeted limb support",
-        order: 1
+        name: "Loop Bands",
+        slug: "loop-bands",
+        description: "Continuous loop resistance bands"
       },
       {
         id: 11,
-        name: "Socks",
-        slug: "socks",
-        description: "Compression socks for improved circulation and recovery",
-        order: 2
+        name: "Therapy Bands",
+        slug: "therapy-bands",
+        description: "Flat therapy bands for rehabilitation and mobility"
       },
       {
         id: 12,
-        name: "Full Body",
-        slug: "full-body",
-        description: "Full body compression garments for total recovery",
-        order: 3
+        name: "Power Bands",
+        slug: "power-bands",
+        description: "Heavy duty bands for strength training"
       }
-    ],
-    showInNavigation: true,
-    order: 4,
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-01-01T00:00:00Z"
+    ]
   }
 ];
 
-// Get all categories
-export const getCategories = async (): Promise<Category[]> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return [...CATEGORIES];
+// Store categories in localStorage on initialization
+const initializeCategories = () => {
+  const storedCategories = localStorage.getItem('categories');
+  if (!storedCategories) {
+    localStorage.setItem('categories', JSON.stringify(CATEGORIES));
+  } else {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
 };
 
-// Get navigation categories (those marked to show in navigation)
+// Initialize on module load
+initializeCategories();
+
+// Get all categories for navigation
 export const getNavigationCategories = async (): Promise<Category[]> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 300));
-  return [...CATEGORIES].filter(c => c.showInNavigation).sort((a, b) => a.order - b.order);
-};
-
-// Get category by ID
-export const getCategoryById = async (id: number): Promise<Category | null> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 200));
-  const category = CATEGORIES.find(c => c.id === id);
-  return category || null;
+  
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
+  
+  return CATEGORIES;
 };
 
 // Get category by slug
 export const getCategoryBySlug = async (slug: string): Promise<Category | null> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 200));
+  
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
+  
   const category = CATEGORIES.find(c => c.slug === slug);
   return category || null;
 };
 
 // Get subcategory by slug
-export const getSubcategoryBySlug = async (categorySlug: string, subcategorySlug: string): Promise<Subcategory | null> => {
+export const getSubcategoryBySlug = async (categorySlug: string, subcategorySlug: string): Promise<{category: Category, subcategory: Subcategory} | null> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 300));
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
   
   const category = CATEGORIES.find(c => c.slug === categorySlug);
   if (!category) return null;
   
   const subcategory = category.subcategories.find(s => s.slug === subcategorySlug);
-  return subcategory || null;
+  if (!subcategory) return null;
+  
+  return { category, subcategory };
 };
 
 // Create new category
-export const createCategory = async (category: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>): Promise<Category> => {
+export const createCategory = async (category: Omit<Category, 'id'>): Promise<Category> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 700));
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Create new category with ID and dates
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
+  
+  // Validate that slug doesn't already exist
+  if (CATEGORIES.some(c => c.slug === category.slug)) {
+    throw new Error(`Category with slug "${category.slug}" already exists`);
+  }
+  
+  // Create new category with ID
   const newCategory: Category = {
     ...category,
-    id: Math.max(...CATEGORIES.map(c => c.id)) + 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    id: CATEGORIES.length > 0 ? Math.max(...CATEGORIES.map(c => c.id)) + 1 : 1,
   };
   
+  // Add to categories and update localStorage
   CATEGORIES.push(newCategory);
+  localStorage.setItem('categories', JSON.stringify(CATEGORIES));
   
   toast({
-    title: "Category created",
-    description: `"${newCategory.name}" has been added successfully`
+    title: "Category Created",
+    description: `${newCategory.name} has been added successfully`
   });
   
   return newCategory;
 };
 
 // Update category
-export const updateCategory = async (id: number, updates: Partial<Omit<Category, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Category> => {
+export const updateCategory = async (id: number, updates: Omit<Category, 'id'>): Promise<Category> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 700));
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
   
   const index = CATEGORIES.findIndex(c => c.id === id);
   if (index === -1) {
     throw new Error(`Category with ID ${id} not found`);
   }
   
+  // Validate that slug doesn't already exist (except for this category)
+  if (CATEGORIES.some(c => c.slug === updates.slug && c.id !== id)) {
+    throw new Error(`Category with slug "${updates.slug}" already exists`);
+  }
+  
   // Update the category
   const updatedCategory: Category = {
-    ...CATEGORIES[index],
     ...updates,
-    updatedAt: new Date().toISOString()
+    id,
   };
   
   CATEGORIES[index] = updatedCategory;
+  localStorage.setItem('categories', JSON.stringify(CATEGORIES));
   
   toast({
-    title: "Category updated",
-    description: `"${updatedCategory.name}" has been updated successfully`
+    title: "Category Updated",
+    description: `${updatedCategory.name} has been updated successfully`
   });
   
   return updatedCategory;
@@ -266,6 +269,12 @@ export const deleteCategory = async (id: number): Promise<boolean> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 400));
   
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
+  
   const index = CATEGORIES.findIndex(c => c.id === id);
   if (index === -1) {
     throw new Error(`Category with ID ${id} not found`);
@@ -273,65 +282,140 @@ export const deleteCategory = async (id: number): Promise<boolean> => {
   
   const categoryName = CATEGORIES[index].name;
   CATEGORIES = CATEGORIES.filter(c => c.id !== id);
+  localStorage.setItem('categories', JSON.stringify(CATEGORIES));
   
   toast({
-    title: "Category deleted",
-    description: `"${categoryName}" has been removed successfully`
+    title: "Category Deleted",
+    description: `${categoryName} has been deleted successfully`
   });
   
   return true;
 };
 
-// Add subcategory to category
-export const addSubcategory = async (categoryId: number, subcategory: Omit<Subcategory, 'id'>): Promise<Subcategory> => {
+// Create new subcategory
+export const createSubcategory = async (categoryId: number, subcategory: Omit<Subcategory, 'id'>): Promise<Subcategory> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 600));
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
   
   const categoryIndex = CATEGORIES.findIndex(c => c.id === categoryId);
   if (categoryIndex === -1) {
     throw new Error(`Category with ID ${categoryId} not found`);
+  }
+  
+  // Validate that slug doesn't already exist in this category
+  if (CATEGORIES[categoryIndex].subcategories.some(s => s.slug === subcategory.slug)) {
+    throw new Error(`Subcategory with slug "${subcategory.slug}" already exists in this category`);
   }
   
   // Create new subcategory with ID
   const newSubcategory: Subcategory = {
     ...subcategory,
-    id: Math.max(0, ...CATEGORIES[categoryIndex].subcategories.map(s => s.id)) + 1
+    id: getNextSubcategoryId(),
   };
   
+  // Add to subcategories and update localStorage
   CATEGORIES[categoryIndex].subcategories.push(newSubcategory);
-  CATEGORIES[categoryIndex].updatedAt = new Date().toISOString();
+  localStorage.setItem('categories', JSON.stringify(CATEGORIES));
   
   toast({
-    title: "Subcategory added",
-    description: `"${newSubcategory.name}" has been added to ${CATEGORIES[categoryIndex].name}`
+    title: "Subcategory Created",
+    description: `${newSubcategory.name} has been added successfully`
   });
   
   return newSubcategory;
 };
 
-// Remove subcategory from category
-export const removeSubcategory = async (categoryId: number, subcategoryId: number): Promise<boolean> => {
+// Update subcategory
+export const updateSubcategory = async (categoryId: number, subcategoryId: number, updates: Omit<Subcategory, 'id'>): Promise<Subcategory> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 400));
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
   
   const categoryIndex = CATEGORIES.findIndex(c => c.id === categoryId);
   if (categoryIndex === -1) {
     throw new Error(`Category with ID ${categoryId} not found`);
   }
   
-  const subcategory = CATEGORIES[categoryIndex].subcategories.find(s => s.id === subcategoryId);
-  if (!subcategory) {
+  const subcategoryIndex = CATEGORIES[categoryIndex].subcategories.findIndex(s => s.id === subcategoryId);
+  if (subcategoryIndex === -1) {
     throw new Error(`Subcategory with ID ${subcategoryId} not found in category ${categoryId}`);
   }
   
-  const subcategoryName = subcategory.name;
-  CATEGORIES[categoryIndex].subcategories = CATEGORIES[categoryIndex].subcategories.filter(s => s.id !== subcategoryId);
-  CATEGORIES[categoryIndex].updatedAt = new Date().toISOString();
+  // Validate that slug doesn't already exist in this category (except for this subcategory)
+  if (CATEGORIES[categoryIndex].subcategories.some(s => s.slug === updates.slug && s.id !== subcategoryId)) {
+    throw new Error(`Subcategory with slug "${updates.slug}" already exists in this category`);
+  }
+  
+  // Update the subcategory
+  const updatedSubcategory: Subcategory = {
+    ...updates,
+    id: subcategoryId,
+  };
+  
+  CATEGORIES[categoryIndex].subcategories[subcategoryIndex] = updatedSubcategory;
+  localStorage.setItem('categories', JSON.stringify(CATEGORIES));
   
   toast({
-    title: "Subcategory removed",
-    description: `"${subcategoryName}" has been removed from ${CATEGORIES[categoryIndex].name}`
+    title: "Subcategory Updated",
+    description: `${updatedSubcategory.name} has been updated successfully`
+  });
+  
+  return updatedSubcategory;
+};
+
+// Delete subcategory
+export const deleteSubcategory = async (categoryId: number, subcategoryId: number): Promise<boolean> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 400));
+  
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
+  
+  const categoryIndex = CATEGORIES.findIndex(c => c.id === categoryId);
+  if (categoryIndex === -1) {
+    throw new Error(`Category with ID ${categoryId} not found`);
+  }
+  
+  const subcategoryIndex = CATEGORIES[categoryIndex].subcategories.findIndex(s => s.id === subcategoryId);
+  if (subcategoryIndex === -1) {
+    throw new Error(`Subcategory with ID ${subcategoryId} not found in category ${categoryId}`);
+  }
+  
+  const subcategoryName = CATEGORIES[categoryIndex].subcategories[subcategoryIndex].name;
+  CATEGORIES[categoryIndex].subcategories = CATEGORIES[categoryIndex].subcategories.filter(s => s.id !== subcategoryId);
+  localStorage.setItem('categories', JSON.stringify(CATEGORIES));
+  
+  toast({
+    title: "Subcategory Deleted",
+    description: `${subcategoryName} has been deleted successfully`
   });
   
   return true;
+};
+
+// Helper function to generate the next subcategory ID
+const getNextSubcategoryId = (): number => {
+  let maxId = 0;
+  CATEGORIES.forEach(category => {
+    category.subcategories.forEach(subcategory => {
+      if (subcategory.id > maxId) {
+        maxId = subcategory.id;
+      }
+    });
+  });
+  return maxId + 1;
 };

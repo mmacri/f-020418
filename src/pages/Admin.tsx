@@ -1,93 +1,51 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Cog, Info, LockKeyhole, Pencil, Plus, Trash2, Package, FileText, LayoutGrid } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import AdminAuth from "@/components/admin/AdminAuth";
+import AdminProducts from "@/components/admin/AdminProducts";
+import AdminBlog from "@/components/admin/AdminBlog";
+import AdminCategories from "@/components/admin/AdminCategories";
+import AdminDashboard from "@/components/admin/AdminDashboard";
+import AdminSettings from "@/components/admin/AdminSettings";
+import { isAdmin, isAuthenticated } from "@/services/userService";
 
 const Admin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = () => {
-    // In a real application, this would verify credentials against a backend
-    if (email === "admin@recoveryessentials.com" && password === "admin123") {
-      setIsAuthenticated(true);
-      toast({
-        title: "Login successful",
-        description: "Welcome to the admin dashboard",
-      });
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = () => {
+    if (isAuthenticated() && isAdmin()) {
+      setIsAuthorized(true);
     } else {
-      toast({
-        title: "Login failed",
-        description: "Invalid email or password",
-        variant: "destructive",
-      });
+      setIsAuthorized(false);
     }
   };
 
-  if (!isAuthenticated) {
+  const handleAuthSuccess = () => {
+    setIsAuthorized(true);
+    toast({
+      title: "Login successful",
+      description: "Welcome to the admin dashboard",
+    });
+  };
+
+  if (!isAuthorized) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-100">
         <Header />
-        
         <div className="container mx-auto px-4 py-8 flex-grow">
-          <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
-            <h1 className="text-2xl font-bold mb-6">Admin Login</h1>
-            
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 text-yellow-800 mb-6">
-              <div className="flex items-center mb-2">
-                <Info className="w-5 h-5 mr-2" />
-                <p className="font-medium">Access Restricted</p>
-              </div>
-              <p className="text-sm">
-                Please log in with administrator credentials to access the dashboard.
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <Input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@recoveryessentials.com"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <Input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  For demo: use "admin@recoveryessentials.com" and "admin123"
-                </p>
-              </div>
-              
-              <Button
-                type="button"
-                className="w-full"
-                onClick={handleLogin}
-              >
-                Log In
-              </Button>
-            </div>
-          </div>
+          <AdminAuth onAuthSuccess={handleAuthSuccess} />
         </div>
-
         <Footer />
       </div>
     );
@@ -98,156 +56,79 @@ const Admin = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8 flex-grow">
-        <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        </div>
         
-        <Tabs defaultValue="products">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid grid-cols-6 w-full mb-4">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="blog">Blog Posts</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="help">Help</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="products" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Manage Products</h2>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add New Product
-              </Button>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Products</CardTitle>
-                <CardDescription>
-                  Create, edit and manage your affiliate products.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((item) => (
-                    <div key={item} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center">
-                          <Package className="h-8 w-8 text-indigo-600 mr-3" />
-                          <div>
-                            <p className="font-medium">Product {item}</p>
-                            <p className="text-sm text-gray-500">$99.99</p>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="icon">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="dashboard">
+            <AdminDashboard />
           </TabsContent>
           
-          <TabsContent value="blog" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Manage Blog Posts</h2>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add New Post
-              </Button>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Blog Posts</CardTitle>
-                <CardDescription>
-                  Create, edit and manage your blog content.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    "How Often Should You Use Recovery Tools?",
-                    "6 Effective Massage Gun Techniques for Faster Recovery",
-                    "The Ultimate Guide to Foam Rolling",
-                    "Essential Recovery Routines for Runners"
-                  ].map((title, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center">
-                          <FileText className="h-8 w-8 text-indigo-600 mr-3" />
-                          <div>
-                            <p className="font-medium">{title}</p>
-                            <p className="text-sm text-gray-500">Published: April {(index + 1) * 5}, 2023</p>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="icon">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="products">
+            <AdminProducts />
           </TabsContent>
           
-          <TabsContent value="categories" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Manage Categories</h2>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add New Category
-              </Button>
-            </div>
-            
+          <TabsContent value="blog">
+            <AdminBlog />
+          </TabsContent>
+          
+          <TabsContent value="categories">
+            <AdminCategories />
+          </TabsContent>
+          
+          <TabsContent value="settings">
+            <AdminSettings />
+          </TabsContent>
+          
+          <TabsContent value="help">
             <Card>
               <CardHeader>
-                <CardTitle>Navigation Categories</CardTitle>
+                <CardTitle>Admin Help Documentation</CardTitle>
                 <CardDescription>
-                  Create, edit and manage your site's navigation structure.
+                  Learn how to manage your affiliate marketing website efficiently.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { name: "Massage Guns", subcategories: ["Percussion", "Vibration", "Heated"] },
-                    { name: "Foam Rollers", subcategories: ["Standard", "Textured", "Vibrating"] },
-                    { name: "Fitness Bands", subcategories: ["Resistance Loops", "Pull-up Bands", "Therapy Bands"] },
-                    { name: "Compression Gear", subcategories: ["Sleeves", "Socks", "Full Body"] }
-                  ].map((category, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center">
-                          <LayoutGrid className="h-6 w-6 text-indigo-600 mr-3" />
-                          <p className="font-medium">{category.name}</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="icon">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="pl-9">
-                        <p className="text-sm text-gray-700 mb-1">Subcategories:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {category.subcategories.map((subcat, i) => (
-                            <span key={i} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                              {subcat}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Getting Started</h3>
+                  <p className="text-gray-500">
+                    This admin dashboard allows you to manage all aspects of your Recovery Essentials website.
+                    Use the tabs above to navigate between different sections.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Product Management</h3>
+                  <p className="text-gray-500">
+                    Add, edit, and delete products with their Amazon affiliate links.
+                    Make sure to include high-quality images and detailed descriptions.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Blog Management</h3>
+                  <p className="text-gray-500">
+                    Create and manage blog posts to drive traffic and improve SEO.
+                    You can use the rich text editor to format your content.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Data Storage</h3>
+                  <p className="text-gray-500">
+                    Currently, all data is stored in your browser's localStorage.
+                    Use the export functionality in Settings to back up your data.
+                  </p>
                 </div>
               </CardContent>
             </Card>

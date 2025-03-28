@@ -8,312 +8,340 @@ export interface BlogPost {
   slug: string;
   excerpt: string;
   content: string;
-  image: string;
-  category: string;
-  date: string;
-  readTime: string;
-  author?: string;
-  authorImage?: string;
-  authorBio?: string;
-  videoId?: string;
-  videoTitle?: string;
-  videoDescription?: string;
+  coverImage: string;
+  author: string;
   tags?: string[];
-  featured?: boolean;
   published: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-// Mock blog post data
+// Mock blog posts data
 let BLOG_POSTS: BlogPost[] = [
   {
     id: 1,
     title: "How Often Should You Use Recovery Tools?",
-    slug: "recovery-frequency",
-    excerpt: "Finding the optimal frequency for massage guns, foam rollers, and other recovery modalities for your specific needs.",
-    content: `
-      <p class="text-lg font-medium text-gray-800 mb-6">
-        "How often should I use recovery tools?" is one of the most common questions we receive from our community. Whether it's about massage guns, foam rollers, compression gear, or other recovery modalities, finding the right frequency is crucial for maximizing benefits without overdoing it.
-      </p>
+    slug: "how-often-should-you-use-recovery-tools",
+    excerpt: "Learn the optimal frequency for using different recovery tools to maximize their benefits without overuse.",
+    content: `# How Often Should You Use Recovery Tools?
 
-      <p class="text-gray-700 mb-6">
-        This guide breaks down the optimal usage frequency for different recovery tools based on scientific research, expert recommendations, and real-world application. We'll cover specific protocols for various fitness levels, activity types, and recovery needs.
-      </p>
+Recovery tools have become increasingly popular among athletes and fitness enthusiasts. From foam rollers to massage guns, these tools can help alleviate muscle soreness, improve mobility, and speed up recovery. But how often should you use them?
 
-      <div class="bg-indigo-50 p-6 rounded-lg my-8">
-        <h3 class="font-bold text-xl mb-3">Coming Soon</h3>
-        <p class="text-gray-700">
-          We're currently finalizing this practical guide on recovery tool frequency. Check back soon for the complete article, or subscribe to our newsletter to be notified when it's published.
-        </p>
-      </div>
-    `,
-    image: "https://ext.same-assets.com/4181642789/575270868.jpeg",
-    category: "Recovery Science",
-    date: "April 12, 2023",
-    readTime: "5 min read",
-    author: "Elena Rodriguez",
-    authorImage: "https://ext.same-assets.com/2651616194/3622592620.jpeg",
-    authorBio: "Fitness recovery specialist with expertise in optimizing recovery protocols for athletes of all levels.",
-    tags: ["recovery frequency", "massage guns", "foam rollers", "recovery tools"],
-    featured: false,
+## Daily Use Tools
+
+Some recovery tools are gentle enough for daily use:
+
+- **Foam Rollers**: Can be used daily for 5-10 minutes, especially before workouts.
+- **Compression Garments**: Can be worn during and after workouts.
+- **Recovery Boots**: Typically safe for daily use for 20-30 minutes.
+
+## Moderate Frequency Tools
+
+Other tools should be used more sparingly:
+
+- **Percussion Massage Guns**: 2-3 times per week for 10-15 minutes per session.
+- **Vibrating Foam Rollers**: 3-4 times per week for 5-10 minutes.
+
+## High-Intensity Tools
+
+Some recovery methods are more intense and should be used less frequently:
+
+- **Electrical Muscle Stimulation**: 1-2 times per week for 20-30 minutes.
+- **Cryotherapy**: 1-2 times per week.
+
+## Listen to Your Body
+
+The most important guideline is to listen to your body. If you experience increased pain or discomfort, reduce frequency and intensity.
+
+Remember that recovery tools complement, but don't replace, proper nutrition, hydration, and sleep.`,
+    coverImage: "https://ext.same-assets.com/1001010126/recovery-tools-frequency.jpg",
+    author: "Dr. Sarah Johnson",
+    tags: ["recovery", "massage guns", "foam rolling", "techniques"],
     published: true,
-    createdAt: "2023-04-10T09:30:00Z",
-    updatedAt: "2023-04-11T14:15:00Z"
+    createdAt: "2023-02-15T10:30:00Z",
+    updatedAt: "2023-02-15T10:30:00Z"
   },
   {
     id: 2,
     title: "6 Effective Massage Gun Techniques for Faster Recovery",
-    slug: "massage-gun-techniques",
-    excerpt: "Master these techniques to maximize your percussion therapy results and enhance muscle recovery.",
-    content: `
-      <p class="text-lg font-medium text-gray-800 mb-6">
-        Whether you're a professional athlete, fitness enthusiast, or someone dealing with everyday muscle tension,
-        a massage gun can be a game-changer for your recovery routine. But simply turning it on and moving it around
-        randomly won't deliver the best results. In this guide, we'll explore effective techniques to maximize the
-        benefits of your percussion therapy device.
-      </p>
+    slug: "6-effective-massage-gun-techniques",
+    excerpt: "Discover the most effective ways to use your percussion massage gun to speed up recovery and relieve muscle soreness.",
+    content: `# 6 Effective Massage Gun Techniques for Faster Recovery
 
-      <div class="bg-indigo-50 p-6 rounded-lg my-8">
-        <h3 class="font-bold text-xl mb-3">Important Safety Notes</h3>
-        <ul class="list-disc pl-6 space-y-2 text-gray-700">
-          <li>Never use a massage gun directly on bones, joints, or nerves</li>
-          <li>Avoid using on injuries, inflamed areas, or broken skin</li>
-          <li>Start with the lowest intensity setting and gradually increase as needed</li>
-          <li>Limit treatment to 2 minutes per muscle group</li>
-          <li>If you experience pain (beyond normal muscle soreness), stop immediately</li>
-          <li>Consult a healthcare professional if you have medical conditions or concerns</li>
-        </ul>
-      </div>
+Percussion massage guns have revolutionized muscle recovery, providing deep tissue massage in a convenient handheld device. Here are six techniques to optimize your results:
 
-      <h2 class="text-3xl font-bold text-gray-800 my-8">Essential Massage Gun Techniques</h2>
+## 1. Gliding Technique
 
-      <!-- Technique 1 -->
-      <div class="bg-white rounded-lg shadow-md border border-gray-100 p-6 mb-8">
-        <h3 class="text-2xl font-bold text-indigo-800 mb-4">1. Float and Glide</h3>
-        <div class="flex flex-col md:flex-row gap-6 mb-4">
-          <div class="md:w-1/3">
-            <img src="https://ext.same-assets.com/198595764/1658350751.jpeg" alt="Float and Glide Technique" class="rounded-lg shadow-sm">
-          </div>
-          <div class="md:w-2/3">
-            <p class="text-gray-700 mb-4">
-              The most basic and versatile technique. Without applying additional pressure, let the massage gun float along
-              the muscle, gliding slowly (about 1-2 inches per second). This distributes the percussion evenly throughout the muscle tissue.
-            </p>
-            <h4 class="font-bold mt-4 mb-2">When to use:</h4>
-            <p class="text-gray-700">
-              Ideal for warming up muscles pre-workout, general muscle maintenance, or as a starting point before using more targeted techniques.
-            </p>
-          </div>
-        </div>
-        <div class="bg-gray-50 p-4 rounded text-sm text-gray-600">
-          <strong>Pro Tip:</strong> Keep the massage gun perpendicular to the muscle rather than at an angle for optimal percussion depth.
-        </div>
-      </div>
+Move the massage gun slowly across the muscle in long, sweeping motions. This helps increase blood flow to large muscle groups like quads and hamstrings.
 
-      <!-- Technique 2 -->
-      <div class="bg-white rounded-lg shadow-md border border-gray-100 p-6 mb-8">
-        <h3 class="text-2xl font-bold text-indigo-800 mb-4">2. Press and Hold</h3>
-        <div class="flex flex-col md:flex-row gap-6 mb-4">
-          <div class="md:w-1/3">
-            <img src="https://ext.same-assets.com/1926211595/4269912841.jpeg" alt="Press and Hold Technique" class="rounded-lg shadow-sm">
-          </div>
-          <div class="md:w-2/3">
-            <p class="text-gray-700 mb-4">
-              For targeting specific knots or trigger points, apply the massage gun directly to the spot and hold with light to medium pressure for 15-30 seconds. The sustained percussion helps release stubborn tension points.
-            </p>
-            <h4 class="font-bold mt-4 mb-2">When to use:</h4>
-            <p class="text-gray-700">
-              Perfect for addressing specific areas of tension, muscle knots, or trigger points that don't release with regular movement techniques.
-            </p>
-          </div>
-        </div>
-        <div class="bg-gray-50 p-4 rounded text-sm text-gray-600">
-          <strong>Pro Tip:</strong> Start with lower pressure and gradually increase to avoid discomfort. Use a round or flat attachment for this technique.
-        </div>
-      </div>
-    `,
-    image: "https://ext.same-assets.com/198595764/1658350751.jpeg",
-    category: "Techniques",
-    date: "May 14, 2023",
-    readTime: "8 min read",
-    author: "Dr. Sarah Johnson",
-    authorImage: "https://ext.same-assets.com/2783942035/2491380635.jpeg",
-    authorBio: "Physical therapist with over 12 years of experience specializing in sports injury rehabilitation and recovery protocols.",
-    videoId: "xMbU2JK9x50",
-    videoTitle: "Massage Gun Techniques Demonstration",
-    videoDescription: "Watch this video tutorial to see these techniques in action and learn proper form:",
-    tags: ["massage gun", "percussion therapy", "recovery techniques"],
-    featured: true,
+## 2. Spot Treatment
+
+Hold the massage gun on a specific trigger point or knot for 15-30 seconds. Apply moderate pressure but avoid causing pain.
+
+## 3. Circular Motion
+
+Move the massage gun in small circles on areas with particular tension. This helps break up fascial adhesions.
+
+## 4. Pre-Workout Activation
+
+Use the massage gun briefly (30-60 seconds per muscle group) before working out to increase blood flow and prepare muscles for exercise.
+
+## 5. Post-Workout Flush
+
+After exercise, use a sweeping technique across muscles for 1-2 minutes per area to help clear metabolic waste.
+
+## 6. Cross-Friction Technique
+
+Move the massage gun perpendicular to the direction of the muscle fibers to break up scar tissue and improve tissue mobility.
+
+Remember to start with a lower intensity setting and gradually increase as needed. Avoid bony areas, and never use directly on injuries or inflamed areas.`,
+    coverImage: "https://ext.same-assets.com/1001010126/massage-gun-techniques.jpg",
+    author: "Mike Taylor",
+    tags: ["massage guns", "techniques", "recovery", "muscle soreness"],
     published: true,
-    createdAt: "2023-05-10T11:20:00Z",
-    updatedAt: "2023-05-13T16:45:00Z"
+    createdAt: "2023-01-20T14:45:00Z",
+    updatedAt: "2023-01-20T14:45:00Z"
   },
   {
     id: 3,
     title: "The Ultimate Guide to Foam Rolling",
-    slug: "foam-rolling-guide",
-    excerpt: "Learn proper foam rolling techniques to relieve muscle tension and improve flexibility.",
-    content: `
-      <p class="text-lg mb-4">
-        Foam rolling is one of the most effective self-care techniques for relieving muscle tension, improving flexibility, and enhancing recovery. This technique, also known as self-myofascial release (SMR), has gained popularity among athletes, fitness enthusiasts, and physical therapists for its ability to target tight fascia—the connective tissue surrounding muscles—and improve overall mobility.
-      </p>
-      <h2 class="text-2xl font-bold mt-8 mb-4">What is Foam Rolling?</h2>
-      <p class="mb-4">
-        Foam rolling involves using a cylindrical foam roller to apply pressure to specific areas of your body. By rolling the targeted muscle group over the foam roller, you apply pressure that helps release tightness and adhesions in the fascia—the thin layer of connective tissue that surrounds your muscles.
-      </p>
-      <p class="mb-6">
-        Think of your muscles and fascia like a wool sweater that's been bunched up and twisted. Foam rolling helps to smooth everything back out, allowing your muscles to move more freely and efficiently.
-      </p>
-      <h2 class="text-2xl font-bold mt-8 mb-4">Key Benefits of Foam Rolling</h2>
-      <ul class="list-disc pl-6 mb-6">
-        <li class="mb-2"><strong>Reduces Muscle Soreness:</strong> Multiple studies have shown that foam rolling can significantly reduce delayed onset muscle soreness (DOMS) after intense exercise.</li>
-        <li class="mb-2"><strong>Improves Blood Circulation:</strong> The pressure applied during foam rolling helps increase blood flow to muscles, delivering more oxygen and nutrients.</li>
-        <li class="mb-2"><strong>Enhances Flexibility:</strong> Regular foam rolling can improve joint range of motion and flexibility without negatively impacting muscle performance.</li>
-        <li class="mb-2"><strong>Prevents Injury:</strong> Addressing muscle imbalances and restrictions through regular foam rolling can help prevent common exercise-related injuries.</li>
-      </ul>
-    `,
-    image: "https://ext.same-assets.com/1001010124/foam-roller-guide.jpg",
-    category: "Techniques",
-    date: "July 8, 2023",
-    readTime: "12 min read",
-    author: "Dr. Sarah Johnson",
-    authorImage: "https://ext.same-assets.com/2783942035/2491380635.jpeg",
-    authorBio: "Physical therapist with over 12 years of experience specializing in sports injury rehabilitation and recovery protocols.",
-    videoId: "M8J6SZ7Y4RI",
-    videoTitle: "Foam Rolling Techniques for Total Body Recovery",
-    videoDescription: "This step-by-step guide demonstrates proper foam rolling techniques for all major muscle groups.",
-    tags: ["foam rolling", "myofascial release", "recovery techniques", "flexibility"],
-    featured: false,
+    slug: "ultimate-guide-to-foam-rolling",
+    excerpt: "Learn everything you need to know about foam rolling, from basic techniques to advanced routines.",
+    content: `# The Ultimate Guide to Foam Rolling
+
+Foam rolling has become a staple in recovery routines. This self-myofascial release technique can improve flexibility, reduce muscle soreness, and enhance performance. Here's your comprehensive guide:
+
+## Choosing the Right Foam Roller
+
+- **Soft Foam Rollers**: Best for beginners and sensitive individuals
+- **Medium-Density Rollers**: Good all-purpose options
+- **High-Density Rollers**: Provide deeper pressure for experienced users
+- **Textured Rollers**: Target trigger points more precisely
+- **Vibrating Rollers**: Add vibration therapy for enhanced benefits
+
+## Essential Foam Rolling Techniques
+
+### Lower Body
+
+1. **Calves**: Sit with the roller under your calves, roll from ankle to knee
+2. **Hamstrings**: Sit with the roller under your thighs, roll from knee to glutes
+3. **Quadriceps**: Lie face down with the roller under your thighs, roll from knee to hip
+4. **IT Band**: Lie on your side with the roller under your thigh, roll from knee to hip
+5. **Glutes**: Sit on the roller with one ankle crossed over the opposite knee, roll across the glute
+
+### Upper Body
+
+1. **Upper Back**: Lie with the roller under your upper back, roll from mid-back to shoulders
+2. **Lats**: Lie on your side with your arm extended, roller under your armpit, roll along the side of your torso
+3. **Chest**: Lie face down with the roller under one side of your chest, roll across pectoral muscles
+
+## Best Practices
+
+- Roll slowly (1-2 inches per second)
+- Spend 30-60 seconds on each muscle group
+- When you find a tender spot, pause for 10-30 seconds
+- Breathe deeply and try to relax into the pressure
+- Roll before and/or after workouts
+- Stay hydrated before and after rolling
+
+## Common Mistakes to Avoid
+
+- Rolling too quickly
+- Rolling directly on joints or bones
+- Using too much pressure too soon
+- Rolling an acute injury
+- Bad posture during rolling
+
+Incorporate foam rolling into your routine 3-5 times per week for optimal results.`,
+    coverImage: "https://ext.same-assets.com/30303031/foam-roller-guide.jpg",
+    author: "Lisa Chen, PT",
+    tags: ["foam rolling", "recovery", "techniques", "flexibility"],
     published: true,
-    createdAt: "2023-07-05T10:15:00Z",
-    updatedAt: "2023-07-07T13:30:00Z"
+    createdAt: "2023-03-05T09:15:00Z",
+    updatedAt: "2023-03-05T09:15:00Z"
   }
 ];
 
-// Get all blog posts
-export const getBlogPosts = async (): Promise<BlogPost[]> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 600));
-  return [...BLOG_POSTS].filter(post => post.published);
+// Store blog posts in localStorage on initialization
+const initializeBlogPosts = () => {
+  const storedPosts = localStorage.getItem('blogPosts');
+  if (!storedPosts) {
+    localStorage.setItem('blogPosts', JSON.stringify(BLOG_POSTS));
+  } else {
+    BLOG_POSTS = JSON.parse(storedPosts);
+  }
 };
 
-// Get featured blog posts
-export const getFeaturedBlogPosts = async (): Promise<BlogPost[]> => {
+// Initialize on module load
+initializeBlogPosts();
+
+// Get all blog posts
+export const getAllPosts = async (): Promise<BlogPost[]> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 400));
-  return [...BLOG_POSTS].filter(post => post.published && post.featured);
+  
+  // Load latest from localStorage
+  const storedPosts = localStorage.getItem('blogPosts');
+  if (storedPosts) {
+    BLOG_POSTS = JSON.parse(storedPosts);
+  }
+  
+  return BLOG_POSTS;
 };
 
-// Get blog post by ID
-export const getBlogPostById = async (id: number): Promise<BlogPost | null> => {
-  // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const post = BLOG_POSTS.find(p => p.id === id && p.published);
-  return post || null;
+// Get published blog posts
+export const getPublishedPosts = async (): Promise<BlogPost[]> => {
+  const posts = await getAllPosts();
+  return posts.filter(post => post.published);
 };
 
 // Get blog post by slug
-export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
+export const getPostBySlug = async (slug: string): Promise<BlogPost | null> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 300));
-  const post = BLOG_POSTS.find(p => p.slug === slug && p.published);
+  
+  // Load latest from localStorage
+  const storedPosts = localStorage.getItem('blogPosts');
+  if (storedPosts) {
+    BLOG_POSTS = JSON.parse(storedPosts);
+  }
+  
+  const post = BLOG_POSTS.find(p => p.slug === slug);
   return post || null;
 };
 
-// Get blog posts by category
-export const getBlogPostsByCategory = async (category: string): Promise<BlogPost[]> => {
+// Get blog posts by tag
+export const getPostsByTag = async (tag: string): Promise<BlogPost[]> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  const normalizedCategory = category.toLowerCase().replace(/\s+/g, '-');
-  return [...BLOG_POSTS].filter(
-    p => p.published && p.category.toLowerCase().replace(/\s+/g, '-') === normalizedCategory
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  // Load latest from localStorage
+  const storedPosts = localStorage.getItem('blogPosts');
+  if (storedPosts) {
+    BLOG_POSTS = JSON.parse(storedPosts);
+  }
+  
+  return BLOG_POSTS.filter(post => 
+    post.published && post.tags && post.tags.includes(tag)
   );
 };
 
 // Create new blog post
-export const createBlogPost = async (post: Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt'>): Promise<BlogPost> => {
+export const createPost = async (post: Omit<BlogPost, 'id'>): Promise<BlogPost> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 800));
+  await new Promise(resolve => setTimeout(resolve, 600));
   
-  // Create new blog post with ID and dates
+  // Load latest from localStorage
+  const storedPosts = localStorage.getItem('blogPosts');
+  if (storedPosts) {
+    BLOG_POSTS = JSON.parse(storedPosts);
+  }
+  
+  // Create new post with ID
   const newPost: BlogPost = {
     ...post,
-    id: Math.max(...BLOG_POSTS.map(p => p.id)) + 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    id: BLOG_POSTS.length > 0 ? Math.max(...BLOG_POSTS.map(p => p.id)) + 1 : 1,
   };
   
+  // Add to posts and update localStorage
   BLOG_POSTS.push(newPost);
+  localStorage.setItem('blogPosts', JSON.stringify(BLOG_POSTS));
   
   toast({
-    title: "Blog post created",
-    description: `"${newPost.title}" has been added successfully`
+    title: "Post Created",
+    description: `"${newPost.title}" has been created`
   });
   
   return newPost;
 };
 
 // Update blog post
-export const updateBlogPost = async (id: number, updates: Partial<Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt'>>): Promise<BlogPost> => {
+export const updatePost = async (id: number, updates: Partial<Omit<BlogPost, 'id'>>): Promise<BlogPost> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 800));
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
+  // Load latest from localStorage
+  const storedPosts = localStorage.getItem('blogPosts');
+  if (storedPosts) {
+    BLOG_POSTS = JSON.parse(storedPosts);
+  }
   
   const index = BLOG_POSTS.findIndex(p => p.id === id);
   if (index === -1) {
-    throw new Error(`Blog post with ID ${id} not found`);
+    throw new Error(`Post with ID ${id} not found`);
   }
   
-  // Update the blog post
+  // Update the post
   const updatedPost: BlogPost = {
     ...BLOG_POSTS[index],
     ...updates,
-    updatedAt: new Date().toISOString()
   };
   
   BLOG_POSTS[index] = updatedPost;
+  localStorage.setItem('blogPosts', JSON.stringify(BLOG_POSTS));
   
   toast({
-    title: "Blog post updated",
-    description: `"${updatedPost.title}" has been updated successfully`
+    title: "Post Updated",
+    description: `"${updatedPost.title}" has been updated`
   });
   
   return updatedPost;
 };
 
 // Delete blog post
-export const deleteBlogPost = async (id: number): Promise<boolean> => {
+export const deletePost = async (id: number): Promise<boolean> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 400));
+  
+  // Load latest from localStorage
+  const storedPosts = localStorage.getItem('blogPosts');
+  if (storedPosts) {
+    BLOG_POSTS = JSON.parse(storedPosts);
+  }
   
   const index = BLOG_POSTS.findIndex(p => p.id === id);
   if (index === -1) {
-    throw new Error(`Blog post with ID ${id} not found`);
+    throw new Error(`Post with ID ${id} not found`);
   }
   
   const postTitle = BLOG_POSTS[index].title;
   BLOG_POSTS = BLOG_POSTS.filter(p => p.id !== id);
+  localStorage.setItem('blogPosts', JSON.stringify(BLOG_POSTS));
   
   toast({
-    title: "Blog post deleted",
-    description: `"${postTitle}" has been removed successfully`
+    title: "Post Deleted",
+    description: `"${postTitle}" has been deleted`
   });
   
   return true;
 };
 
-// Get posts by search term
-export const searchBlogPosts = async (searchTerm: string): Promise<BlogPost[]> => {
+// Get popular tags
+export const getPopularTags = async (): Promise<{tag: string, count: number}[]> => {
   // Simulate API request delay
-  await new Promise(resolve => setTimeout(resolve, 600));
+  await new Promise(resolve => setTimeout(resolve, 300));
   
-  const term = searchTerm.toLowerCase();
-  return [...BLOG_POSTS].filter(post => 
-    post.published && (
-      post.title.toLowerCase().includes(term) || 
-      post.excerpt.toLowerCase().includes(term) || 
-      post.content.toLowerCase().includes(term) ||
-      (post.tags && post.tags.some(tag => tag.toLowerCase().includes(term)))
-    )
-  );
+  // Load latest from localStorage
+  const storedPosts = localStorage.getItem('blogPosts');
+  if (storedPosts) {
+    BLOG_POSTS = JSON.parse(storedPosts);
+  }
+  
+  const tagCounts: {[key: string]: number} = {};
+  
+  // Count occurrences of each tag
+  BLOG_POSTS.filter(post => post.published).forEach(post => {
+    if (post.tags) {
+      post.tags.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    }
+  });
+  
+  // Convert to array and sort by count
+  const popularTags = Object.entries(tagCounts)
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count);
+  
+  return popularTags;
 };
