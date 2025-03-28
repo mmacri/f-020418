@@ -167,11 +167,12 @@ const AdminBlog = () => {
         excerpt: data.excerpt,
         content: data.content,
         coverImage: data.coverImage,
+        image: data.coverImage,
         author: data.author,
         tags: data.tags,
         published: data.published,
-        createdAt: now,
-        updatedAt: now
+        date: now.split('T')[0],
+        category: "Blog",
       });
       
       setPosts([...posts, newPost]);

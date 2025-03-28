@@ -20,10 +20,18 @@ export interface BlogPost {
   updatedAt: string;
 }
 
-export type BlogPostInput = Omit<BlogPost, "id" | "createdAt" | "updatedAt"> & {
-  // Allow createdAt and updatedAt to be passed, but they'll be overridden in addBlogPost
-  createdAt?: string;
-  updatedAt?: string;
+export type BlogPostInput = Partial<Omit<BlogPost, "id">> & {
+  // Required fields
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  published: boolean;
+  
+  // Optional fields with defaults
+  category?: string;
+  image?: string;
+  date?: string;
 };
 
 // Get blog posts from localStorage
@@ -82,9 +90,13 @@ export const addBlogPost = async (post: BlogPostInput): Promise<BlogPost> => {
     const posts = await getBlogPosts();
     const now = new Date().toISOString();
     
+    // Set default values for optional fields
     const newPost: BlogPost = {
       ...post,
       id: posts.length ? Math.max(...posts.map(p => p.id)) + 1 : 1,
+      category: post.category || "Uncategorized",
+      image: post.image || post.coverImage || "",
+      date: post.date || now.split('T')[0],
       createdAt: now,
       updatedAt: now
     };
