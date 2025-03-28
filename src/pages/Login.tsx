@@ -1,10 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Info } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -15,16 +15,27 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { login } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 
-// Form validation schema
+// Form validation schema with more detailed error messages
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
-  rememberMe: z.boolean().optional()
+  email: z
+    .string()
+    .min(1, { message: "Email is required" })
+    .email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .min(1, { message: "Password is required" })
+    .min(8, { message: "Password must be at least 8 characters" })
+    .optional()
+    .or(z.literal('')),
+  rememberMe: z.boolean().optional().default(false)
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -32,6 +43,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -41,16 +53,32 @@ const Login = () => {
       email: "",
       password: "",
       rememberMe: false
-    }
+    },
+    mode: "onChange" // Enable real-time validation as user types
   });
+
+  // Clear error message when form values change
+  useEffect(() => {
+    if (loginError) {
+      setLoginError(null);
+    }
+  }, [form.watch("email"), form.watch("password"), loginError]);
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setLoading(true);
+      setLoginError(null);
+      
+      // Check for demo credentials and provide helpful message
+      if (values.email === "user@example.com" && values.password !== "password123") {
+        setLoginError("For the demo account, please use password: password123");
+        setLoading(false);
+        return;
+      }
       
       const result = await login({
         email: values.email,
-        password: values.password
+        password: values.password || "" // Handle optional case
       });
       
       if (result.success) {
@@ -60,34 +88,26 @@ const Login = () => {
         });
         navigate("/");
       } else {
-        toast({
-          title: "Login failed",
-          description: result.message || "Invalid email or password",
-          variant: "destructive"
-        });
+        setLoginError(result.message || "Invalid email or password");
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        title: "Login failed",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
+      setLoginError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50" role="main">
       <Header />
       
       <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
           <div className="text-center">
-            <h2 className="mt-2 text-3xl font-extrabold text-gray-900">
+            <h1 className="mt-2 text-3xl font-extrabold text-gray-900">
               Sign in to your account
-            </h2>
+            </h1>
             <p className="mt-2 text-sm text-gray-600">
               Don't have an account?{' '}
               <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
@@ -97,22 +117,42 @@ const Login = () => {
           </div>
           
           {/* Demo Credentials Notice */}
-          <div className="bg-blue-50 rounded-md p-4 text-sm text-blue-700">
-            <p className="font-medium mb-1">Demo Credentials</p>
-            <p>Email: <span className="font-medium">user@example.com</span></p>
-            <p>Password: <span className="font-medium">password123</span></p>
+          <div className="bg-blue-50 rounded-md p-4 text-sm text-blue-700" role="note" aria-label="Demo Credentials">
+            <div className="flex items-start">
+              <Info className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <div>
+                <p className="font-medium mb-1">Demo Credentials</p>
+                <p>Email: <span className="font-medium">user@example.com</span></p>
+                <p>Password: <span className="font-medium">password123</span></p>
+              </div>
+            </div>
           </div>
           
+          {loginError && (
+            <Alert variant="destructive" className="animate-in fade-in-50">
+              <AlertCircle className="h-4 w-4 mr-2" aria-hidden="true" />
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
+          
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate aria-label="Login form">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email Address</FormLabel>
+                    <FormLabel htmlFor="email">Email Address</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="Enter your email" {...field} />
+                      <Input 
+                        id="email"
+                        type="email" 
+                        placeholder="Enter your email" 
+                        autoComplete="email"
+                        aria-required="true"
+                        aria-invalid={!!form.formState.errors.email}
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -125,7 +165,7 @@ const Login = () => {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel htmlFor="password">Password</FormLabel>
                       <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
                         Forgot password?
                       </Link>
@@ -133,16 +173,21 @@ const Login = () => {
                     <FormControl>
                       <div className="relative">
                         <Input 
+                          id="password"
                           type={showPassword ? "text" : "password"} 
                           placeholder="Enter your password" 
+                          autoComplete="current-password"
+                          aria-required="true"
+                          aria-invalid={!!form.formState.errors.password}
                           {...field} 
                         />
                         <button
                           type="button"
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
                           onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
                         >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                         </button>
                       </div>
                     </FormControl>
@@ -151,21 +196,37 @@ const Login = () => {
                 )}
               />
               
-              <div className="flex items-center">
-                <input
-                  id="remember_me"
-                  name="remember_me"
-                  type="checkbox"
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  onChange={(e) => form.setValue("rememberMe", e.target.checked)}
-                />
-                <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
-              </div>
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+                    <FormControl>
+                      <Checkbox
+                        id="remember_me"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel
+                        htmlFor="remember_me"
+                        className="text-sm font-normal"
+                      >
+                        Remember me
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
               
               <div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loading}
+                  aria-busy={loading}
+                >
                   {loading ? "Signing In..." : "Sign In"}
                 </Button>
               </div>
