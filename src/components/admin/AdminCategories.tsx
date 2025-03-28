@@ -7,6 +7,7 @@ import {
   updateCategory,
   deleteCategory,
   createSubcategory,
+  deleteSubcategory,
   Category,
   Subcategory,
   CategoryInput,
@@ -307,7 +308,6 @@ const AdminCategories = () => {
     setIsLoading(true);
     
     try {
-      await deleteCategory(currentCategory.id);
       await deleteSubcategory(currentCategory.id, currentSubcategory.id);
       
       // Update the category by filtering out the deleted subcategory
