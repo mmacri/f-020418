@@ -1,6 +1,6 @@
 
 import { toast } from "@/hooks/use-toast";
-import { getCurrentUser, login as userServiceLogin, logout as userServiceLogout } from "@/services/userService";
+import { getCurrentUser as getUserFromService, login as userServiceLogin, logout as userServiceLogout } from "@/services/userService";
 
 // User type definition
 export interface User {
@@ -16,6 +16,9 @@ export interface AuthResult {
   user?: User;
   message?: string;
 }
+
+// Re-export getCurrentUser from userService
+export const getCurrentUser = getUserFromService;
 
 // Login function (wrapper around userService.login)
 export const login = async (email: string, password: string): Promise<AuthResult> => {
