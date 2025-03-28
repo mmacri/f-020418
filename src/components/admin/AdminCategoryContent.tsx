@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   getAllCategoryContent, 
@@ -33,7 +32,6 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import { SelectedPick } from '@/components/ui/select';
 
 const AdminCategoryContent = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -45,7 +43,6 @@ const AdminCategoryContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Load categories and content
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -55,7 +52,6 @@ const AdminCategoryContent = () => {
         const contentList = await getAllCategoryContent();
         setCategoryContent(contentList);
         
-        // Select first category by default if available
         if (categoriesList.length > 0 && !selectedCategory) {
           handleCategorySelect(categoriesList[0].slug);
         }
@@ -72,7 +68,6 @@ const AdminCategoryContent = () => {
     loadData();
   }, []);
 
-  // Handle category selection
   const handleCategorySelect = async (slug: string) => {
     setSelectedCategory(slug);
     setIsLoading(true);
@@ -85,7 +80,6 @@ const AdminCategoryContent = () => {
         setFaqs(content.faqs || []);
         setBenefits(content.benefits || []);
       } else {
-        // Initialize with empty content
         setCurrentContent({
           slug,
           title: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
@@ -111,13 +105,11 @@ const AdminCategoryContent = () => {
     }
   };
 
-  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setCurrentContent(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle benefits
   const handleAddBenefit = () => {
     setBenefits([...benefits, '']);
   };
@@ -133,7 +125,6 @@ const AdminCategoryContent = () => {
     setBenefits(updatedBenefits);
   };
 
-  // Handle FAQs
   const handleAddFaq = () => {
     setFaqs([...faqs, { question: '', answer: '' }]);
   };
@@ -149,7 +140,6 @@ const AdminCategoryContent = () => {
     setFaqs(updatedFaqs);
   };
 
-  // Save content
   const handleSaveContent = async () => {
     if (!selectedCategory) return;
     
@@ -165,7 +155,6 @@ const AdminCategoryContent = () => {
       const savedContent = await updateCategoryContent(selectedCategory, dataToSave);
       
       if (savedContent) {
-        // Update content in the state
         setCategoryContent(prev => 
           prev.map(c => c.slug === selectedCategory ? savedContent : c)
         );
