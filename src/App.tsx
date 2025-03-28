@@ -3,6 +3,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import Index from "@/pages/Index";
+import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Blog from "@/pages/Blog";
@@ -24,10 +25,15 @@ import Search from "@/pages/Search";
 import "./styles/global.css";
 import "./index.css";
 
+// Create router with all routes for the application
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Index />,
+    element: <Home />, // Using the enhanced Home page as landing page
+  },
+  {
+    path: "/index",
+    element: <Index />, // Keep original index as an alternative
   },
   {
     path: "/login",
@@ -46,11 +52,15 @@ const router = createBrowserRouter([
     element: <BlogPost />,
   },
   {
-    path: "/categories/:slug",
+    path: "/categories",
+    element: <CategoryPage />, // Categories overview page
+  },
+  {
+    path: "/categories/:categorySlug",
     element: <CategoryPage />,
   },
   {
-    path: "/categories/:slug/:subSlug",
+    path: "/categories/:categorySlug/:subSlug",
     element: <CategoryPage />,
   },
   {
@@ -96,6 +106,10 @@ const router = createBrowserRouter([
   {
     path: "/search",
     element: <Search />,
+  },
+  {
+    path: "/cart",
+    element: <div>Cart Page (Coming Soon)</div>, // Placeholder for cart page
   },
   {
     path: "*",
