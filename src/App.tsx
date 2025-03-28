@@ -25,6 +25,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 import WorkflowDemo from "./pages/WorkflowDemo";
+import AutoWorkflowDemo from "./pages/AutoWorkflowDemo";
 
 // Configure React Query with better defaults
 const queryClient = new QueryClient({
@@ -75,6 +76,7 @@ const App = () => (
           <Route path="/recovery-apps" element={<RecoveryApps />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/workflow" element={<WorkflowDemo />} />
+          <Route path="/auto-workflow" element={<AutoWorkflowDemo />} />
           
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />

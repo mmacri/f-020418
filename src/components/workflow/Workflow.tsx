@@ -4,25 +4,42 @@ import { Button } from '@/components/ui/button';
 import { WorkflowProgress } from './WorkflowProgress';
 import { useWorkflow, WorkflowItem } from '@/context/WorkflowContext';
 import { useToast } from '@/hooks/use-toast';
+import { Play, Pause, RotateCcw } from 'lucide-react';
 
 interface WorkflowProps {
   items: WorkflowItem[];
   onComplete?: () => void;
   className?: string;
+  autoStart?: boolean;
 }
 
 const Workflow: React.FC<WorkflowProps> = ({ 
   items, 
   onComplete,
-  className 
+  className,
+  autoStart = false
 }) => {
-  const { setItems, currentItemIndex, completeCurrentItem, resetWorkflow, isComplete } = useWorkflow();
+  const { 
+    setItems, 
+    currentItemIndex, 
+    completeCurrentItem, 
+    resetWorkflow, 
+    isComplete,
+    startAutoProgress,
+    stopAutoProgress,
+    isAutoProgressing
+  } = useWorkflow();
   const { toast } = useToast();
   const currentItem = items[currentItemIndex];
 
   useEffect(() => {
     setItems(items);
-  }, [items, setItems]);
+    
+    // Start auto-progression if autoStart is true
+    if (autoStart) {
+      startAutoProgress();
+    }
+  }, [items, setItems, autoStart, startAutoProgress]);
 
   useEffect(() => {
     if (isComplete && onComplete) {
@@ -33,6 +50,22 @@ const Workflow: React.FC<WorkflowProps> = ({
       });
     }
   }, [isComplete, onComplete, toast]);
+
+  const handleToggleAutoProgress = () => {
+    if (isAutoProgressing) {
+      stopAutoProgress();
+      toast({
+        title: "Auto-progress Paused",
+        description: "You can now manually progress through the tasks."
+      });
+    } else {
+      startAutoProgress();
+      toast({
+        title: "Auto-progress Started",
+        description: "Tasks will automatically complete one after another."
+      });
+    }
+  };
 
   return (
     <div className={className}>
@@ -45,10 +78,27 @@ const Workflow: React.FC<WorkflowProps> = ({
           <h3 className="text-xl font-semibold mb-2">{currentItem?.title}</h3>
           <p className="text-gray-600 mb-6">{currentItem?.description}</p>
           
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            <Button
+              variant="outline"
+              onClick={handleToggleAutoProgress}
+              className="flex items-center gap-2"
+            >
+              {isAutoProgressing ? (
+                <>
+                  <Pause className="w-4 h-4" /> Pause Auto-Progress
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" /> Start Auto-Progress
+                </>
+              )}
+            </Button>
+            
             <Button 
               onClick={completeCurrentItem}
               className="bg-indigo-600 hover:bg-indigo-700"
+              disabled={isAutoProgressing}
             >
               Complete & Continue
             </Button>
@@ -62,8 +112,9 @@ const Workflow: React.FC<WorkflowProps> = ({
           <Button 
             onClick={resetWorkflow}
             variant="outline"
+            className="flex items-center gap-2"
           >
-            Start Over
+            <RotateCcw className="w-4 h-4" /> Start Over
           </Button>
         </div>
       )}
