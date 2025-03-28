@@ -4,29 +4,54 @@ import { localStorageKeys } from "@/lib/constants";
 export interface Product {
   id: number;
   name: string;
+  title?: string; // Add title as an alias for name
   slug: string;
   description: string;
+  shortDescription?: string; // Add shortDescription property
   price: number;
   comparePrice?: number;
+  originalPrice?: number; // Add originalPrice property
   images: string[];
+  imageUrl?: string; // Add imageUrl property
+  additionalImages?: string[]; // Add additionalImages property
   category: string;
   categoryId: number;
+  subcategory?: string; // Add subcategory property
   rating: number;
   reviewCount: number;
   features?: string[];
   affiliateLink?: string;
+  affiliateUrl?: string; // Add affiliateUrl as alias for affiliateLink
   brand?: string;
   specifications?: { [key: string]: string };
   availability?: string;
+  inStock?: boolean; // Add inStock property
+  bestSeller?: boolean; // Add bestSeller property
+  asin?: string; // Add ASIN property
   createdAt: string;
   updatedAt: string;
 }
+
+// Backward compatibility getter function
+const getProductWithBackwardsCompatibility = (product: Product): Product => {
+  return {
+    ...product,
+    title: product.name, // Alias name as title
+    imageUrl: product.images[0], // Use first image as imageUrl
+    additionalImages: product.images.slice(1), // Use remaining images as additionalImages
+    originalPrice: product.comparePrice, // Alias comparePrice as originalPrice
+    affiliateUrl: product.affiliateLink, // Alias affiliateLink as affiliateUrl
+    inStock: product.availability === "In Stock" || !product.availability, // Set inStock based on availability
+  };
+};
 
 // Get products from localStorage
 export const getProducts = async (): Promise<Product[]> => {
   try {
     const productsData = localStorage.getItem(localStorageKeys.PRODUCTS);
-    return productsData ? JSON.parse(productsData) : [];
+    const products = productsData ? JSON.parse(productsData) : [];
+    // Add backwards compatibility properties to each product
+    return products.map(getProductWithBackwardsCompatibility);
   } catch (error) {
     console.error("Error retrieving products:", error);
     return [];
@@ -37,7 +62,8 @@ export const getProducts = async (): Promise<Product[]> => {
 export const getProductById = async (id: number): Promise<Product | null> => {
   try {
     const products = await getProducts();
-    return products.find(product => product.id === id) || null;
+    const product = products.find(product => product.id === id) || null;
+    return product;
   } catch (error) {
     console.error(`Error retrieving product with ID ${id}:`, error);
     return null;
@@ -82,12 +108,15 @@ export const addProduct = async (product: Omit<Product, "id" | "createdAt" | "up
       JSON.stringify([...products, newProduct])
     );
     
-    return newProduct;
+    return getProductWithBackwardsCompatibility(newProduct);
   } catch (error) {
     console.error("Error adding product:", error);
     throw new Error("Failed to add product");
   }
 };
+
+// Alias for addProduct to match expected function name
+export const createProduct = addProduct;
 
 // Update product
 export const updateProduct = async (id: number, productData: Partial<Product>): Promise<Product | null> => {
@@ -108,7 +137,7 @@ export const updateProduct = async (id: number, productData: Partial<Product>): 
     products[productIndex] = updatedProduct;
     localStorage.setItem(localStorageKeys.PRODUCTS, JSON.stringify(products));
     
-    return updatedProduct;
+    return getProductWithBackwardsCompatibility(updatedProduct);
   } catch (error) {
     console.error(`Error updating product with ID ${id}:`, error);
     throw new Error("Failed to update product");

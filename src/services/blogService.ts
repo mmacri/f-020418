@@ -8,6 +8,7 @@ export interface BlogPost {
   excerpt: string;
   content: string;
   image: string;
+  coverImage?: string;  // Add this property
   category: string;
   categoryId?: number;
   tags?: string[];
@@ -19,6 +20,8 @@ export interface BlogPost {
   updatedAt: string;
 }
 
+export type BlogPostInput = Omit<BlogPost, "id" | "createdAt" | "updatedAt">;
+
 // Get blog posts from localStorage
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
   try {
@@ -29,6 +32,9 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
     return [];
   }
 };
+
+// Alias for getBlogPosts to match the imported function names
+export const getAllPosts = getBlogPosts;
 
 // Get published blog posts
 export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
@@ -63,6 +69,9 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
   }
 };
 
+// Alias for getBlogPostBySlug to match the imported function name
+export const getPostBySlug = getBlogPostBySlug;
+
 // Add blog post
 export const addBlogPost = async (post: Omit<BlogPost, "id" | "createdAt" | "updatedAt">): Promise<BlogPost> => {
   try {
@@ -85,6 +94,9 @@ export const addBlogPost = async (post: Omit<BlogPost, "id" | "createdAt" | "upd
     throw new Error("Failed to add blog post");
   }
 };
+
+// Alias for addBlogPost to match the imported function name
+export const createPost = addBlogPost;
 
 // Update blog post
 export const updateBlogPost = async (id: number, postData: Partial<BlogPost>): Promise<BlogPost | null> => {
@@ -112,6 +124,9 @@ export const updateBlogPost = async (id: number, postData: Partial<BlogPost>): P
   }
 };
 
+// Alias for updateBlogPost to match the imported function name
+export const updatePost = updateBlogPost;
+
 // Delete blog post
 export const deleteBlogPost = async (id: number): Promise<boolean> => {
   try {
@@ -129,6 +144,9 @@ export const deleteBlogPost = async (id: number): Promise<boolean> => {
     throw new Error("Failed to delete blog post");
   }
 };
+
+// Alias for deleteBlogPost to match the imported function name
+export const deletePost = deleteBlogPost;
 
 // Search blog posts
 export const searchBlogPosts = async (query: string): Promise<BlogPost[]> => {
