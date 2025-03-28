@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 
 // Blog post type definition
@@ -15,6 +14,9 @@ export interface BlogPost {
   createdAt: string;
   updatedAt: string;
 }
+
+// Create type without id field
+export type BlogPostInput = Omit<BlogPost, 'id'>;
 
 // Mock blog posts data
 let BLOG_POSTS: BlogPost[] = [
@@ -227,7 +229,7 @@ export const getPostsByTag = async (tag: string): Promise<BlogPost[]> => {
 };
 
 // Create new blog post
-export const createPost = async (post: Omit<BlogPost, 'id'>): Promise<BlogPost> => {
+export const createPost = async (post: BlogPostInput): Promise<BlogPost> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 600));
   
@@ -256,7 +258,7 @@ export const createPost = async (post: Omit<BlogPost, 'id'>): Promise<BlogPost> 
 };
 
 // Update blog post
-export const updatePost = async (id: number, updates: Partial<Omit<BlogPost, 'id'>>): Promise<BlogPost> => {
+export const updatePost = async (id: number, updates: Partial<BlogPostInput>): Promise<BlogPost> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 600));
   

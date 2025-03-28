@@ -38,7 +38,12 @@ const AdminAuth = ({ onAuthSuccess }: AdminAuthProps) => {
     setIsLoading(true);
     
     try {
-      const response = await login(data);
+      // Ensure data is not optional since LoginData requires email and password
+      const response = await login({
+        email: data.email,
+        password: data.password
+      });
+      
       if (response.success && response.user?.role === "admin") {
         onAuthSuccess();
       } else {

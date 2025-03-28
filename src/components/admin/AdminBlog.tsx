@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   FileText, 
@@ -59,7 +58,6 @@ import {
 } from "@/services/blogService";
 import { useToast } from "@/hooks/use-toast";
 
-// Form schema
 const blogFormSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters" }),
   slug: z.string().min(3, { message: "Slug must be at least 3 characters" }),
@@ -83,7 +81,6 @@ const AdminBlog = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Initialize the form
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogFormSchema),
     defaultValues: {
@@ -98,7 +95,6 @@ const AdminBlog = () => {
     },
   });
 
-  // Load posts
   useEffect(() => {
     const loadPosts = async () => {
       try {
@@ -117,13 +113,11 @@ const AdminBlog = () => {
     loadPosts();
   }, [toast]);
 
-  // Open add post dialog
   const openAddDialog = () => {
     form.reset();
     setIsAddDialogOpen(true);
   };
 
-  // Open edit post dialog
   const openEditDialog = (post: BlogPost) => {
     setCurrentPost(post);
     
@@ -141,19 +135,16 @@ const AdminBlog = () => {
     setIsEditDialogOpen(true);
   };
 
-  // Open delete post dialog
   const openDeleteDialog = (post: BlogPost) => {
     setCurrentPost(post);
     setIsDeleteDialogOpen(true);
   };
 
-  // Add tag field
   const addTagField = () => {
     const tags = form.getValues("tags");
     form.setValue("tags", [...tags, ""]);
   };
 
-  // Remove tag field
   const removeTagField = (index: number) => {
     const tags = form.getValues("tags");
     if (tags.length > 1) {
@@ -164,14 +155,12 @@ const AdminBlog = () => {
     }
   };
 
-  // Handle add post
   const handleAddPost = async (data: BlogFormValues) => {
     setIsLoading(true);
     
     try {
       const newPost = await createPost({
         ...data,
-        id: 0, // This will be assigned by the service
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
@@ -194,7 +183,6 @@ const AdminBlog = () => {
     }
   };
 
-  // Handle edit post
   const handleEditPost = async (data: BlogFormValues) => {
     if (!currentPost) return;
     
@@ -224,7 +212,6 @@ const AdminBlog = () => {
     }
   };
 
-  // Handle delete post
   const handleDeletePost = async () => {
     if (!currentPost) return;
     
@@ -251,7 +238,6 @@ const AdminBlog = () => {
     }
   };
 
-  // Filter posts by search query
   const filteredPosts = posts.filter(post => 
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -326,7 +312,6 @@ const AdminBlog = () => {
         </CardContent>
       </Card>
 
-      {/* Add Post Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
           <DialogHeader>
@@ -538,7 +523,6 @@ const AdminBlog = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Post Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
           <DialogHeader>
@@ -550,7 +534,6 @@ const AdminBlog = () => {
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleEditPost)} className="space-y-6">
-              {/* Same form fields as Add Post Dialog */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <FormField
@@ -751,7 +734,6 @@ const AdminBlog = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Post Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -792,7 +774,6 @@ const AdminBlog = () => {
   );
 };
 
-// Blog Posts Table Component
 interface BlogPostsTableProps {
   posts: BlogPost[];
   onEdit: (post: BlogPost) => void;

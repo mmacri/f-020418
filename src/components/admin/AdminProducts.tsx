@@ -1,26 +1,29 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
-  Package, 
+  Image, 
   Pencil, 
   Plus, 
   Trash2, 
   Search, 
-  X,
-  AlertCircle,
-  Star,
-  DollarSign,
-  Tag,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  FileText
+  X, 
+  Link, 
+  Star, 
+  AlertCircle 
 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { 
   Form, 
   FormControl, 
@@ -31,15 +34,6 @@ import {
   FormMessage 
 } from "@/components/ui/form";
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
-import { 
   Table, 
   TableBody, 
   TableCell, 
@@ -48,48 +42,62 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   getProducts, 
   createProduct, 
   updateProduct, 
-  deleteProduct,
-  Product
+  deleteProduct, 
+  Product 
 } from "@/services/productService";
-import { getNavigationCategories } from "@/services/categoryService";
 import { useToast } from "@/hooks/use-toast";
 
-// Form validation schema
+// Form schema
 const productFormSchema = z.object({
-  title: z.string().min(3, { message: "Product title must be at least 3 characters" }),
+  name: z.string().min(5, { message: "Name must be at least 5 characters" }),
   slug: z.string().min(3, { message: "Slug must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  shortDescription: z.string().optional(),
-  price: z.coerce.number().positive({ message: "Price must be a positive number" }),
-  originalPrice: z.coerce.number().positive({ message: "Original price must be a positive number" }).optional(),
-  category: z.string().min(1, { message: "Category is required" }),
-  subcategory: z.string().optional(),
   imageUrl: z.string().url({ message: "Please enter a valid image URL" }),
-  additionalImages: z.array(z.string().url({ message: "Please enter a valid image URL" })).optional(),
-  asin: z.string().min(1, { message: "ASIN is required" }),
-  rating: z.coerce.number().min(0).max(5, { message: "Rating must be between 0 and 5" }),
-  reviewCount: z.coerce.number().min(0, { message: "Review count must be a positive number" }),
-  affiliateUrl: z.string().url({ message: "Please enter a valid affiliate URL" }),
-  bestSeller: z.boolean().default(false).optional(),
-  inStock: z.boolean().default(true),
-  features: z.array(z.string().min(3, { message: "Feature must be at least 3 characters" }))
-    .min(1, { message: "At least one feature is required" }),
+  category: z.string().min(3, { message: "Category must be at least 3 characters" }),
+  price: z.string().refine((value) => {
+    try {
+      const num = parseFloat(value);
+      return !isNaN(num) && num > 0;
+    } catch (e) {
+      return false;
+    }
+  }, {
+    message: "Price must be a valid number greater than 0",
+  }),
+  originalPrice: z.string().optional().refine((value) => {
+    if (!value) return true; // Allow empty value
+    try {
+      const num = parseFloat(value);
+      return !isNaN(num) && num >= 0;
+    } catch (e) {
+      return false;
+    }
+  }, {
+    message: "Original price must be a valid number greater than or equal to 0",
+  }),
+  amazonLink: z.string().url({ message: "Please enter a valid Amazon link URL" }),
+  rating: z.string().refine((value) => {
+    try {
+      const num = parseFloat(value);
+      return !isNaN(num) && num >= 0 && num <= 5;
+    } catch (e) {
+      return false;
+    }
+  }, {
+    message: "Rating must be a valid number between 0 and 5",
+  }),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
 const AdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [subcategories, setSubcategories] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -102,68 +110,36 @@ const AdminProducts = () => {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
-      title: "",
+      name: "",
       slug: "",
       description: "",
-      shortDescription: "",
-      price: 0,
-      originalPrice: undefined,
-      category: "",
-      subcategory: "",
       imageUrl: "",
-      additionalImages: [],
-      asin: "",
-      rating: 0,
-      reviewCount: 0,
-      affiliateUrl: "",
-      bestSeller: false,
-      inStock: true,
-      features: [""],
+      category: "",
+      price: "",
+      originalPrice: "",
+      amazonLink: "",
+      rating: "",
     },
   });
 
-  // Load products and categories
+  // Load products
   useEffect(() => {
-    const loadData = async () => {
+    const loadProducts = async () => {
       try {
-        const productData = await getProducts();
-        setProducts(productData);
-
-        const categoryData = await getNavigationCategories();
-        setCategories(categoryData);
+        const productList = await getProducts();
+        setProducts(productList);
       } catch (error) {
-        console.error("Error loading data:", error);
+        console.error("Error loading products:", error);
         toast({
           title: "Error",
-          description: "Failed to load products or categories",
+          description: "Failed to load products",
           variant: "destructive",
         });
       }
     };
 
-    loadData();
+    loadProducts();
   }, [toast]);
-
-  // Update subcategories when category changes
-  useEffect(() => {
-    if (selectedCategory) {
-      const category = categories.find(c => c.slug === selectedCategory);
-      if (category) {
-        setSubcategories(category.subcategories || []);
-      } else {
-        setSubcategories([]);
-      }
-    } else {
-      setSubcategories([]);
-    }
-  }, [selectedCategory, categories]);
-
-  // Handle category change
-  const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
-    form.setValue("category", value);
-    form.setValue("subcategory", "");
-  };
 
   // Open add product dialog
   const openAddDialog = () => {
@@ -174,26 +150,17 @@ const AdminProducts = () => {
   // Open edit product dialog
   const openEditDialog = (product: Product) => {
     setCurrentProduct(product);
-    setSelectedCategory(product.category);
     
     form.reset({
-      title: product.title,
+      name: product.name,
       slug: product.slug,
       description: product.description,
-      shortDescription: product.shortDescription || "",
-      price: product.price,
-      originalPrice: product.originalPrice,
-      category: product.category,
-      subcategory: product.subcategory || "",
       imageUrl: product.imageUrl,
-      additionalImages: product.additionalImages || [],
-      asin: product.asin,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-      affiliateUrl: product.affiliateUrl,
-      bestSeller: product.bestSeller || false,
-      inStock: product.inStock,
-      features: product.features || [""],
+      category: product.category,
+      price: product.price.toString(),
+      originalPrice: product.originalPrice ? product.originalPrice.toString() : "",
+      amazonLink: product.amazonLink,
+      rating: product.rating.toString(),
     });
     
     setIsEditDialogOpen(true);
@@ -205,23 +172,6 @@ const AdminProducts = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  // Add feature field
-  const addFeatureField = () => {
-    const features = form.getValues("features");
-    form.setValue("features", [...features, ""]);
-  };
-
-  // Remove feature field
-  const removeFeatureField = (index: number) => {
-    const features = form.getValues("features");
-    if (features.length > 1) {
-      form.setValue(
-        "features",
-        features.filter((_, i) => i !== index)
-      );
-    }
-  };
-
   // Handle add product
   const handleAddProduct = async (data: ProductFormValues) => {
     setIsLoading(true);
@@ -229,16 +179,18 @@ const AdminProducts = () => {
     try {
       const newProduct = await createProduct({
         ...data,
-        id: 0, // This will be assigned by the service
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        rating: Number(data.rating),
+        price: Number(data.price),
+        originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
+        reviews: 0,
+        // Don't include id, will be assigned by the service
       });
       
       setProducts([...products, newProduct]);
       setIsAddDialogOpen(false);
       toast({
         title: "Success",
-        description: `${data.title} has been added successfully.`,
+        description: `${data.name} has been added.`,
       });
     } catch (error) {
       console.error("Error adding product:", error);
@@ -261,14 +213,16 @@ const AdminProducts = () => {
     try {
       const updatedProduct = await updateProduct(currentProduct.id, {
         ...data,
-        updatedAt: new Date().toISOString(),
+        rating: Number(data.rating),
+        price: Number(data.price),
+        originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
       });
       
       setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
       setIsEditDialogOpen(false);
       toast({
         title: "Success",
-        description: `${data.title} has been updated successfully.`,
+        description: `${data.name} has been updated.`,
       });
     } catch (error) {
       console.error("Error updating product:", error);
@@ -295,7 +249,7 @@ const AdminProducts = () => {
       setIsDeleteDialogOpen(false);
       toast({
         title: "Success",
-        description: `${currentProduct.title} has been deleted.`,
+        description: `${currentProduct.name} has been deleted.`,
       });
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -311,7 +265,7 @@ const AdminProducts = () => {
 
   // Filter products by search query
   const filteredProducts = products.filter(product => 
-    product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -346,109 +300,11 @@ const AdminProducts = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                      No products found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded bg-gray-100 mr-3 overflow-hidden">
-                            {product.imageUrl && (
-                              <img
-                                src={product.imageUrl}
-                                alt={product.title}
-                                className="h-full w-full object-cover"
-                              />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium">{product.title}</div>
-                            <div className="text-xs text-gray-500">ID: {product.id}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{product.category.replace(/-/g, ' ')}</div>
-                        {product.subcategory && (
-                          <div className="text-xs text-gray-500">
-                            {product.subcategory.replace(/-/g, ' ')}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">${product.price.toFixed(2)}</div>
-                        {product.originalPrice && (
-                          <div className="text-xs text-gray-500 line-through">
-                            ${product.originalPrice.toFixed(2)}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                          <span>{product.rating}</span>
-                          <span className="text-xs text-gray-500 ml-1">
-                            ({product.reviewCount})
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            product.inStock
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {product.inStock ? "In Stock" : "Out of Stock"}
-                        </div>
-                        {product.bestSeller && (
-                          <div className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 ml-2">
-                            Best Seller
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mr-2"
-                          onClick={() => openEditDialog(product)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openDeleteDialog(product)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <ProductsTable 
+            products={filteredProducts} 
+            onEdit={openEditDialog} 
+            onDelete={openDeleteDialog} 
+          />
         </CardContent>
       </Card>
 
@@ -458,7 +314,7 @@ const AdminProducts = () => {
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
             <DialogDescription>
-              Fill in the details below to add a new product to your catalog.
+              Create a new product for your website.
             </DialogDescription>
           </DialogHeader>
           
@@ -468,12 +324,12 @@ const AdminProducts = () => {
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="title"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Product Title</FormLabel>
+                        <FormLabel>Product Name</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Theragun Pro" />
+                          <Input {...field} placeholder="Massage Gun Pro" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -487,10 +343,10 @@ const AdminProducts = () => {
                       <FormItem>
                         <FormLabel>URL Slug</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="theragun-pro" />
+                          <Input {...field} placeholder="massage-gun-pro" />
                         </FormControl>
                         <FormDescription>
-                          Used in the product URL (e.g., /products/theragun-pro)
+                          Used in the product URL (e.g., /products/massage-gun-pro)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -499,200 +355,12 @@ const AdminProducts = () => {
                   
                   <FormField
                     control={form.control}
-                    name="shortDescription"
+                    name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Short Description</FormLabel>
+                        <FormLabel>Category</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Professional-grade massage device" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price ($)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input {...field} type="number" step="0.01" className="pl-10" />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="originalPrice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Original Price ($)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input 
-                                {...field} 
-                                type="number" 
-                                step="0.01" 
-                                className="pl-10" 
-                                placeholder="Optional"
-                                onChange={(e) => {
-                                  if (e.target.value === "") {
-                                    field.onChange(undefined);
-                                  } else {
-                                    field.onChange(e.target.value);
-                                  }
-                                }}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select 
-                            onValueChange={handleCategoryChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category.slug} value={category.slug}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="subcategory"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Subcategory</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                            disabled={subcategories.length === 0}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a subcategory" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {subcategories.map((subcategory) => (
-                                <SelectItem key={subcategory.slug} value={subcategory.slug}>
-                                  {subcategory.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="rating"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Rating (0-5)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Star className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input 
-                                {...field} 
-                                type="number" 
-                                min="0" 
-                                max="5" 
-                                step="0.1" 
-                                className="pl-10" 
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="reviewCount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Review Count</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="number" min="0" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="asin"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amazon ASIN</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Tag className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                            <Input {...field} className="pl-10" placeholder="B07TRSYXB9" />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          The Amazon Standard Identification Number
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            {...field} 
-                            placeholder="Detailed product description..." 
-                            className="min-h-[150px] resize-y"
-                          />
+                          <Input {...field} placeholder="Massage Guns" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -704,10 +372,10 @@ const AdminProducts = () => {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Main Image URL</FormLabel>
+                        <FormLabel>Image URL</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <ImageIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Image className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input 
                               {...field} 
                               className="pl-10" 
@@ -722,17 +390,45 @@ const AdminProducts = () => {
                   
                   <FormField
                     control={form.control}
-                    name="affiliateUrl"
+                    name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Affiliate URL</FormLabel>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="99.99" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="originalPrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Original Price (Optional)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="129.99" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="rating"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rating</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Star className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input 
                               {...field} 
                               className="pl-10" 
-                              placeholder="https://amazon.com/dp/B07TRSYXB9?tag=yourtag-20" 
+                              placeholder="4.5" 
                             />
                           </div>
                         </FormControl>
@@ -741,92 +437,46 @@ const AdminProducts = () => {
                     )}
                   />
                   
-                  <div className="flex items-center space-x-4">
-                    <FormField
-                      control={form.control}
-                      name="bestSeller"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                  <FormField
+                    control={form.control}
+                    name="amazonLink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amazon Link URL</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Link className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Input 
+                              {...field} 
+                              className="pl-10" 
+                              placeholder="https://amzn.to/abcd" 
                             />
-                          </FormControl>
-                          <FormLabel className="text-sm">Best Seller</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="inStock"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm">In Stock</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <FormLabel>Product Features</FormLabel>
-                    <FormDescription className="mb-2">
-                      Add key features and benefits of the product
-                    </FormDescription>
-                    
-                    {form.watch("features").map((_, index) => (
-                      <div key={index} className="flex items-center mb-2">
-                        <FormField
-                          control={form.control}
-                          name={`features.${index}`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1 mr-2">
-                              <FormControl>
-                                <div className="relative">
-                                  <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                  <Input 
-                                    {...field} 
-                                    className="pl-10" 
-                                    placeholder="Product feature" 
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeFeatureField(index)}
-                          disabled={form.watch("features").length <= 1}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-2"
-                      onClick={addFeatureField}
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Add Feature
-                    </Button>
-                  </div>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Write your product description here..." 
+                            className="min-h-[300px] resize-y"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
               
@@ -835,7 +485,7 @@ const AdminProducts = () => {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save Product"}
+                  {isLoading ? "Adding..." : "Add Product"}
                 </Button>
               </DialogFooter>
             </form>
@@ -849,7 +499,7 @@ const AdminProducts = () => {
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
             <DialogDescription>
-              Update the details for {currentProduct?.title}
+              Update the product: {currentProduct?.name}
             </DialogDescription>
           </DialogHeader>
           
@@ -860,12 +510,12 @@ const AdminProducts = () => {
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="title"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Product Title</FormLabel>
+                        <FormLabel>Product Name</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Theragun Pro" />
+                          <Input {...field} placeholder="Massage Gun Pro" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -879,10 +529,10 @@ const AdminProducts = () => {
                       <FormItem>
                         <FormLabel>URL Slug</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="theragun-pro" />
+                          <Input {...field} placeholder="massage-gun-pro" />
                         </FormControl>
                         <FormDescription>
-                          Used in the product URL (e.g., /products/theragun-pro)
+                          Used in the product URL (e.g., /products/massage-gun-pro)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -891,200 +541,12 @@ const AdminProducts = () => {
                   
                   <FormField
                     control={form.control}
-                    name="shortDescription"
+                    name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Short Description</FormLabel>
+                        <FormLabel>Category</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Professional-grade massage device" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price ($)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input {...field} type="number" step="0.01" className="pl-10" />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="originalPrice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Original Price ($)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input 
-                                {...field} 
-                                type="number" 
-                                step="0.01" 
-                                className="pl-10" 
-                                placeholder="Optional"
-                                onChange={(e) => {
-                                  if (e.target.value === "") {
-                                    field.onChange(undefined);
-                                  } else {
-                                    field.onChange(e.target.value);
-                                  }
-                                }}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select 
-                            onValueChange={handleCategoryChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category.slug} value={category.slug}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="subcategory"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Subcategory</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                            disabled={subcategories.length === 0}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a subcategory" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {subcategories.map((subcategory) => (
-                                <SelectItem key={subcategory.slug} value={subcategory.slug}>
-                                  {subcategory.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="rating"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Rating (0-5)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Star className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                              <Input 
-                                {...field} 
-                                type="number" 
-                                min="0" 
-                                max="5" 
-                                step="0.1" 
-                                className="pl-10" 
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="reviewCount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Review Count</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="number" min="0" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="asin"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amazon ASIN</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Tag className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                            <Input {...field} className="pl-10" placeholder="B07TRSYXB9" />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          The Amazon Standard Identification Number
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            {...field} 
-                            placeholder="Detailed product description..." 
-                            className="min-h-[150px] resize-y"
-                          />
+                          <Input {...field} placeholder="Massage Guns" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1096,10 +558,10 @@ const AdminProducts = () => {
                     name="imageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Main Image URL</FormLabel>
+                        <FormLabel>Image URL</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <ImageIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Image className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input 
                               {...field} 
                               className="pl-10" 
@@ -1114,17 +576,45 @@ const AdminProducts = () => {
                   
                   <FormField
                     control={form.control}
-                    name="affiliateUrl"
+                    name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Affiliate URL</FormLabel>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="99.99" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="originalPrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Original Price (Optional)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="129.99" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="rating"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rating</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Star className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input 
                               {...field} 
                               className="pl-10" 
-                              placeholder="https://amazon.com/dp/B07TRSYXB9?tag=yourtag-20" 
+                              placeholder="4.5" 
                             />
                           </div>
                         </FormControl>
@@ -1133,92 +623,46 @@ const AdminProducts = () => {
                     )}
                   />
                   
-                  <div className="flex items-center space-x-4">
-                    <FormField
-                      control={form.control}
-                      name="bestSeller"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                  <FormField
+                    control={form.control}
+                    name="amazonLink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amazon Link URL</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Link className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Input 
+                              {...field} 
+                              className="pl-10" 
+                              placeholder="https://amzn.to/abcd" 
                             />
-                          </FormControl>
-                          <FormLabel className="text-sm">Best Seller</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="inStock"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm">In Stock</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div>
-                    <FormLabel>Product Features</FormLabel>
-                    <FormDescription className="mb-2">
-                      Add key features and benefits of the product
-                    </FormDescription>
-                    
-                    {form.watch("features").map((_, index) => (
-                      <div key={index} className="flex items-center mb-2">
-                        <FormField
-                          control={form.control}
-                          name={`features.${index}`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1 mr-2">
-                              <FormControl>
-                                <div className="relative">
-                                  <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                  <Input 
-                                    {...field} 
-                                    className="pl-10" 
-                                    placeholder="Product feature" 
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeFeatureField(index)}
-                          disabled={form.watch("features").length <= 1}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-2"
-                      onClick={addFeatureField}
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Add Feature
-                    </Button>
-                  </div>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Write your product description here..." 
+                            className="min-h-[300px] resize-y"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
               
@@ -1247,27 +691,16 @@ const AdminProducts = () => {
           
           {currentProduct && (
             <div className="py-4">
-              <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded bg-gray-100 mr-3 overflow-hidden">
-                  {currentProduct.imageUrl && (
-                    <img
-                      src={currentProduct.imageUrl}
-                      alt={currentProduct.title}
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                </div>
-                <div>
-                  <div className="font-medium">{currentProduct.title}</div>
-                  <div className="text-sm text-gray-500">${currentProduct.price.toFixed(2)}</div>
-                </div>
+              <div className="mb-4">
+                <h3 className="font-medium">{currentProduct.name}</h3>
+                <p className="text-sm text-gray-500 mt-1">{currentProduct.description}</p>
               </div>
               
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
-                  This will permanently delete the product and all its data.
+                  This will permanently delete the product and its content.
                 </AlertDescription>
               </Alert>
             </div>
@@ -1283,6 +716,89 @@ const AdminProducts = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+// Products Table Component
+interface ProductsTableProps {
+  products: Product[];
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+}
+
+const ProductsTable: React.FC<ProductsTableProps> = ({ products, onEdit, onDelete }) => {
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Product</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Price</TableHead>
+            <TableHead>Rating</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {products.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+                No products found
+              </TableCell>
+            </TableRow>
+          ) : (
+            products.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell>
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded bg-gray-100 mr-3 overflow-hidden">
+                      {product.imageUrl && (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium">{product.name}</div>
+                      <div className="text-xs text-gray-500 truncate max-w-[200px]">
+                        {product.description}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>{product.category}</TableCell>
+                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    <Star className="h-4 w-4 mr-1 text-yellow-500" />
+                    {product.rating.toFixed(1)}
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mr-2"
+                    onClick={() => onEdit(product)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDelete(product)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 };

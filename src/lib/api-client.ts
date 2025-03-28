@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 
 // Cache configuration
@@ -242,13 +241,18 @@ export class ApiClient {
     
     if (endpoint.startsWith('/categories')) {
       if (endpoint === '/categories') {
-        if (method === 'GET') return categoryService.getCategories() as unknown as T;
+        if (method === 'GET') return categoryService.getNavigationCategories() as unknown as T;
         if (method === 'POST') return categoryService.createCategory(data) as unknown as T;
       }
       
       const categoryId = Number(endpoint.split('/').pop());
       if (!isNaN(categoryId)) {
-        if (method === 'GET') return categoryService.getCategoryById(categoryId) as unknown as T;
+        if (method === 'GET') {
+          // Use getCategoryBySlug instead as getCategoryById doesn't exist
+          const categories = await categoryService.getNavigationCategories();
+          const category = categories.find(c => c.id === categoryId);
+          return (category || null) as unknown as T;
+        }
         if (method === 'PUT') return categoryService.updateCategory(categoryId, data) as unknown as T;
         if (method === 'DELETE') return categoryService.deleteCategory(categoryId) as unknown as T;
       }
@@ -282,14 +286,14 @@ export class ApiClient {
     
     if (endpoint.startsWith('/blog')) {
       if (endpoint === '/blog/posts') {
-        return blogService.getBlogPosts() as unknown as T;
+        return blogService.getAllPosts() as unknown as T;
       }
       
       // Handle blog post by slug
       if (endpoint.includes('/blog/posts/')) {
         const slug = endpoint.split('/').pop();
         if (slug) {
-          return blogService.getBlogPostBySlug(slug) as unknown as T;
+          return blogService.getPostBySlug(slug) as unknown as T;
         }
       }
     }

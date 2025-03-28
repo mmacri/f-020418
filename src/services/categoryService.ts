@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 
 // Type definitions
@@ -17,6 +16,10 @@ export interface Category {
   imageUrl?: string;
   subcategories: Subcategory[];
 }
+
+// Create types without id field
+export type SubcategoryInput = Omit<Subcategory, 'id'>;
+export type CategoryInput = Omit<Category, 'id'>;
 
 // Mock categories data
 let CATEGORIES: Category[] = [
@@ -193,7 +196,7 @@ export const getSubcategoryBySlug = async (categorySlug: string, subcategorySlug
 };
 
 // Create new category
-export const createCategory = async (category: Omit<Category, 'id'>): Promise<Category> => {
+export const createCategory = async (category: CategoryInput): Promise<Category> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
@@ -227,7 +230,7 @@ export const createCategory = async (category: Omit<Category, 'id'>): Promise<Ca
 };
 
 // Update category
-export const updateCategory = async (id: number, updates: Omit<Category, 'id'>): Promise<Category> => {
+export const updateCategory = async (id: number, updates: CategoryInput): Promise<Category> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
@@ -293,7 +296,7 @@ export const deleteCategory = async (id: number): Promise<boolean> => {
 };
 
 // Create new subcategory
-export const createSubcategory = async (categoryId: number, subcategory: Omit<Subcategory, 'id'>): Promise<Subcategory> => {
+export const createSubcategory = async (categoryId: number, subcategory: SubcategoryInput): Promise<Subcategory> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
@@ -332,7 +335,7 @@ export const createSubcategory = async (categoryId: number, subcategory: Omit<Su
 };
 
 // Update subcategory
-export const updateSubcategory = async (categoryId: number, subcategoryId: number, updates: Omit<Subcategory, 'id'>): Promise<Subcategory> => {
+export const updateSubcategory = async (categoryId: number, subcategoryId: number, updates: SubcategoryInput): Promise<Subcategory> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 500));
   

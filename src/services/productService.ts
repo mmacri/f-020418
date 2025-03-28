@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { generateAffiliateLink } from "@/lib/amazon-api";
 
@@ -120,6 +119,9 @@ let PRODUCTS: Product[] = [
   }
 ];
 
+// Define types for product inputs 
+export type ProductInput = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
+
 // Get all products
 export const getProducts = async (): Promise<Product[]> => {
   // Simulate API request delay
@@ -178,7 +180,7 @@ export const createProduct = async (product: Omit<Product, 'id' | 'createdAt' | 
 };
 
 // Update product
-export const updateProduct = async (id: number, updates: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Product> => {
+export const updateProduct = async (id: number, updates: Partial<ProductInput>): Promise<Product> => {
   // Simulate API request delay
   await new Promise(resolve => setTimeout(resolve, 600));
   
