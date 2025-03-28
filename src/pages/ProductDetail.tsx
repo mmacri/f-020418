@@ -13,16 +13,17 @@ import SaveForLater from '@/components/product/SaveForLater';
 import ProductSkeleton from '@/components/product/ProductSkeleton';
 import { api } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+import { Product } from '@/services/productService';
 
 const ProductDetail = () => {
   const { productSlug } = useParams<{ productSlug: string }>();
   const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Fetch product data
-  const { data: product, isLoading, error } = useQuery({
+  // Fetch product data with proper typing
+  const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: ['product', productSlug],
-    queryFn: () => api.get(`/products/${productSlug}`),
+    queryFn: () => api.get<Product>(`/products/${productSlug}`),
     enabled: !!productSlug
   });
 

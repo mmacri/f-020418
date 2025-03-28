@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { isAuthenticated } from '@/services/userService';
+import { Product } from '@/services/productService';
 
 // For development, we'll use localStorage
 // In production, this would call a real API
@@ -26,7 +27,7 @@ export const useWishlist = () => {
   const isLoggedIn = isAuthenticated();
 
   // Fetch wishlist items
-  const { data: wishlistItems, isLoading } = useQuery({
+  const { data: wishlistItems, isLoading } = useQuery<Product[]>({
     queryKey: ['savedProducts'],
     queryFn: async () => {
       if (!isLoggedIn) return [];
@@ -40,7 +41,7 @@ export const useWishlist = () => {
         
         // Fetch details for each product
         const products = await Promise.all(
-          productIds.map(id => api.get(`/products/${id}`))
+          productIds.map(id => api.get<Product>(`/products/${id}`))
         );
         
         return products.filter(Boolean); // Filter out any null results
@@ -180,7 +181,10 @@ export const useWishlist = () => {
   return {
     wishlistItems: wishlistItems || [],
     isLoading,
-    isInWishlist,
+    isInWishlist: (productId: number): boolean => {
+      const productIds = getWishlistFromStorage();
+      return productIds.includes(productId);
+    },
     addToWishlist: (productId: number) => addToWishlist.mutate(productId),
     removeFromWishlist: (productId: number) => removeFromWishlist.mutate(productId),
     clearWishlist: () => clearWishlist.mutate(),

@@ -282,14 +282,14 @@ export class ApiClient {
     
     if (endpoint.startsWith('/blog')) {
       if (endpoint === '/blog/posts') {
-        return blogService.getPosts() as unknown as T;
+        return blogService.getAllPosts() as unknown as T;
       }
       
       // Handle blog post by slug
       if (endpoint.includes('/blog/posts/')) {
         const slug = endpoint.split('/').pop();
         if (slug) {
-          return blogService.getPostBySlug(slug) as unknown as T;
+          return blogService.getBlogPostBySlug(slug) as unknown as T;
         }
       }
     }

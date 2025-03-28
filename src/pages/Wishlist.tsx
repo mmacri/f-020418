@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { isAuthenticated } from '@/services/userService';
+import { Product } from '@/services/productService';
 
 const Wishlist = () => {
   const { 
@@ -81,7 +82,7 @@ const Wishlist = () => {
             </div>
           ) : wishlistItems.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {wishlistItems.map(product => (
+              {(wishlistItems as Product[]).map(product => (
                 <div key={product.id} className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
                   <Link to={`/products/${product.slug}`} className="block">
                     <div className="h-48 bg-gray-100 p-4 flex items-center justify-center">
