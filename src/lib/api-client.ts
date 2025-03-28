@@ -177,6 +177,7 @@ export class ApiClient {
     // Import mock services dynamically to avoid circular dependencies
     const productService = await import('@/services/productService');
     const categoryService = await import('@/services/categoryService');
+    const categoryContentService = await import('@/services/categoryContentService');
     const userService = await import('@/services/userService');
     const blogService = await import('@/services/blogService');
     
@@ -243,6 +244,19 @@ export class ApiClient {
       if (endpoint === '/categories') {
         if (method === 'GET') return categoryService.getNavigationCategories() as unknown as T;
         if (method === 'POST') return categoryService.createCategory(data) as unknown as T;
+      }
+      
+      if (endpoint === '/categories/content') {
+        if (method === 'GET') return categoryContentService.getAllCategoryContent() as unknown as T;
+      }
+      
+      // Handle category content by slug
+      if (endpoint.includes('/categories/content/')) {
+        const slug = endpoint.split('/').pop();
+        if (slug) {
+          if (method === 'GET') return categoryContentService.getCategoryContentBySlug(slug) as unknown as T;
+          if (method === 'PUT') return categoryContentService.updateCategoryContent(slug, data) as unknown as T;
+        }
       }
       
       const categoryId = Number(endpoint.split('/').pop());

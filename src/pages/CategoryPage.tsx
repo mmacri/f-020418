@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -9,57 +9,67 @@ import ProductComparison from '@/components/ProductComparison';
 import VideoSection from '@/components/VideoSection';
 import { getProductsByCategory } from '@/lib/product-utils';
 import { Button } from '@/components/ui/button';
+import { getCategoryContentBySlug, CategoryContent } from '@/services/categoryContentService';
+import { Loader2 } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const CategoryPage = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
-  const products = categorySlug ? getProductsByCategory(categorySlug) : [];
+  const [products, setProducts] = useState<any[]>([]);
+  const [categoryContent, setCategoryContent] = useState<CategoryContent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      
+      // Get products for this category
+      const categoryProducts = categorySlug ? getProductsByCategory(categorySlug) : [];
+      setProducts(categoryProducts);
+      
+      // Get category content
+      if (categorySlug) {
+        const content = await getCategoryContentBySlug(categorySlug);
+        setCategoryContent(content);
+      }
+      
+      setIsLoading(false);
+    };
+    
+    fetchData();
+  }, [categorySlug]);
   
   // Get featured product (first product in the category)
   const featuredProduct = products.length > 0 ? products[0] : null;
   
-  // Category-specific content
-  const categoryContent = {
-    'fitness-bands': {
-      description: "Comprehensive guide to the top resistance and fitness bands for improving flexibility, mobility, and aiding recovery",
-      introduction: "Resistance bands are one of the most versatile recovery tools available, providing gentle resistance for stretching, rehabilitation, and mobility work. They're portable, affordable, and suitable for users of all fitness levels. Our team has tested dozens of bands to find the best options for recovery, mobility, and injury prevention.",
-      benefits: [
-        "Enhanced Flexibility: Provides gentle assistance for deeper, more effective stretches",
-        "Improved Circulation: Promotes blood flow to muscles for faster recovery",
-        "Joint Mobility: Helps restore range of motion after workouts or injury",
-        "Muscle Activation: Engages stabilizer muscles that are often overlooked",
-        "Progressive Resistance: Allows for gradual increase in intensity as recovery progresses"
-      ],
-      videoId: "PjZ9w2cQP-Q",
-      videoTitle: "Resistance Band Recovery Techniques",
-      videoDescription: "Watch this video to learn effective resistance band stretches and mobility exercises that can enhance your recovery and improve flexibility:"
-    },
-    'massage-guns': {
-      description: "Expert reviews and comparisons of the best percussion massage guns for faster recovery and pain relief",
-      introduction: "Percussion massage guns have revolutionized muscle recovery with their ability to deliver powerful, targeted deep tissue massage. These handheld devices use rapid pulses to penetrate muscle tissue, increase blood flow, and release tension. Our experts have thoroughly tested the top massage guns to help you find the perfect option for your recovery needs.",
-      benefits: [
-        "Accelerated Recovery: Reduces post-workout soreness and recovery time",
-        "Improved Blood Flow: Enhances circulation to damaged tissues",
-        "Decreased Pain: Helps alleviate muscle pain and stiffness",
-        "Increased Range of Motion: Reduces muscle tension that limits movement",
-        "Stress Reduction: Promotes relaxation and reduces cortisol levels"
-      ],
-      videoId: "hKYEn-6Dt_M",
-      videoTitle: "How to Use a Massage Gun Effectively",
-      videoDescription: "Learn the proper techniques for using a percussion massage gun to maximize recovery benefits while avoiding common mistakes:"
-    },
-    // Add other categories as needed
+  // Default content if none is found
+  const defaultContent = {
+    title: categorySlug ? categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '',
+    description: "Discover the best recovery products in this category.",
+    introduction: "Discover the best recovery products in this category.",
+    benefits: [],
+    videoId: "",
+    videoTitle: "",
+    videoDescription: "",
+    faqs: [],
+    buyingGuide: ""
   };
   
-  const content = categorySlug && categoryContent[categorySlug] 
-    ? categoryContent[categorySlug] 
-    : {
-        description: "",
-        introduction: "Discover the best recovery products in this category.",
-        benefits: [],
-        videoId: "",
-        videoTitle: "",
-        videoDescription: ""
-      };
+  // Use category content from service or default
+  const content = categoryContent || defaultContent;
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
+          <p className="mt-4 text-gray-600">Loading category information...</p>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -72,6 +82,7 @@ const CategoryPage = () => {
       <section className="py-10 bg-white">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="prose lg:prose-xl">
+            <h1 className="text-3xl font-bold text-center mb-8">{content.title}</h1>
             <p className="text-lg font-medium text-gray-800 mb-6">
               {content.introduction}
             </p>
@@ -151,8 +162,43 @@ const CategoryPage = () => {
         />
       )}
       
+      {/* Buying Guide Section */}
+      {content.buyingGuide && (
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <h2 className="text-3xl font-bold mb-8 text-center">Buying Guide</h2>
+            <div className="bg-gray-50 p-8 rounded-lg shadow-sm">
+              <p className="text-gray-800 leading-relaxed">
+                {content.buyingGuide}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+      
       {/* Product Comparison */}
       {products.length > 0 && <ProductComparison products={products} />}
+      
+      {/* FAQ Section */}
+      {content.faqs && content.faqs.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {content.faqs.map((faq, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-left text-lg font-medium">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-700">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+      )}
       
       {/* CTA Section */}
       <section className="py-16 bg-indigo-600">

@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { ArrowUpRight, ExternalLink } from 'lucide-react';
+import { ArrowUpRight, ExternalLink, Clock, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/services/productService';
+import { getAffiliateCookieInfo } from '@/lib/affiliate-utils';
 
 interface ProductSpecificationsProps {
   product: Product;
@@ -10,6 +11,9 @@ interface ProductSpecificationsProps {
 }
 
 const ProductSpecifications: React.FC<ProductSpecificationsProps> = ({ product, onBuyNow }) => {
+  // Get affiliate cookie info to show countdown if active
+  const { active, hoursRemaining, minutesRemaining } = getAffiliateCookieInfo();
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="bg-gray-50 p-5 rounded-lg">
@@ -62,6 +66,21 @@ const ProductSpecifications: React.FC<ProductSpecificationsProps> = ({ product, 
           </Button>
         </div>
         
+        {active && (
+          <div className="bg-blue-50 p-5 rounded-lg mb-4 border border-blue-100">
+            <div className="flex items-center mb-2">
+              <Clock className="h-4 w-4 text-blue-600 mr-2" />
+              <h3 className="font-medium text-gray-900">Amazon Cookie Status</h3>
+            </div>
+            <p className="text-sm text-gray-700 mb-2">
+              You have an active Amazon affiliate cookie that will support us when you purchase any product.
+            </p>
+            <p className="text-sm font-medium text-blue-700">
+              Time remaining: {hoursRemaining}h {minutesRemaining}m
+            </p>
+          </div>
+        )}
+        
         <div className="bg-amber-50 p-5 rounded-lg border border-amber-100">
           <h3 className="font-medium text-gray-900 mb-3">Why Buy Through Our Link?</h3>
           <ul className="text-sm space-y-2 text-gray-700 mb-4">
@@ -88,6 +107,10 @@ const ProductSpecifications: React.FC<ProductSpecificationsProps> = ({ product, 
           <p className="text-xs text-center mt-3 text-gray-500">
             As an Amazon Associate we earn from qualifying purchases
           </p>
+          <div className="mt-3 text-xs text-gray-500 flex items-start">
+            <Info className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+            <span>We only recommend products we've thoroughly researched and tested</span>
+          </div>
         </div>
       </div>
     </div>

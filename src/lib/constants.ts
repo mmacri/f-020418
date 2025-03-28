@@ -5,6 +5,7 @@ export const localStorageKeys = {
   PRODUCTS: "recovery-essentials-products",
   BLOG_POSTS: "recovery-essentials-blog-posts",
   CATEGORIES: "recovery-essentials-categories",
+  CATEGORIES_CONTENT: "recovery-essentials-categories-content",
   WISHLIST: "recovery-essentials-wishlist",
   THEME: "recovery-essentials-theme",
   CART: "recovery-essentials-cart",
