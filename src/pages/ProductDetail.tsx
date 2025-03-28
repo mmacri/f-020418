@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -21,6 +20,7 @@ import ProductInquiryForm from '@/components/product/ProductInquiryForm';
 import { api } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/services/productService';
+import { handleAffiliateClick } from '@/lib/affiliate-utils';
 
 const ProductDetail = () => {
   const { productSlug } = useParams<{ productSlug: string }>();
@@ -37,16 +37,24 @@ const ProductDetail = () => {
     if (!product) return;
     
     // Track click for analytics
-    console.log('Buy Now clicked:', product.title);
+    console.log('Buy Now clicked:', product.title || product.name);
     
-    // Open affiliate link in new tab
-    window.open(product.affiliateUrl, '_blank');
-    
-    // Show toast notification
-    toast({
-      title: "Opening Amazon",
-      description: "You're being redirected to complete your purchase"
-    });
+    // Use our enhanced affiliate click handler
+    const affiliateUrl = product.affiliateUrl || product.affiliateLink;
+    if (affiliateUrl) {
+      handleAffiliateClick(
+        affiliateUrl, 
+        product.id, 
+        product.title || product.name, 
+        product.asin
+      );
+    } else {
+      // Fallback if no affiliate URL
+      toast({
+        title: "No affiliate link available",
+        description: "Sorry, we couldn't find a purchase link for this product."
+      });
+    }
   };
 
   const handleShare = () => {
@@ -160,7 +168,7 @@ const ProductDetail = () => {
           {/* Product Inquiry Form */}
           {!isLoading && product && (
             <ProductInquiryForm 
-              productName={product.title} 
+              productName={product.title || product.name} 
               productId={product.id} 
             />
           )}

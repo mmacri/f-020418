@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { ArrowUpRight, Heart, Check, ShoppingCart, Share2 } from 'lucide-react';
+import { ArrowUpRight, Heart, Check, ShoppingCart, Share2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/services/productService';
 import SaveForLater from '@/components/product/SaveForLater';
 import { useToast } from '@/hooks/use-toast';
+import { handleAffiliateClick, getAffiliateCookieInfo } from '@/lib/affiliate-utils';
 
 interface ProductInfoProps {
   product: Product;
@@ -13,10 +14,40 @@ interface ProductInfoProps {
 }
 
 const ProductInfo: React.FC<ProductInfoProps> = ({ product, onShare, onBuyNow }) => {
+  const { toast } = useToast();
+  
   // Calculate discount percentage
   const discountPercentage = product.originalPrice && product.price < product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : null;
+  
+  // Check affiliate cookie status
+  const affiliateCookie = getAffiliateCookieInfo();
+
+  // Enhanced onBuyNow that uses our affiliate utility
+  const handleBuyNowClick = () => {
+    if (!product.affiliateUrl && !product.affiliateLink) {
+      toast({
+        title: "No affiliate link available",
+        description: "Sorry, we couldn't find a purchase link for this product."
+      });
+      return;
+    }
+    
+    // If the original onBuyNow still has important logic, call it
+    onBuyNow();
+    
+    // Use our enhanced affiliate click handler
+    const affiliateUrl = product.affiliateUrl || product.affiliateLink;
+    if (affiliateUrl) {
+      handleAffiliateClick(
+        affiliateUrl, 
+        product.id, 
+        product.title || product.name, 
+        product.asin
+      );
+    }
+  };
 
   return (
     <div className="md:w-1/2">
@@ -26,7 +57,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onShare, onBuyNow })
         </div>
       )}
       
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.title}</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.title || product.name}</h1>
       
       <div className="flex items-center mb-4">
         <div className="flex text-amber-400 mr-2">
@@ -44,8 +75,12 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onShare, onBuyNow })
         <span className="text-2xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
         {discountPercentage && (
           <>
-            <span className="text-gray-500 line-through ml-2">${product.originalPrice!.toFixed(2)}</span>
-            <span className="text-green-600 ml-2">Save {discountPercentage}%</span>
+            <span className="text-gray-500 line-through ml-2">
+              ${product.originalPrice!.toFixed(2)}
+            </span>
+            <span className="text-green-600 ml-2">
+              Save {discountPercentage}%
+            </span>
           </>
         )}
       </div>
@@ -72,10 +107,22 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onShare, onBuyNow })
         </span>
       </div>
       
+      {/* Affiliate Cookie Timer */}
+      {affiliateCookie.active && (
+        <div className="mb-6 p-3 bg-indigo-50 rounded-md flex items-center text-sm border border-indigo-100">
+          <Clock className="h-4 w-4 mr-2 text-indigo-600" />
+          <span>
+            Your Amazon support cookie is active! Purchases made within the next 
+            <span className="font-semibold text-indigo-700"> {affiliateCookie.hoursRemaining}h {affiliateCookie.minutesRemaining}m </span> 
+            will support our site. Thank you!
+          </span>
+        </div>
+      )}
+      
       <div className="mb-8 flex space-x-4">
         <Button 
-          className="flex items-center"
-          onClick={onBuyNow}
+          className="flex items-center bg-amber-500 hover:bg-amber-600"
+          onClick={handleBuyNowClick}
           disabled={!product.inStock}
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
@@ -85,7 +132,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onShare, onBuyNow })
         
         <SaveForLater 
           productId={product.id} 
-          productName={product.title}
+          productName={product.title || product.name}
         />
         
         <Button
