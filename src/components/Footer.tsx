@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, PinterestIcon } from "lucide-react";
+import { Facebook, Twitter, Instagram } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -29,9 +29,6 @@ const Footer = () => {
               </a>
               <a href="#" className="text-gray-400 hover:text-white transition">
                 <Instagram size={20} />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <PinterestIcon size={20} />
               </a>
             </div>
           </div>
