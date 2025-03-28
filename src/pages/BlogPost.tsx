@@ -1,15 +1,32 @@
-
 import { useParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import VideoSection from "@/components/VideoSection";
 import { Link } from "react-router-dom";
 
+interface BlogPostType {
+  title: string;
+  category: string;
+  date: string;
+  readTime: string;
+  featuredImage: string;
+  author?: string;
+  authorImage?: string;
+  authorBio?: string;
+  content: string;
+  videoId?: string;
+  videoTitle?: string;
+  videoDescription?: string;
+}
+
+interface BlogPostsRecord {
+  [key: string]: BlogPostType;
+}
+
 const BlogPost = () => {
   const { articleSlug } = useParams<{ articleSlug: string }>();
   
-  // This would typically come from an API or CMS
-  const blogPosts = {
+  const blogPosts: BlogPostsRecord = {
     "recovery-frequency": {
       title: "How Often Should You Use Recovery Tools?",
       category: "Recovery Science",
@@ -186,11 +203,11 @@ const BlogPost = () => {
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12">
         <div className="container mx-auto px-4 text-center">
           <span className="inline-block bg-indigo-700 text-white text-sm py-1 px-3 rounded-md mb-4">
-            {post.category}
+            {post?.category}
           </span>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">{post?.title}</h1>
           <div className="flex flex-col sm:flex-row justify-center items-center text-sm">
-            {post.author && (
+            {post?.author && (
               <div className="flex items-center mb-2 sm:mb-0">
                 <img 
                   src={post.authorImage} 
@@ -201,9 +218,9 @@ const BlogPost = () => {
               </div>
             )}
             <span className="mx-3 hidden sm:block">•</span>
-            <span>{post.date}</span>
+            <span>{post?.date}</span>
             <span className="mx-3 hidden sm:block">•</span>
-            <span>{post.readTime}</span>
+            <span>{post?.readTime}</span>
           </div>
         </div>
       </div>
@@ -212,8 +229,8 @@ const BlogPost = () => {
       <div className="container mx-auto px-4 -mt-8">
         <div className="max-w-3xl mx-auto">
           <img 
-            src={post.featuredImage} 
-            alt={post.title} 
+            src={post?.featuredImage} 
+            alt={post?.title} 
             className="w-full h-auto rounded-lg shadow-xl"
           />
         </div>
@@ -223,10 +240,10 @@ const BlogPost = () => {
       <article className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
-            <div className="prose lg:prose-xl" dangerouslySetInnerHTML={{ __html: post.content }} />
+            <div className="prose lg:prose-xl" dangerouslySetInnerHTML={{ __html: post?.content || '' }} />
             
             {/* Video Section */}
-            {post.videoId && (
+            {post?.videoId && (
               <div className="my-12">
                 <VideoSection 
                   title={post.videoTitle || "Watch Related Video"} 
@@ -237,7 +254,7 @@ const BlogPost = () => {
             )}
             
             {/* Author Bio */}
-            {post.author && post.authorBio && (
+            {post?.author && post?.authorBio && (
               <div className="mt-12 pt-6 border-t border-gray-200">
                 <div className="flex items-center">
                   <img src={post.authorImage} alt={post.author} className="w-16 h-16 rounded-full mr-4" />
