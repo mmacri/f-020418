@@ -20,6 +20,9 @@ import Newsletter from "./pages/Newsletter";
 import ProductComparison from "./pages/ProductComparison";
 import RecoveryApps from "./pages/RecoveryApps";
 import Admin from "./pages/Admin";
+import ProductDetail from "./pages/ProductDetail";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -35,9 +38,16 @@ const App = () => (
           {/* Category pages */}
           <Route path="/categories/:categorySlug" element={<CategoryPage />} />
           
+          {/* Product pages */}
+          <Route path="/products/:productSlug" element={<ProductDetail />} />
+          
           {/* Blog pages */}
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:articleSlug" element={<BlogPost />} />
+          
+          {/* Authentication pages */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           
           {/* Company/Info pages */}
           <Route path="/about" element={<About />} />
