@@ -3,28 +3,34 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlogPostCard from "@/components/BlogPostCard";
+import { useState } from "react";
 
 const Blog = () => {
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+
   const blogPosts = [
     {
       id: 1,
       slug: "recovery-frequency",
-      title: "The Science Behind Muscle Recovery",
-      excerpt: "Understand the physiological processes behind muscle recovery and how to optimize them for better results.",
-      image: "https://ext.same-assets.com/30303034/muscle-recovery-science.jpg",
+      title: "How Often Should You Use Recovery Tools?",
+      excerpt: "Finding the optimal frequency for massage guns, foam rollers, and other recovery modalities for your specific needs.",
+      image: "https://ext.same-assets.com/4181642789/575270868.jpeg",
       category: "Recovery Science",
-      date: "April 15, 2023",
-      readTime: "8 min read"
+      date: "April 12, 2023",
+      readTime: "5 min read",
+      author: "Elena Rodriguez"
     },
     {
       id: 2,
       slug: "massage-gun-techniques",
-      title: "How to Choose the Right Massage Gun",
-      excerpt: "Discover the key features to consider when selecting a massage gun for your specific recovery needs.",
-      image: "https://ext.same-assets.com/30303035/choosing-massage-gun.jpg",
-      category: "Buying Guide",
-      date: "May 3, 2023",
-      readTime: "6 min read"
+      title: "6 Effective Massage Gun Techniques for Faster Recovery",
+      excerpt: "Master these techniques to maximize your percussion therapy results and enhance muscle recovery.",
+      image: "https://ext.same-assets.com/198595764/1658350751.jpeg",
+      category: "Techniques",
+      date: "May 14, 2023",
+      readTime: "8 min read",
+      author: "Dr. Sarah Johnson"
     },
     {
       id: 3,
@@ -41,12 +47,22 @@ const Blog = () => {
       slug: "foam-rolling-guide",
       title: "The Ultimate Guide to Foam Rolling",
       excerpt: "Learn proper foam rolling techniques to relieve muscle tension and improve flexibility.",
-      image: "https://ext.same-assets.com/30303031/foam-roller-category.jpg",
+      image: "https://ext.same-assets.com/1001010124/foam-roller-guide.jpg",
       category: "Techniques",
       date: "July 8, 2023",
-      readTime: "12 min read"
+      readTime: "12 min read",
+      author: "Dr. Sarah Johnson"
     }
   ];
+
+  // Filter posts based on category and search term
+  const filteredPosts = blogPosts.filter(post => {
+    const matchesCategory = activeCategory === "all" || post.category.toLowerCase().replace(/\s+/g, '-') === activeCategory;
+    const matchesSearch = searchTerm === "" || 
+                         post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -66,6 +82,8 @@ const Blog = () => {
               type="text" 
               className="w-full pl-12 pr-4 py-3 rounded-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300" 
               placeholder="Search articles..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -80,12 +98,38 @@ const Blog = () => {
       <section className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex overflow-x-auto py-4 -mx-4 px-4 whitespace-nowrap">
-            <a href="#all" className="px-4 py-2 mx-2 rounded-md font-medium bg-indigo-600 text-white">All Categories</a>
-            <a href="#recovery" className="px-4 py-2 mx-2 rounded-md font-medium text-gray-700 hover:text-indigo-600">Recovery Techniques</a>
-            <a href="#massage" className="px-4 py-2 mx-2 rounded-md font-medium text-gray-700 hover:text-indigo-600">Massage Therapy</a>
-            <a href="#guides" className="px-4 py-2 mx-2 rounded-md font-medium text-gray-700 hover:text-indigo-600">Product Guides</a>
-            <a href="#fitness" className="px-4 py-2 mx-2 rounded-md font-medium text-gray-700 hover:text-indigo-600">Fitness</a>
-            <a href="#injury" className="px-4 py-2 mx-2 rounded-md font-medium text-gray-700 hover:text-indigo-600">Injury Prevention</a>
+            <button
+              onClick={() => setActiveCategory("all")}
+              className={`px-4 py-2 mx-2 rounded-md font-medium ${
+                activeCategory === "all" ? "bg-indigo-600 text-white" : "text-gray-700 hover:text-indigo-600"
+              }`}
+            >
+              All Categories
+            </button>
+            <button
+              onClick={() => setActiveCategory("recovery-science")}
+              className={`px-4 py-2 mx-2 rounded-md font-medium ${
+                activeCategory === "recovery-science" ? "bg-indigo-600 text-white" : "text-gray-700 hover:text-indigo-600"
+              }`}
+            >
+              Recovery Science
+            </button>
+            <button
+              onClick={() => setActiveCategory("techniques")}
+              className={`px-4 py-2 mx-2 rounded-md font-medium ${
+                activeCategory === "techniques" ? "bg-indigo-600 text-white" : "text-gray-700 hover:text-indigo-600"
+              }`}
+            >
+              Techniques
+            </button>
+            <button
+              onClick={() => setActiveCategory("running-recovery")}
+              className={`px-4 py-2 mx-2 rounded-md font-medium ${
+                activeCategory === "running-recovery" ? "bg-indigo-600 text-white" : "text-gray-700 hover:text-indigo-600"
+              }`}
+            >
+              Running Recovery
+            </button>
           </div>
         </div>
       </section>
@@ -107,8 +151,8 @@ const Blog = () => {
             </div>
             <div className="lg:col-span-2 flex flex-col">
               <div className="mb-4">
-                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Recovery Techniques</span>
-                <span className="text-gray-500 text-sm ml-2">Feb 20, 2023</span>
+                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Techniques</span>
+                <span className="text-gray-500 text-sm ml-2">July 8, 2023</span>
               </div>
               <h3 className="text-2xl font-bold mb-4">
                 <Link to="/blog/foam-rolling-guide" className="text-gray-900 hover:text-indigo-600">
@@ -143,11 +187,18 @@ const Blog = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.map((post) => (
-              <BlogPostCard key={post.id} post={post} />
-            ))}
-          </div>
+          {filteredPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredPosts.map((post) => (
+                <BlogPostCard key={post.id} post={post} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <h3 className="text-xl font-medium text-gray-600 mb-4">No articles found</h3>
+              <p className="text-gray-500">Try adjusting your search or category filters</p>
+            </div>
+          )}
 
           {/* Load More Button */}
           <div className="text-center mt-12">

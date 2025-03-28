@@ -9,9 +9,9 @@ interface VideoSectionProps {
 
 const VideoSection: React.FC<VideoSectionProps> = ({ title, description, videoId }) => {
   return (
-    <section className="py-16 bg-white">
+    <section className="py-8 bg-white">
       <div className="container mx-auto px-4 max-w-4xl">
-        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">{title}</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">{title}</h2>
 
         <p className="text-gray-600 mb-8 text-center max-w-3xl mx-auto">
           {description}

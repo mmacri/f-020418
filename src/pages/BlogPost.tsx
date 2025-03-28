@@ -11,87 +11,110 @@ const BlogPost = () => {
   // This would typically come from an API or CMS
   const blogPosts = {
     "recovery-frequency": {
-      title: "The Science Behind Muscle Recovery",
+      title: "How Often Should You Use Recovery Tools?",
       category: "Recovery Science",
-      date: "April 15, 2023",
-      readTime: "8 min read",
-      featuredImage: "https://ext.same-assets.com/30303034/muscle-recovery-science.jpg",
+      date: "April 12, 2023",
+      readTime: "5 min read",
+      featuredImage: "https://ext.same-assets.com/4181642789/575270868.jpeg",
+      author: "Elena Rodriguez",
+      authorImage: "https://ext.same-assets.com/2651616194/3622592620.jpeg",
+      authorBio: "Fitness recovery specialist with expertise in optimizing recovery protocols for athletes of all levels.",
       content: `
-        <p class="text-lg mb-4">
-          Understanding the science behind muscle recovery is essential for optimizing your fitness routine. When you exercise, especially during strength training, you create microscopic tears in your muscle fibers. This damage triggers an inflammatory response as your body works to repair the tissue.
+        <p class="text-lg font-medium text-gray-800 mb-6">
+          "How often should I use recovery tools?" is one of the most common questions we receive from our community. Whether it's about massage guns, foam rollers, compression gear, or other recovery modalities, finding the right frequency is crucial for maximizing benefits without overdoing it.
         </p>
-        <h2 class="text-2xl font-bold mt-8 mb-4">The Recovery Process</h2>
-        <p class="mb-4">
-          Muscle recovery happens in several phases:
+
+        <p class="text-gray-700 mb-6">
+          This guide breaks down the optimal usage frequency for different recovery tools based on scientific research, expert recommendations, and real-world application. We'll cover specific protocols for various fitness levels, activity types, and recovery needs.
         </p>
-        <ul class="list-disc pl-6 mb-6">
-          <li class="mb-2"><strong>Inflammation Phase:</strong> Immediately after exercise, blood flow increases to the worked muscles, bringing nutrients and immune cells to begin the repair process.</li>
-          <li class="mb-2"><strong>Repair Phase:</strong> During this phase, your body synthesizes proteins to rebuild the damaged muscle fibers.</li>
-          <li class="mb-2"><strong>Growth Phase:</strong> As repairs continue, the muscle adapts by becoming stronger and, in some cases, larger than before.</li>
-        </ul>
-        <p class="mb-6">
-          Research shows that complete muscle recovery can take anywhere from 24-72 hours, depending on the intensity of your workout, your fitness level, age, and other factors.
-        </p>
-        <h2 class="text-2xl font-bold mt-8 mb-4">Optimizing Recovery</h2>
-        <p class="mb-4">
-          To enhance your recovery process, consider these evidence-based strategies:
-        </p>
-        <ol class="list-decimal pl-6 mb-6">
-          <li class="mb-2"><strong>Adequate Protein Intake:</strong> Consuming 20-40g of protein within the anabolic window (within a few hours after exercise) can enhance muscle protein synthesis.</li>
-          <li class="mb-2"><strong>Quality Sleep:</strong> During deep sleep, your body releases growth hormone, which is crucial for tissue repair and recovery.</li>
-          <li class="mb-2"><strong>Active Recovery:</strong> Light activity like walking or swimming can increase blood flow to muscles without causing additional damage.</li>
-          <li class="mb-2"><strong>Hydration:</strong> Maintaining proper fluid balance is essential for nutrient delivery and waste removal from muscles.</li>
-          <li class="mb-2"><strong>Recovery Tools:</strong> Devices like massage guns, foam rollers, and compression gear can help reduce muscle soreness and speed up recovery.</li>
-        </ol>
-      `,
-      videoId: "Vl4KYSx1YmI",
-      videoTitle: "Understanding Muscle Recovery",
-      videoDescription: "Watch this video to learn more about the science of muscle recovery and how to optimize it.",
-      author: "Dr. Emma Thompson",
-      authorImage: "https://ext.same-assets.com/2783942035/2491380635.jpeg",
-      authorBio: "Exercise Physiologist with 10+ years specializing in recovery protocols for elite athletes."
+
+        <div class="bg-indigo-50 p-6 rounded-lg my-8">
+          <h3 class="font-bold text-xl mb-3">Coming Soon</h3>
+          <p class="text-gray-700">
+            We're currently finalizing this practical guide on recovery tool frequency. Check back soon for the complete article, or subscribe to our newsletter to be notified when it's published.
+          </p>
+        </div>
+      `
     },
     "massage-gun-techniques": {
-      title: "How to Choose the Right Massage Gun",
-      category: "Buying Guide",
-      date: "May 3, 2023",
-      readTime: "6 min read",
-      featuredImage: "https://ext.same-assets.com/30303035/choosing-massage-gun.jpg",
+      title: "6 Effective Massage Gun Techniques for Faster Recovery",
+      category: "Techniques",
+      date: "May 14, 2023",
+      readTime: "8 min read",
+      featuredImage: "https://ext.same-assets.com/198595764/1658350751.jpeg",
+      author: "Dr. Sarah Johnson",
+      authorImage: "https://ext.same-assets.com/2783942035/2491380635.jpeg",
+      authorBio: "Physical therapist with over 12 years of experience specializing in sports injury rehabilitation and recovery protocols.",
       content: `
-        <p class="text-lg mb-4">
-          Massage guns have become increasingly popular recovery tools, but with so many options on the market, choosing the right one can be overwhelming. This guide will help you understand the key features to consider.
+        <p class="text-lg font-medium text-gray-800 mb-6">
+          Whether you're a professional athlete, fitness enthusiast, or someone dealing with everyday muscle tension,
+          a massage gun can be a game-changer for your recovery routine. But simply turning it on and moving it around
+          randomly won't deliver the best results. In this guide, we'll explore effective techniques to maximize the
+          benefits of your percussion therapy device.
         </p>
-        <h2 class="text-2xl font-bold mt-8 mb-4">What to Look for in a Massage Gun</h2>
-        <p class="mb-6">
-          When shopping for a massage gun, consider these important factors:
-        </p>
-        <h3 class="text-xl font-bold mt-6 mb-3">1. Amplitude (Stroke Length)</h3>
-        <p class="mb-4">
-          This measures how deep the massage gun head moves into your muscle. Professional-grade devices typically offer 16mm or more, while budget options might only provide 10-12mm.
-        </p>
-        <h3 class="text-xl font-bold mt-6 mb-3">2. Stall Force</h3>
-        <p class="mb-4">
-          This is the amount of pressure the device can handle before the motor stalls. Higher stall force (30+ pounds) is better for deep tissue work and larger muscle groups.
-        </p>
-        <h3 class="text-xl font-bold mt-6 mb-3">3. Speed Options</h3>
-        <p class="mb-4">
-          Most quality massage guns offer multiple speed settings, typically ranging from 1,200 to 3,200 percussions per minute. Having at least 3-5 speed options provides versatility for different body parts and recovery needs.
-        </p>
-        <h3 class="text-xl font-bold mt-6 mb-3">4. Battery Life</h3>
-        <p class="mb-4">
-          Look for devices with at least 2-3 hours of battery life per charge. This ensures you won't constantly need to recharge after short sessions.
-        </p>
-        <h3 class="text-xl font-bold mt-6 mb-3">5. Noise Level</h3>
-        <p class="mb-4">
-          Lower-quality massage guns can be quite loud, which may limit when and where you use them. Premium options typically operate at 60 decibels or lower.
-        </p>
+
+        <div class="bg-indigo-50 p-6 rounded-lg my-8">
+          <h3 class="font-bold text-xl mb-3">Important Safety Notes</h3>
+          <ul class="list-disc pl-6 space-y-2 text-gray-700">
+            <li>Never use a massage gun directly on bones, joints, or nerves</li>
+            <li>Avoid using on injuries, inflamed areas, or broken skin</li>
+            <li>Start with the lowest intensity setting and gradually increase as needed</li>
+            <li>Limit treatment to 2 minutes per muscle group</li>
+            <li>If you experience pain (beyond normal muscle soreness), stop immediately</li>
+            <li>Consult a healthcare professional if you have medical conditions or concerns</li>
+          </ul>
+        </div>
+
+        <h2 class="text-3xl font-bold text-gray-800 my-8">Essential Massage Gun Techniques</h2>
+
+        <!-- Technique 1 -->
+        <div class="bg-white rounded-lg shadow-md border border-gray-100 p-6 mb-8">
+          <h3 class="text-2xl font-bold text-indigo-800 mb-4">1. Float and Glide</h3>
+          <div class="flex flex-col md:flex-row gap-6 mb-4">
+            <div class="md:w-1/3">
+              <img src="https://ext.same-assets.com/198595764/1658350751.jpeg" alt="Float and Glide Technique" class="rounded-lg shadow-sm">
+            </div>
+            <div class="md:w-2/3">
+              <p class="text-gray-700 mb-4">
+                The most basic and versatile technique. Without applying additional pressure, let the massage gun float along
+                the muscle, gliding slowly (about 1-2 inches per second). This distributes the percussion evenly throughout the muscle tissue.
+              </p>
+              <h4 class="font-bold mt-4 mb-2">When to use:</h4>
+              <p class="text-gray-700">
+                Ideal for warming up muscles pre-workout, general muscle maintenance, or as a starting point before using more targeted techniques.
+              </p>
+            </div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded text-sm text-gray-600">
+            <strong>Pro Tip:</strong> Keep the massage gun perpendicular to the muscle rather than at an angle for optimal percussion depth.
+          </div>
+        </div>
+
+        <!-- Technique 2 -->
+        <div class="bg-white rounded-lg shadow-md border border-gray-100 p-6 mb-8">
+          <h3 class="text-2xl font-bold text-indigo-800 mb-4">2. Press and Hold</h3>
+          <div class="flex flex-col md:flex-row gap-6 mb-4">
+            <div class="md:w-1/3">
+              <img src="https://ext.same-assets.com/1926211595/4269912841.jpeg" alt="Press and Hold Technique" class="rounded-lg shadow-sm">
+            </div>
+            <div class="md:w-2/3">
+              <p class="text-gray-700 mb-4">
+                For targeting specific knots or trigger points, apply the massage gun directly to the spot and hold with light to medium pressure for 15-30 seconds. The sustained percussion helps release stubborn tension points.
+              </p>
+              <h4 class="font-bold mt-4 mb-2">When to use:</h4>
+              <p class="text-gray-700">
+                Perfect for addressing specific areas of tension, muscle knots, or trigger points that don't release with regular movement techniques.
+              </p>
+            </div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded text-sm text-gray-600">
+            <strong>Pro Tip:</strong> Start with lower pressure and gradually increase to avoid discomfort. Use a round or flat attachment for this technique.
+          </div>
+        </div>
       `,
-      videoId: "Y8Xp3NhQj6g",
-      videoTitle: "Massage Gun Techniques for Recovery",
-      videoDescription: "Learn the most effective techniques for using a massage gun to accelerate recovery and relieve muscle pain.",
-      author: "Jason Taylor",
-      authorImage: "https://ext.same-assets.com/8921309534/7182604153.jpeg",
-      authorBio: "Physical therapist specializing in sports rehabilitation and recovery technologies."
+      videoId: "xMbU2JK9x50",
+      videoTitle: "Massage Gun Techniques Demonstration",
+      videoDescription: "Watch this video tutorial to see these techniques in action and learn proper form:"
     },
     "foam-rolling-guide": {
       title: "The Ultimate Guide to Foam Rolling",
@@ -271,18 +294,18 @@ const BlogPost = () => {
                     </div>
                     <div className="p-4">
                       <h4 className="font-bold text-gray-800 group-hover:text-indigo-600 transition-colors mb-2">Massage Gun Techniques</h4>
-                      <p className="text-sm text-gray-500">May 3, 2023 • 6 min read</p>
+                      <p className="text-sm text-gray-500">May 14, 2023 • 8 min read</p>
                     </div>
                   </div>
                 </Link>
                 <Link to="/blog/recovery-frequency" className="block group">
                   <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 h-full">
                     <div className="h-40 bg-gray-200 relative">
-                      <img src="https://ext.same-assets.com/30303034/muscle-recovery-science.jpg" alt="Recovery Frequency" className="w-full h-full object-cover" />
+                      <img src="https://ext.same-assets.com/4181642789/575270868.jpeg" alt="Recovery Frequency" className="w-full h-full object-cover" />
                     </div>
                     <div className="p-4">
-                      <h4 className="font-bold text-gray-800 group-hover:text-indigo-600 transition-colors mb-2">The Science of Muscle Recovery</h4>
-                      <p className="text-sm text-gray-500">April 15, 2023 • 8 min read</p>
+                      <h4 className="font-bold text-gray-800 group-hover:text-indigo-600 transition-colors mb-2">How Often Should You Use Recovery Tools?</h4>
+                      <p className="text-sm text-gray-500">April 12, 2023 • 5 min read</p>
                     </div>
                   </div>
                 </Link>
