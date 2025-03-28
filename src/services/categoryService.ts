@@ -15,6 +15,8 @@ export interface Category {
   description?: string;
   imageUrl?: string;
   subcategories: Subcategory[];
+  showInNavigation?: boolean;
+  navigationOrder?: number;
 }
 
 // Create types without id field
@@ -31,6 +33,8 @@ export type CategoryInput = {
   imageUrl?: string;
   subcategories: any[]; // Changed from Subcategory[] to any[] for more flexibility
   parentId?: number | null; // Added to match the form data
+  showInNavigation?: boolean;
+  navigationOrder?: number;
 };
 
 // Mock categories data
@@ -60,7 +64,9 @@ let CATEGORIES: Category[] = [
         slug: "heated",
         description: "Massage guns with heat therapy"
       }
-    ]
+    ],
+    showInNavigation: true,
+    navigationOrder: 1
   },
   {
     id: 2,
@@ -87,7 +93,9 @@ let CATEGORIES: Category[] = [
         slug: "vibrating",
         description: "Foam rollers with vibration technology"
       }
-    ]
+    ],
+    showInNavigation: true,
+    navigationOrder: 2
   },
   {
     id: 3,
@@ -114,7 +122,9 @@ let CATEGORIES: Category[] = [
         slug: "full-body",
         description: "Full body compression suits and garments"
       }
-    ]
+    ],
+    showInNavigation: true,
+    navigationOrder: 3
   },
   {
     id: 4,
@@ -141,7 +151,9 @@ let CATEGORIES: Category[] = [
         slug: "power-bands",
         description: "Heavy duty bands for strength training"
       }
-    ]
+    ],
+    showInNavigation: true,
+    navigationOrder: 4
   }
 ];
 
