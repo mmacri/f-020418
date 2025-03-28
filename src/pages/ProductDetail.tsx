@@ -9,8 +9,11 @@ import Footer from '@/components/Footer';
 import ProductReviews from '@/components/product/ProductReviews';
 import ProductSkeleton from '@/components/product/ProductSkeleton';
 import Breadcrumbs from '@/components/product/Breadcrumbs';
+import BreadcrumbsSkeleton from '@/components/product/BreadcrumbsSkeleton';
 import ProductImages from '@/components/product/ProductImages';
+import ProductImagesSkeleton from '@/components/product/ProductImagesSkeleton';
 import ProductInfo from '@/components/product/ProductInfo';
+import ProductInfoSkeleton from '@/components/product/ProductInfoSkeleton';
 import ProductDescription from '@/components/product/ProductDescription';
 import ProductSpecifications from '@/components/product/ProductSpecifications';
 import { api } from '@/lib/api-client';
@@ -73,19 +76,7 @@ const ProductDetail = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-          <ProductSkeleton />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (error || !product) {
+  if (error) {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -114,45 +105,54 @@ const ProductDetail = () => {
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Breadcrumbs */}
-          <Breadcrumbs product={product} />
+          {isLoading ? <BreadcrumbsSkeleton /> : product && <Breadcrumbs product={product} />}
           
           <div className="flex flex-col md:flex-row gap-8">
             {/* Product Images */}
-            <ProductImages product={product} />
+            {isLoading ? <ProductImagesSkeleton /> : product && <ProductImages product={product} />}
             
             {/* Product Info */}
-            <ProductInfo 
-              product={product} 
-              onShare={handleShare} 
-              onBuyNow={handleBuyNow} 
-            />
+            {isLoading ? <ProductInfoSkeleton /> : product && (
+              <ProductInfo 
+                product={product} 
+                onShare={handleShare} 
+                onBuyNow={handleBuyNow} 
+              />
+            )}
           </div>
           
           {/* Tabs for Description, Specs, Reviews */}
           <div className="mt-16">
-            <Tabs defaultValue="description">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="description">Description</TabsTrigger>
-                <TabsTrigger value="specifications">Specifications</TabsTrigger>
-                <TabsTrigger value="reviews">Reviews</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="description" className="p-6 border rounded-lg mt-4">
-                <ProductDescription product={product} />
-              </TabsContent>
-              
-              <TabsContent value="specifications" className="p-6 border rounded-lg mt-4">
-                <h2 className="text-xl font-bold mb-4">Technical Specifications</h2>
-                <ProductSpecifications product={product} onBuyNow={handleBuyNow} />
-              </TabsContent>
-              
-              <TabsContent value="reviews" className="mt-4">
-                <ProductReviews 
-                  productId={product.id}
-                  productSlug={product.slug}
-                />
-              </TabsContent>
-            </Tabs>
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full rounded-md" />
+                <Skeleton className="h-64 w-full rounded-lg" />
+              </div>
+            ) : product && (
+              <Tabs defaultValue="description">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="description">Description</TabsTrigger>
+                  <TabsTrigger value="specifications">Specifications</TabsTrigger>
+                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="description" className="p-6 border rounded-lg mt-4">
+                  <ProductDescription product={product} />
+                </TabsContent>
+                
+                <TabsContent value="specifications" className="p-6 border rounded-lg mt-4">
+                  <h2 className="text-xl font-bold mb-4">Technical Specifications</h2>
+                  <ProductSpecifications product={product} onBuyNow={handleBuyNow} />
+                </TabsContent>
+                
+                <TabsContent value="reviews" className="mt-4">
+                  <ProductReviews 
+                    productId={product.id}
+                    productSlug={product.slug}
+                  />
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         </div>
       </main>
