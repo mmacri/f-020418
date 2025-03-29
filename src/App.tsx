@@ -23,7 +23,9 @@ import AutoWorkflowDemo from "@/pages/AutoWorkflowDemo";
 import NotFound from "@/pages/NotFound";
 import ProductComparisonPage from "@/pages/ProductComparisonPage";
 import Wishlist from "@/pages/Wishlist";
+import Register from "@/pages/Register";
 import initPolyfills from "@/lib/browser-polyfills";
+import { Toaster } from "@/components/ui/toaster";
 
 function App() {
   useEffect(() => {
@@ -40,6 +42,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/recovery-apps" element={<RecoveryApps />} />
@@ -71,6 +74,7 @@ function App() {
           {/* 404 route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Toaster />
       </Router>
     </ThemeProvider>
   );

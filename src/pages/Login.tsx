@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { login } from "@/services/authService";
 import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 // Form validation schema
 const loginSchema = z.object({
@@ -181,6 +182,7 @@ const Login = () => {
       </div>
 
       <Footer />
+      <Toaster />
     </div>
   );
 };

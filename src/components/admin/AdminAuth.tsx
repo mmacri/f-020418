@@ -45,6 +45,11 @@ const AdminAuth = ({ onAuthSuccess }: AdminAuthProps) => {
       });
       
       if (response.success && response.user?.role === "admin") {
+        toast({
+          title: "Authentication Successful",
+          description: "Welcome to the admin dashboard.",
+          variant: "default",
+        });
         onAuthSuccess();
       } else {
         toast({
