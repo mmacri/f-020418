@@ -1,16 +1,17 @@
-
 export const localStorageKeys = {
-  USER: "recovery-essentials-user",
-  USERS: "recovery-essentials-users",
-  PRODUCTS: "recovery-essentials-products",
-  BLOG_POSTS: "recovery-essentials-blog-posts",
-  CATEGORIES: "recovery-essentials-categories",
-  CATEGORIES_CONTENT: "recovery-essentials-categories-content",
-  WISHLIST: "recovery-essentials-wishlist",
-  THEME: "recovery-essentials-theme",
-  CART: "recovery-essentials-cart",
-  AFFILIATE_CLICKS: "recovery-essentials-affiliate-clicks", // Track affiliate link interactions
-  NAVIGATION: "recovery-essentials-navigation", // Store navigation structure
+  PRODUCTS: 'recovery-essentials-products',
+  CATEGORIES: 'recovery-essentials-categories',
+  USER: 'recovery-essentials-user',
+  USER_ID: 'recovery-essentials-user-id',
+  AUTH_TOKEN: 'recovery-essentials-auth-token',
+  CART_ITEMS: 'recovery-essentials-cart-items',
+  WISHLIST_ITEMS: 'recovery-essentials-wishlist',
+  BLOG_POSTS: 'recovery-essentials-blog-posts',
+  THEME: 'recovery-essentials-theme',
+  SETTINGS: 'recovery-essentials-settings',
+  AFFILIATE_CLICKS: 'recovery-essentials-affiliate-clicks',
+  ANALYTICS_DATA: 'recovery-essentials-analytics-data',
+  CATEGORY_CONTENT: 'recovery-essentials-category-content',
 };
 
 // Default category slugs for the application

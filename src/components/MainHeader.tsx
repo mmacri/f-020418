@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -169,17 +168,7 @@ const MainHeader = () => {
             {/* Theme Toggle */}
             <ThemeToggle />
             
-            {/* Cart Link */}
-            <Link to="/cart" className="relative">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`h-9 w-9 ${isActiveLink("/cart") ? "bg-accent" : ""}`}
-              >
-                <ShoppingCart className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">0</span>
-              </Button>
-            </Link>
+            {/* Removed Shopping Cart Link */}
             
             {/* User Menu */}
             {user ? (
