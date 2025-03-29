@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, X, Heart } from 'lucide-react';
@@ -11,7 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { ModeToggle } from '@/components/ModeToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { DEFAULT_NAVIGATION } from '@/lib/constants';
 import { isAdmin, isAuthenticated, logout } from '@/services/authService';
 
@@ -21,12 +22,18 @@ interface NavItem {
   type: "link" | "category-dropdown" | "button";
   url?: string;
   showInHeader: boolean;
-  items?: NavItem[];
+  items?: {
+    id: number;
+    title: string;
+    url?: string;
+    type?: string;
+    showInHeader?: boolean;
+  }[];
 }
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [mainMenu, setMainMenu] = useState<NavItem[]>(DEFAULT_NAVIGATION.mainMenu);
+  const [mainMenu, setMainMenu] = useState<NavItem[]>(DEFAULT_NAVIGATION.mainMenu as NavItem[]);
   const { theme } = useTheme();
   const location = useLocation();
 
@@ -154,7 +161,7 @@ const Header = () => {
           <Link to="/wishlist">
             <Heart className="h-5 w-5 text-gray-500 hover:text-gray-700" />
           </Link>
-          <ModeToggle />
+          <ThemeToggle />
           {renderAuthButtons()}
 
           <Sheet>
