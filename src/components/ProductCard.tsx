@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPrice, getProductUrl } from '@/lib/product-utils';
@@ -10,7 +11,7 @@ type ProductImage = {
 };
 
 interface ProductCardProps {
-  product: {
+  product: Product | {
     id: string | number;
     name: string;
     slug: string;
@@ -20,7 +21,10 @@ interface ProductCardProps {
     originalPrice?: number;
     rating: number;
     reviewCount: number;
-    images: ProductImage[] | string[];
+    images: (ProductImage | string)[] | string[];
+    categoryId?: number;
+    createdAt?: string;
+    updatedAt?: string;
   };
   isLoading?: boolean;
   featured?: boolean;
@@ -35,7 +39,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, f
     }
     
     const firstImage = product.images[0];
-    return typeof firstImage === 'string' ? firstImage : firstImage.url;
+    if (typeof firstImage === 'string') {
+      return firstImage;
+    } else if (typeof firstImage === 'object' && 'url' in firstImage) {
+      return firstImage.url;
+    }
+    return '/placeholder.svg';
   };
   
   const imageUrl = getImageUrl();
@@ -60,11 +69,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, f
     );
   }
 
+  // Ensure the product has all required fields for getProductUrl
   const productWithDefaults = {
     ...product,
-    categoryId: product.categoryId || 0,
-    createdAt: product.createdAt || new Date().toISOString(),
-    updatedAt: product.updatedAt || new Date().toISOString(),
+    categoryId: ('categoryId' in product) ? product.categoryId : 0,
+    createdAt: ('createdAt' in product) ? product.createdAt : new Date().toISOString(),
+    updatedAt: ('updatedAt' in product) ? product.updatedAt : new Date().toISOString(),
   } as Product;
 
   return (
