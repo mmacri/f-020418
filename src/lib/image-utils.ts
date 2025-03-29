@@ -10,6 +10,7 @@ interface ImageWithFallbackProps {
   type?: 'product' | 'category' | 'hero' | 'blog';
   disableCacheBusting?: boolean;
   onLoad?: () => void;
+  loading?: 'lazy' | 'eager';
 }
 
 // Component to handle image loading with fallback
@@ -21,6 +22,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   type = 'product',
   disableCacheBusting = true,
   onLoad,
+  loading,
 }) => {
   const getDefaultFallback = () => {
     switch (type) {
@@ -76,6 +78,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       className={className}
       onError={handleError}
       onLoad={handleLoad}
+      loading={loading}
     />
   );
 };
