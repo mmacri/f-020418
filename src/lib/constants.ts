@@ -41,6 +41,7 @@ export const imageUrls = {
   PRODUCT_DEFAULT: 'https://placehold.co/600x400?text=Product+Image',
   CATEGORY_DEFAULT: 'https://placehold.co/600x400?text=Category+Image',
   HERO_DEFAULT: 'https://placehold.co/1200x400?text=Recovery+Essentials',
+  BLOG_DEFAULT: 'https://placehold.co/800x400?text=Blog+Post',  // Added missing BLOG_DEFAULT
   AVATAR_DEFAULT: 'https://placehold.co/200x200?text=User'
 };
 
