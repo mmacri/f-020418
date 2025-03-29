@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Edit, Trash2, ArrowUpRight, Layers } from 'lucide-react';
 import { ImageWithFallback } from '@/lib/image-utils';
+import { imageUrls } from '@/lib/constants';
 import { SubcategoryList } from '@/components/admin';
 
 interface CategoryCardProps {
@@ -58,16 +59,15 @@ const CategoryCard = ({ category, onEdit, onDelete }: CategoryCardProps) => {
       </CardHeader>
       
       <CardContent className="pt-4">
-        {category.imageUrl && (
-          <div className="mb-4 rounded-md overflow-hidden h-36 flex items-center justify-center border border-border bg-muted/50">
-            <ImageWithFallback 
-              src={category.imageUrl} 
-              alt={category.name}
-              className="w-full h-full object-cover" 
-              fallbackSrc="/placeholder.svg"
-            />
-          </div>
-        )}
+        <div className="mb-4 rounded-md overflow-hidden h-36 flex items-center justify-center border border-border bg-muted/50">
+          <ImageWithFallback 
+            src={category.imageUrl || imageUrls.CATEGORY_DEFAULT} 
+            alt={category.name}
+            className="w-full h-full object-cover" 
+            fallbackSrc={imageUrls.CATEGORY_DEFAULT}
+            type="category"
+          />
+        </div>
         
         <div className="space-y-3 mb-4">
           <div className="text-sm bg-muted/30 p-2 rounded-md flex items-center justify-between">
@@ -109,7 +109,7 @@ const CategoryCard = ({ category, onEdit, onDelete }: CategoryCardProps) => {
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full text-primary border-primary/30 hover:bg-primary/10 hover:text-primary bg-background/50"
+          className="w-full text-primary font-medium border-primary/30 hover:bg-primary/10 hover:text-primary bg-background/50"
           asChild
         >
           <a href={`/categories/${category.slug}`} target="_blank" rel="noopener noreferrer">

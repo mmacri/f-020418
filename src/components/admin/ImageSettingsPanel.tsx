@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { localStorageKeys } from '@/lib/constants';
+import { localStorageKeys, imageUrls } from '@/lib/constants';
 import { ImageWithFallback } from '@/lib/image-utils';
 
 const ImageSettingsPanel: React.FC = () => {
@@ -24,10 +24,10 @@ const ImageSettingsPanel: React.FC = () => {
     setUseLocalFallbacks(useLocal);
     
     // Load current fallback URLs
-    setProductFallbackUrl(localStorage.getItem('product_fallback_url') || 'https://ext.same-assets.com/1001010126/product-placeholder.jpg');
-    setCategoryFallbackUrl(localStorage.getItem('category_fallback_url') || 'https://ext.same-assets.com/1001010126/category-placeholder.jpg');
+    setProductFallbackUrl(localStorage.getItem('product_fallback_url') || imageUrls.PRODUCT_DEFAULT);
+    setCategoryFallbackUrl(localStorage.getItem('category_fallback_url') || imageUrls.CATEGORY_DEFAULT);
     setBlogFallbackUrl(localStorage.getItem('blog_fallback_url') || 'https://ext.same-assets.com/1001010126/blog-placeholder.jpg');
-    setHeroFallbackUrl(localStorage.getItem('hero_fallback_url') || 'https://ext.same-assets.com/1001010126/hero-placeholder.jpg');
+    setHeroFallbackUrl(localStorage.getItem('hero_fallback_url') || imageUrls.HERO_DEFAULT);
   }, []);
   
   const handleSaveSettings = () => {
@@ -37,6 +37,7 @@ const ImageSettingsPanel: React.FC = () => {
     localStorage.setItem('category_fallback_url', categoryFallbackUrl);
     localStorage.setItem('blog_fallback_url', blogFallbackUrl);
     localStorage.setItem('hero_fallback_url', heroFallbackUrl);
+    localStorage.setItem(localStorageKeys.HERO_IMAGE, heroFallbackUrl);
     
     toast({
       title: 'Settings Saved',
@@ -47,17 +48,18 @@ const ImageSettingsPanel: React.FC = () => {
   const handleResetDefaults = () => {
     // Reset to defaults
     setUseLocalFallbacks(false);
-    setProductFallbackUrl('https://ext.same-assets.com/1001010126/product-placeholder.jpg');
-    setCategoryFallbackUrl('https://ext.same-assets.com/1001010126/category-placeholder.jpg');
+    setProductFallbackUrl(imageUrls.PRODUCT_DEFAULT);
+    setCategoryFallbackUrl(imageUrls.CATEGORY_DEFAULT);
     setBlogFallbackUrl('https://ext.same-assets.com/1001010126/blog-placeholder.jpg');
-    setHeroFallbackUrl('https://ext.same-assets.com/1001010126/hero-placeholder.jpg');
+    setHeroFallbackUrl(imageUrls.HERO_DEFAULT);
     
     // Save defaults to localStorage
     localStorage.setItem(localStorageKeys.USE_LOCAL_FALLBACKS, 'false');
-    localStorage.setItem('product_fallback_url', 'https://ext.same-assets.com/1001010126/product-placeholder.jpg');
-    localStorage.setItem('category_fallback_url', 'https://ext.same-assets.com/1001010126/category-placeholder.jpg');
+    localStorage.setItem('product_fallback_url', imageUrls.PRODUCT_DEFAULT);
+    localStorage.setItem('category_fallback_url', imageUrls.CATEGORY_DEFAULT);
     localStorage.setItem('blog_fallback_url', 'https://ext.same-assets.com/1001010126/blog-placeholder.jpg');
-    localStorage.setItem('hero_fallback_url', 'https://ext.same-assets.com/1001010126/hero-placeholder.jpg');
+    localStorage.setItem('hero_fallback_url', imageUrls.HERO_DEFAULT);
+    localStorage.setItem(localStorageKeys.HERO_IMAGE, imageUrls.HERO_DEFAULT);
     
     toast({
       title: 'Defaults Restored',

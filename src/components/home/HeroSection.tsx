@@ -8,7 +8,6 @@ import { ImageWithFallback } from '@/lib/image-utils';
 
 const HeroSection: React.FC = () => {
   const [heroImageUrl, setHeroImageUrl] = useState<string>(imageUrls.HERO_DEFAULT);
-  const [imageLoaded, setImageLoaded] = useState(false);
   
   useEffect(() => {
     // Try to load the hero image from localStorage
@@ -32,7 +31,7 @@ const HeroSection: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
                 size="lg" 
-                className="bg-white text-indigo-600 hover:bg-gray-100"
+                className="bg-white text-indigo-600 hover:bg-gray-100 font-medium"
                 asChild
               >
                 <Link to="/categories/massage-guns">
@@ -43,7 +42,7 @@ const HeroSection: React.FC = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="bg-transparent border-white text-white hover:bg-white/10"
+                className="bg-transparent border-white text-white hover:bg-white/10 font-medium"
                 asChild
               >
                 <Link to="/blog">
@@ -54,14 +53,10 @@ const HeroSection: React.FC = () => {
             </div>
           </div>
           <div className="md:w-1/2 relative rounded-lg shadow-xl overflow-hidden bg-white/10 p-1">
-            {!imageLoaded && (
-              <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
-            )}
             <ImageWithFallback 
               src={heroImageUrl} 
               alt="Recovery Equipment" 
               className="rounded-lg w-full h-auto"
-              onLoad={() => setImageLoaded(true)}
               fallbackSrc={imageUrls.HERO_DEFAULT}
               disableCacheBusting={false}
             />

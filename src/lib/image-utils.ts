@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
+import { imageUrls } from '@/lib/constants';
 
-// Constants
-const DEFAULT_FALLBACK_IMAGE = '/placeholder.svg';
-const REMOTE_FALLBACK_IMAGE = 'https://placehold.co/600x400?text=Image+Not+Found';
+// Constants with defaults from the constants.ts file
+const DEFAULT_FALLBACK_IMAGE = imageUrls.DEFAULT_FALLBACK;
+const REMOTE_FALLBACK_IMAGE = imageUrls.REMOTE_FALLBACK;
 
 export interface ImageFallbackOptions {
   defaultImage?: string;
@@ -123,7 +124,10 @@ export const getImageUrl = (
   
   // Handle empty URLs
   if (!url) {
-    return DEFAULT_FALLBACK_IMAGE;
+    return type === 'product' ? imageUrls.PRODUCT_DEFAULT :
+           type === 'category' ? imageUrls.CATEGORY_DEFAULT :
+           type === 'avatar' ? imageUrls.AVATAR_DEFAULT :
+           DEFAULT_FALLBACK_IMAGE;
   }
   
   // Construct URL based on type and size
@@ -163,36 +167,55 @@ export const ImageWithFallback = React.forwardRef<HTMLImageElement, ImageWithFal
     size = 'medium',
     onLoad,
     disableCacheBusting = false,
-    className,
+    className = '',
     ...props 
   }, ref) => {
-    const processedSrc = src || DEFAULT_FALLBACK_IMAGE;
-    const { 
-      imageUrl, 
-      handleImageError, 
-      handleImageLoad,
-      isLoading 
-    } = useImageWithFallback(processedSrc, {
-      defaultImage: '',
-      localFallbackImage: fallbackSrc,
-      useRemoteFallback: true
-    });
+    const [currentSrc, setCurrentSrc] = useState<string>(src || fallbackSrc);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [error, setError] = useState<boolean>(false);
+    
+    useEffect(() => {
+      setCurrentSrc(src || fallbackSrc);
+      setError(false);
+      setIsLoading(true);
+    }, [src, fallbackSrc]);
 
     // Process the URL for cache busting if enabled
-    const finalSrc = disableCacheBusting ? imageUrl : addCacheBusting(imageUrl);
+    const finalSrc = disableCacheBusting ? currentSrc : addCacheBusting(currentSrc);
 
-    return React.createElement('img', {
-      src: finalSrc,
-      alt,
-      onError: handleImageError,
-      onLoad: (e) => {
-        handleImageLoad();
-        if (onLoad) onLoad();
-      },
-      className: `${className || ''} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`,
-      ref,
-      ...props
-    });
+    const handleError = () => {
+      console.log('Image error triggered for:', currentSrc);
+      if (!error) {
+        setError(true);
+        setCurrentSrc(fallbackSrc);
+      }
+      setIsLoading(false);
+    };
+
+    const handleLoad = () => {
+      console.log('Image loaded successfully:', currentSrc);
+      setIsLoading(false);
+      if (onLoad) onLoad();
+    };
+
+    return (
+      <div className={`relative ${className}`}>
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/20 animate-pulse">
+            <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          </div>
+        )}
+        <img
+          src={finalSrc}
+          alt={alt}
+          ref={ref}
+          onError={handleError}
+          onLoad={handleLoad}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          {...props}
+        />
+      </div>
+    );
   }
 );
 

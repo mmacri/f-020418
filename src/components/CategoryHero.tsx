@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { getCategoryName } from '@/lib/product-utils';
-import { useImageWithFallback } from '@/lib/image-utils';
+import { ImageWithFallback } from '@/lib/image-utils';
 import { imageUrls } from '@/lib/constants';
 
 interface CategoryHeroProps {
@@ -10,22 +10,12 @@ interface CategoryHeroProps {
   backgroundImage?: string;
 }
 
-const DEFAULT_BACKGROUND_IMAGE = imageUrls.CATEGORY_DEFAULT;
-
 const CategoryHero: React.FC<CategoryHeroProps> = ({ 
   categorySlug, 
   description, 
   backgroundImage 
 }) => {
   const categoryName = getCategoryName(categorySlug);
-  const { imageUrl, handleImageError, handleImageLoad, isLoading } = useImageWithFallback(
-    backgroundImage || DEFAULT_BACKGROUND_IMAGE, 
-    {
-      defaultImage: DEFAULT_BACKGROUND_IMAGE,
-      localFallbackImage: imageUrls.DEFAULT_FALLBACK,
-      useRemoteFallback: true
-    }
-  );
   
   return (
     <section 
@@ -39,13 +29,15 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
     >
       {/* Background image as separate div for better control */}
       <div 
-        className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: `url('${imageUrl}')`,
-          opacity: isLoading ? 0 : 1,
-          transition: 'opacity 0.5s ease-in-out'
-        }}
-      ></div>
+        className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat overflow-hidden"
+      >
+        <ImageWithFallback
+          src={backgroundImage || imageUrls.CATEGORY_DEFAULT}
+          alt={`${categoryName} category background`}
+          fallbackSrc={imageUrls.DEFAULT_FALLBACK}
+          className="w-full h-full object-cover"
+        />
+      </div>
       
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -60,15 +52,6 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
           </p>
         </div>
       </div>
-      
-      {/* Hidden image for preloading and error handling */}
-      <img 
-        src={imageUrl} 
-        alt="" 
-        className="hidden" 
-        onError={handleImageError}
-        onLoad={handleImageLoad}
-      />
     </section>
   );
 };
