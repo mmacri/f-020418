@@ -1,5 +1,4 @@
-
-import { getCategoryBySlug, getNavigationCategories } from "@/services/categoryService";
+import { getCategoryBySlug, getNavigationCategories, getSubcategoryBySlug } from "@/services/categoryService";
 
 /**
  * Get a category by ID
@@ -132,4 +131,3 @@ export const getSubcategoryDetails = async (categorySlug: string, subcategorySlu
     return null;
   }
 };
-

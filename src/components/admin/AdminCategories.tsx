@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   getNavigationCategories, 
@@ -36,6 +35,7 @@ const AdminCategories = () => {
     imageUrl: '',
     showInNavigation: true,
     navigationOrder: 0,
+    subcategories: []
   });
   const [subcategoryFormData, setSubcategoryFormData] = useState({
     name: '',
@@ -67,7 +67,6 @@ const AdminCategories = () => {
     }
   };
 
-  // Category form handlers
   const handleCategoryInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setCategoryFormData({
@@ -102,6 +101,7 @@ const AdminCategories = () => {
       imageUrl: '',
       showInNavigation: true,
       navigationOrder: categories.length + 1,
+      subcategories: []
     });
     setImageMethod('url');
     setUploadedImage(null);
@@ -117,6 +117,7 @@ const AdminCategories = () => {
       imageUrl: category.imageUrl || '',
       showInNavigation: category.showInNavigation !== false,
       navigationOrder: category.navigationOrder || 0,
+      subcategories: category.subcategories || []
     });
     setImageMethod('url');
     setUploadedImage(null);
@@ -193,7 +194,6 @@ const AdminCategories = () => {
     }
   };
 
-  // Subcategory form handlers
   const handleSubcategoryInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setSubcategoryFormData({
@@ -383,7 +383,6 @@ const AdminCategories = () => {
         </div>
       )}
 
-      {/* Category Modal */}
       <Dialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
         <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden bg-background border border-border shadow-lg">
           <DialogHeader className="p-6 pb-2 bg-background border-b border-border/50">
@@ -412,7 +411,6 @@ const AdminCategories = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Subcategory Modal */}
       <Dialog open={isSubcategoryModalOpen} onOpenChange={setIsSubcategoryModalOpen}>
         <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden bg-background border border-border shadow-lg">
           <DialogHeader className="p-6 pb-2 bg-background border-b border-border/50">
