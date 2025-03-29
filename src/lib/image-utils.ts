@@ -76,24 +76,21 @@ export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImag
   type?: 'product' | 'category' | 'blog' | 'avatar' | 'general';
 }
 
-export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
-  src,
-  alt,
-  fallbackSrc = '/placeholder.svg',
-  type = 'general',
-  ...props
-}) => {
-  const { imageUrl, handleImageError } = useImageWithFallback(src, {
-    defaultImage: '',
-    localFallbackImage: fallbackSrc
-  });
+export const ImageWithFallback = React.forwardRef<HTMLImageElement, ImageWithFallbackProps>(
+  ({ src, alt, fallbackSrc = '/placeholder.svg', type = 'general', ...props }, ref) => {
+    const { imageUrl, handleImageError } = useImageWithFallback(src, {
+      defaultImage: '',
+      localFallbackImage: fallbackSrc
+    });
 
-  return (
-    <img
-      src={imageUrl}
-      alt={alt}
-      onError={handleImageError}
-      {...props}
-    />
-  );
-};
+    return React.createElement('img', {
+      src: imageUrl,
+      alt,
+      onError: handleImageError,
+      ref,
+      ...props
+    });
+  }
+);
+
+ImageWithFallback.displayName = 'ImageWithFallback';
