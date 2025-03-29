@@ -4,14 +4,15 @@ import { Link } from 'react-router-dom';
 import { formatPrice, getProductUrl } from '@/lib/product-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star, StarHalf } from 'lucide-react';
+import { Product } from '@/services/productService';
 
 type ProductImage = {
   url: string;
 };
 
 interface ProductCardProps {
-  product: {
-    id: string;
+  product: Partial<Product> & {
+    id: string | number;
     name: string;
     slug: string;
     category: string;
@@ -50,6 +51,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, f
     );
   }
 
+  // Create a fully compatible Product object by adding missing required fields with default values
+  const productWithDefaults = {
+    ...product,
+    categoryId: product.categoryId || 0,
+    createdAt: product.createdAt || new Date().toISOString(),
+    updatedAt: product.updatedAt || new Date().toISOString(),
+  } as Product;
+
   return (
     <div className={`card product-card rounded-lg shadow-sm overflow-hidden bg-white h-full flex flex-col ${featured ? 'border-2 border-indigo-200' : ''}`}>
       <div className="product-card__image p-4 flex items-center justify-center h-48 bg-white relative">
@@ -66,7 +75,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, f
       </div>
       <div className="product-card__content p-4 flex-grow flex flex-col">
         <h3 className="product-card__title text-lg font-medium mb-2">
-          <Link to={getProductUrl(product)} className="text-gray-800 hover:text-indigo-600">
+          <Link to={getProductUrl(productWithDefaults)} className="text-gray-800 hover:text-indigo-600">
             {product.name}
           </Link>
         </h3>
@@ -91,7 +100,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, f
         </div>
         <div className="product-card__actions mt-auto">
           <Link 
-            to={getProductUrl(product)} 
+            to={getProductUrl(productWithDefaults)} 
             className="btn btn-primary w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md inline-block text-center"
           >
             View Details
