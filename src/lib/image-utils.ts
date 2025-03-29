@@ -1,142 +1,99 @@
 
-import { useState, useEffect } from 'react';
-import { localStorageKeys } from './constants';
+import React, { useState } from 'react';
 
-const DEFAULT_PLACEHOLDER = '/placeholder.svg';
-const DEFAULT_RECOVERY_IMAGE = '/recovery-placeholder.jpg';
-
-interface ImageConfig {
+export interface ImageFallbackOptions {
   defaultImage?: string;
   localFallbackImage?: string;
-  forceFallback?: boolean;
 }
 
 /**
- * Adds cache busting to image URLs to prevent stale caches
+ * Custom hook for handling image fallbacks
  */
-export const addCacheBusting = (url: string): string => {
-  if (!url) return url;
-  
-  // Don't add cache busting to local images, data URLs, or URLs with existing cache busters
-  if (url.startsWith('/') || url.startsWith('data:') || url.includes('t=')) return url;
-  
-  // Add timestamp as cache buster
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}t=${Date.now()}`;
-};
+export const useImageWithFallback = (initialSrc: string, options: ImageFallbackOptions = {}) => {
+  const { defaultImage = '', localFallbackImage = '/placeholder.svg' } = options;
+  const [imageUrl, setImageUrl] = useState<string>(initialSrc);
+  const [fallbackTriggered, setFallbackTriggered] = useState<boolean>(false);
 
-/**
- * Utility hook for handling images with fallbacks
- */
-export const useImageWithFallback = (
-  initialUrl: string, 
-  config: ImageConfig = {}
-) => {
-  const {
-    defaultImage = DEFAULT_RECOVERY_IMAGE,
-    localFallbackImage = DEFAULT_PLACEHOLDER,
-    forceFallback = false
-  } = config;
-  
-  const [imageUrl, setImageUrl] = useState<string>(initialUrl || defaultImage);
-  const [useLocalFallback, setUseLocalFallback] = useState<boolean>(false);
-  const [hasError, setHasError] = useState<boolean>(false);
-  const [isLoaded, setIsLoaded] = useState<boolean>(false);
-  
-  useEffect(() => {
-    // Check if we should use local fallback based on localStorage setting
-    const useLocal = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
-    setUseLocalFallback(useLocal);
-    
-    // Reset image if initial URL changes
-    if (initialUrl && !forceFallback) {
-      setImageUrl(initialUrl);
-      setHasError(false);
-      setIsLoaded(false);
-    } else if (forceFallback) {
-      const fallbackImage = useLocal ? localFallbackImage : defaultImage;
-      setImageUrl(fallbackImage);
-      setHasError(false);
-      setIsLoaded(true);
-    }
-  }, [initialUrl, forceFallback, defaultImage, localFallbackImage]);
-  
   const handleImageError = () => {
-    setHasError(true);
-    const fallbackImage = useLocalFallback ? localFallbackImage : defaultImage;
-    setImageUrl(fallbackImage);
-    console.log(`Image failed to load. Using fallback image: ${fallbackImage}`);
+    if (!fallbackTriggered) {
+      // First try the defaultImage if provided
+      if (defaultImage && imageUrl !== defaultImage) {
+        setImageUrl(defaultImage);
+      } else {
+        // Fallback to local image as last resort
+        setImageUrl(localFallbackImage);
+      }
+      setFallbackTriggered(true);
+    }
   };
-  
-  const handleImageLoad = () => {
-    setIsLoaded(true);
-  };
-  
-  return {
-    imageUrl,
-    hasError,
-    isLoaded,
-    handleImageError,
-    handleImageLoad,
-    useLocalFallback
-  };
+
+  return { imageUrl, handleImageError, fallbackTriggered };
 };
 
 /**
- * Get appropriate fallback image URL based on settings
+ * Generate the correct image URL based on type and modifiers
  */
-export const getFallbackImageUrl = (
-  type: 'product' | 'category' | 'blog' | 'hero' | 'general' = 'general'
+export const getImageUrl = (
+  url: string, 
+  type: 'product' | 'category' | 'blog' | 'avatar' | 'general' = 'general',
+  size: 'small' | 'medium' | 'large' | 'original' = 'medium'
 ): string => {
-  const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
-  
-  if (useLocalFallback) {
-    return DEFAULT_PLACEHOLDER;
+  // Handle already fully formed URLs
+  if (url.startsWith('http') || url.startsWith('/')) {
+    return url;
   }
   
+  // Handle empty URLs
+  if (!url) {
+    return '/placeholder.svg';
+  }
+  
+  // Construct URL based on type and size
+  // This is a placeholder implementation - in a real app, 
+  // you might use a CDN with image transformations
   switch (type) {
     case 'product':
-      return 'https://ext.same-assets.com/1001010126/product-placeholder.jpg';
+      // Example: Return product images with appropriate sizing
+      return `/assets/products/${size}/${url}`;
     case 'category':
-      return 'https://ext.same-assets.com/1001010126/category-placeholder.jpg';
+      return `/assets/categories/${url}`;
     case 'blog':
-      return 'https://ext.same-assets.com/1001010126/blog-placeholder.jpg';
-    case 'hero':
-      return 'https://ext.same-assets.com/1001010126/hero-placeholder.jpg';
+      return `/assets/blog/${url}`;
+    case 'avatar':
+      return `/assets/avatars/${url}`;
     default:
-      return DEFAULT_RECOVERY_IMAGE;
+      return `/assets/images/${url}`;
   }
 };
 
 /**
- * Image component with consistent fallback handling
+ * Image component with fallback capability
  */
-export const ImageWithFallback: React.FC<{
+export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
-  className?: string;
-  type?: 'product' | 'category' | 'blog' | 'hero' | 'general';
-  width?: string | number;
-  height?: string | number;
-}> = ({ src, alt, className = '', type = 'general', width, height }) => {
-  const { 
-    imageUrl, 
-    handleImageError, 
-    handleImageLoad, 
-    isLoaded 
-  } = useImageWithFallback(src, {
-    defaultImage: getFallbackImageUrl(type)
+  fallbackSrc?: string;
+  type?: 'product' | 'category' | 'blog' | 'avatar' | 'general';
+}
+
+export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
+  src,
+  alt,
+  fallbackSrc = '/placeholder.svg',
+  type = 'general',
+  ...props
+}) => {
+  const { imageUrl, handleImageError } = useImageWithFallback(src, {
+    defaultImage: '',
+    localFallbackImage: fallbackSrc
   });
-  
+
   return (
     <img
       src={imageUrl}
       alt={alt}
-      className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
       onError={handleImageError}
-      onLoad={handleImageLoad}
-      width={width}
-      height={height}
+      {...props}
     />
   );
 };
