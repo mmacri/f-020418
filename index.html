@@ -11,7 +11,7 @@
     <!-- Security headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <!-- Note: frame-ancestors should be set as an HTTP header, not in meta -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src * data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.gpteng.co https://polyfill.io 'unsafe-inline';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src * data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.gpteng.co https://polyfill.io https://cdnjs.cloudflare.com https://static.cloudflareinsights.com 'unsafe-inline';" />
     
     <!-- Cache control - using meta tag since we can't directly modify HTTP headers -->
     <meta http-equiv="Cache-Control" content="max-age=31536000, immutable" />
@@ -33,6 +33,8 @@
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://cdn.gpteng.co" />
     <link rel="preconnect" href="https://polyfill.io" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="preconnect" href="https://static.cloudflareinsights.com" />
     
     <!-- Polyfill for older browsers -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default,Array.prototype.find,IntersectionObserver,Promise,fetch,Object.assign,CustomEvent,Symbol,URL,Element.prototype.classList"></script>

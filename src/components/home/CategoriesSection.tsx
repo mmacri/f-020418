@@ -27,6 +27,7 @@ const addCacheBusting = (url: string): string => {
 const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propCategories }) => {
   const [categories, setCategories] = useState<Category[]>(propCategories || []);
   const [isLoading, setIsLoading] = useState(!propCategories);
+  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     if (propCategories) {
@@ -48,6 +49,21 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propC
 
     loadCategories();
   }, [propCategories]);
+
+  const handleImageError = (categoryId: string | number) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [categoryId]: true
+    }));
+    console.log(`Image for category ${categoryId} failed to load. Using default image.`);
+  };
+
+  const getCategoryImageUrl = (category: Category) => {
+    if (imageErrors[category.id]) {
+      return FALLBACK_IMAGE;
+    }
+    return addCacheBusting(category.imageUrl || FALLBACK_IMAGE);
+  };
 
   if (isLoading) {
     return (
@@ -92,13 +108,10 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propC
                 >
                   <div className="relative h-48 overflow-hidden">
                     <img 
-                      src={addCacheBusting(category.imageUrl || FALLBACK_IMAGE)} 
+                      src={getCategoryImageUrl(category)} 
                       alt={`${category.name} category image`} 
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = FALLBACK_IMAGE;
-                      }}
+                      onError={() => handleImageError(category.id)}
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                       <h3 className="text-white text-xl font-bold">{category.name}</h3>

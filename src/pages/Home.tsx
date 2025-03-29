@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
@@ -11,14 +12,23 @@ import {
   CheckCircle 
 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
+import { localStorageKeys } from '@/lib/constants';
+
+const DEFAULT_HERO_IMAGE = "https://ext.same-assets.com/1001010126/massage-gun-category.jpg";
+const LOCAL_FALLBACK_IMAGE = "/placeholder.svg";
 
 const Home = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [bestSellers, setBestSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroImage, setHeroImage] = useState<string>("");
   
   useEffect(() => {
+    // Load hero image from localStorage
+    const savedHeroImage = localStorage.getItem(localStorageKeys.HERO_IMAGE) || DEFAULT_HERO_IMAGE;
+    setHeroImage(savedHeroImage);
+    
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -49,6 +59,14 @@ const Home = () => {
     
     fetchData();
   }, []);
+  
+  const handleHeroImageError = () => {
+    // Check if we should use local fallback
+    const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
+    const fallbackImage = useLocalFallback ? LOCAL_FALLBACK_IMAGE : DEFAULT_HERO_IMAGE;
+    setHeroImage(fallbackImage);
+    console.log("Hero image failed to load. Using fallback image.");
+  };
   
   const renderFeaturedProducts = () => (
     <section className="py-16 bg-gray-50">
@@ -90,7 +108,13 @@ const Home = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="relative bg-cover bg-center py-28" style={{ backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('https://ext.same-assets.com/1001010126/massage-gun-category.jpg')" }}>
+      <section className="relative bg-cover bg-center py-28" 
+        style={{ 
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('${heroImage}')`,
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover'
+        }}
+      >
         <div className="container mx-auto px-4 text-center text-white">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Recover Faster, Perform Better
@@ -122,6 +146,13 @@ const Home = () => {
             </Button>
           </div>
         </div>
+        {/* Hidden image for preloading and error handling */}
+        <img 
+          src={heroImage} 
+          alt="" 
+          className="hidden" 
+          onError={handleHeroImageError}
+        />
       </section>
       
       {/* Featured Categories */}
@@ -140,6 +171,11 @@ const Home = () => {
                     src={category.imageUrl || `https://ext.same-assets.com/30303031/foam-roller-category.jpg`} 
                     alt={category.name} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
+                      target.src = useLocalFallback ? LOCAL_FALLBACK_IMAGE : `https://ext.same-assets.com/30303031/foam-roller-category.jpg`;
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
                     <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -249,6 +285,11 @@ const Home = () => {
                 src="https://ext.same-assets.com/30303031/foam-roller-category.jpg" 
                 alt="Foam Rolling" 
                 className="w-full h-48 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
+                  target.src = useLocalFallback ? LOCAL_FALLBACK_IMAGE : DEFAULT_HERO_IMAGE;
+                }}
               />
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2">5 Foam Rolling Techniques for Lower Back Pain</h3>
@@ -267,6 +308,11 @@ const Home = () => {
                 src="https://ext.same-assets.com/1001010126/massage-gun-category.jpg" 
                 alt="Massage Gun" 
                 className="w-full h-48 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
+                  target.src = useLocalFallback ? LOCAL_FALLBACK_IMAGE : DEFAULT_HERO_IMAGE;
+                }}
               />
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2">Massage Gun vs. Foam Roller: Which Is Better?</h3>
@@ -285,6 +331,11 @@ const Home = () => {
                 src="https://ext.same-assets.com/30303032/compression-category.jpg" 
                 alt="Compression Recovery" 
                 className="w-full h-48 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
+                  target.src = useLocalFallback ? LOCAL_FALLBACK_IMAGE : DEFAULT_HERO_IMAGE;
+                }}
               />
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2">The Science of Compression for Recovery</h3>

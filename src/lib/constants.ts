@@ -1,73 +1,75 @@
+// Constants used throughout the application
+
+// Local storage keys
 export const localStorageKeys = {
-  PRODUCTS: 'recovery-essentials-products',
-  CATEGORIES: 'recovery-essentials-categories',
-  USER: 'recovery-essentials-user',
-  USER_ID: 'recovery-essentials-user-id',
-  AUTH_TOKEN: 'recovery-essentials-auth-token',
-  CART_ITEMS: 'recovery-essentials-cart-items',
-  WISHLIST_ITEMS: 'recovery-essentials-wishlist',
-  BLOG_POSTS: 'recovery-essentials-blog-posts',
-  THEME: 'recovery-essentials-theme',
-  SETTINGS: 'recovery-essentials-settings',
-  AFFILIATE_CLICKS: 'recovery-essentials-affiliate-clicks',
-  ANALYTICS_DATA: 'recovery-essentials-analytics-data',
-  CATEGORY_CONTENT: 'recovery-essentials-category-content',
-  HERO_IMAGE: "recovery_essentials_hero_image"
+  HERO_IMAGE: 'hero_image',
+  THEME: 'theme',
+  WISHLIST: 'wishlist_items',
+  RECENT_SEARCHES: 'recent_searches',
+  AUTH_TOKEN: 'auth_token',
+  USER_DATA: 'user_data',
+  VIEWED_PRODUCTS: 'viewed_products',
+  USE_LOCAL_FALLBACKS: 'use_local_fallbacks',
+  // Add any other localStorage keys here
 };
 
-// Default category slugs for the application
-export const DEFAULT_CATEGORIES = [
-  'massage-guns',
-  'foam-rollers',
-  'compression-gear',
-  'resistance-bands',
-  'recovery-tech'
-];
+// API endpoints
+export const apiEndpoints = {
+  PRODUCTS: '/api/products',
+  CATEGORIES: '/api/categories',
+  REVIEWS: '/api/reviews',
+  USERS: '/api/users',
+  AUTH: '/api/auth',
+};
 
-// Default navigation structure
-export const DEFAULT_NAVIGATION = {
-  mainMenu: [
-    {
-      id: 1,
-      title: "Products",
-      type: "category-dropdown",
-      showInHeader: true,
-      items: [] // Will be populated from categories dynamically
-    },
-    {
-      id: 2,
-      title: "Blog",
-      type: "link",
-      url: "/blog",
-      showInHeader: true
-    },
-    {
-      id: 3,
-      title: "About",
-      type: "link",
-      url: "/about",
-      showInHeader: true
-    }
-  ],
-  footerMenu: [
-    {
-      id: 4,
-      title: "Company",
-      type: "section",
-      items: [
-        { id: 5, title: "About Us", url: "/about", type: "link" },
-        { id: 6, title: "Contact", url: "/contact", type: "link" },
-        { id: 7, title: "Terms", url: "/terms", type: "link" }
-      ]
-    },
-    {
-      id: 8,
-      title: "Resources",
-      type: "section",
-      items: [
-        { id: 9, title: "Blog", url: "/blog", type: "link" },
-        { id: 10, title: "Affiliate Disclosure", url: "/affiliate-disclosure", type: "link" }
-      ]
-    }
-  ]
+// Default values
+export const defaults = {
+  ITEMS_PER_PAGE: 12,
+  SEARCH_DEBOUNCE_MS: 300,
+  MAX_RECENT_SEARCHES: 5,
+  MAX_VIEWED_PRODUCTS: 10,
+};
+
+// Route paths
+export const routes = {
+  HOME: '/',
+  PRODUCT: '/product',
+  CATEGORY: '/categories',
+  BLOG: '/blog',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  ADMIN: '/admin',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  PROFILE: '/profile',
+  CHECKOUT: '/checkout',
+  COMPARE: '/compare',
+};
+
+// Breakpoints
+export const breakpoints = {
+  sm: 640,
+  md: 768,
+  lg: 1024,
+  xl: 1280,
+  '2xl': 1536,
+};
+
+// Animation durations
+export const animationDurations = {
+  fast: 150,
+  normal: 300,
+  slow: 500,
+};
+
+// Default SEO values
+export const defaultSEO = {
+  title: 'Recovery Essentials - Best Recovery Equipment',
+  description: 'Find the best recovery equipment with our expert reviews and comparisons',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://recoveryessentials.com/',
+    site_name: 'Recovery Essentials',
+  },
 };
