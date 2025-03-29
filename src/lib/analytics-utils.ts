@@ -1,4 +1,3 @@
-
 import { localStorageKeys } from '@/lib/constants';
 
 export interface ClickEvent {
@@ -9,6 +8,7 @@ export interface ClickEvent {
   asin?: string;
   source: string; // page or component where click occurred
   userId?: string; // anonymous or logged in user id
+  convertedStatus?: 'confirmed' | 'estimated' | 'unknown';
 }
 
 export interface AnalyticsData {
@@ -63,23 +63,79 @@ export const trackAffiliateClick = (
 };
 
 /**
- * Get analytics data summary for dashboard
+ * Get analytics data filtered by date range
  */
-export const getAnalyticsSummary = () => {
+export const getAnalyticsInDateRange = (startDate?: Date, endDate?: Date) => {
   try {
     const existingData = localStorage.getItem(localStorageKeys.ANALYTICS_DATA);
     if (!existingData) {
+      return { clicks: [] };
+    }
+    
+    const analyticsData: AnalyticsData = JSON.parse(existingData);
+    let filteredClicks = [...analyticsData.clicks];
+    
+    // Apply date filters if provided
+    if (startDate) {
+      const startTimestamp = startDate.getTime();
+      filteredClicks = filteredClicks.filter(click => click.timestamp >= startTimestamp);
+    }
+    
+    if (endDate) {
+      const endTimestamp = endDate.getTime() + (24 * 60 * 60 * 1000 - 1); // End of the selected day
+      filteredClicks = filteredClicks.filter(click => click.timestamp <= endTimestamp);
+    }
+    
+    return { clicks: filteredClicks };
+  } catch (error) {
+    console.error('Error getting analytics in date range:', error);
+    return { clicks: [] };
+  }
+};
+
+/**
+ * Calculate estimated conversions based on product category and price point
+ */
+export const calculateEstimatedConversions = (clicks: ClickEvent[], categoryRates?: Record<string, number>) => {
+  // Default conversion rates by price point if not specified by category
+  const defaultRates = {
+    low: 0.032, // 3.2% for products under $25
+    medium: 0.028, // 2.8% for products $25-$100
+    high: 0.018, // 1.8% for products over $100
+    unknown: 0.025 // 2.5% average
+  };
+  
+  // Optional category-specific rates
+  const categoryConversionRates = categoryRates || {
+    'fitness': 0.035,
+    'massage': 0.042,
+    'supplements': 0.038,
+    'mobility': 0.029,
+    'equipment': 0.022
+  };
+  
+  return clicks.length * 0.029; // Using a simplified average rate for now
+};
+
+/**
+ * Get analytics data summary for dashboard with date range filtering
+ */
+export const getAnalyticsSummary = (startDate?: Date, endDate?: Date) => {
+  try {
+    const { clicks } = getAnalyticsInDateRange(startDate, endDate);
+    
+    if (clicks.length === 0) {
       return {
         totalClicks: 0,
         uniqueProducts: 0,
         clicksByDay: {},
         topProducts: [],
-        clicksBySource: {}
+        clicksBySource: {},
+        estimatedConversions: 0,
+        conversionRate: 0,
+        estimatedRevenue: 0
       };
     }
-    
-    const analyticsData: AnalyticsData = JSON.parse(existingData);
-    const clicks = analyticsData.clicks;
     
     // Calculate total clicks
     const totalClicks = clicks.length;
@@ -96,6 +152,8 @@ export const getAnalyticsSummary = () => {
     
     // Get top clicked products
     const productCounts: {[key: string]: number} = {};
+    const productRevenue: {[key: string]: number} = {};
+    
     clicks.forEach(click => {
       const productKey = `${click.productId}`;
       productCounts[productKey] = (productCounts[productKey] || 0) + 1;
@@ -108,7 +166,9 @@ export const getAnalyticsSummary = () => {
         return {
           productId,
           productName: productClick?.productName || 'Unknown Product',
-          count
+          count,
+          conversionRate: 0.029, // Default conversion rate
+          estimatedConversions: Math.round(count * 0.029 * 10) / 10
         };
       })
       .sort((a, b) => b.count - a.count)
@@ -120,12 +180,19 @@ export const getAnalyticsSummary = () => {
       clicksBySource[click.source] = (clicksBySource[click.source] || 0) + 1;
     });
     
+    // Estimate conversions
+    const estimatedConversions = calculateEstimatedConversions(clicks);
+    const conversionRate = totalClicks > 0 ? (estimatedConversions / totalClicks) : 0;
+    
     return {
       totalClicks,
       uniqueProducts,
       clicksByDay,
       topProducts,
-      clicksBySource
+      clicksBySource,
+      estimatedConversions,
+      conversionRate,
+      estimatedRevenue: Math.round(estimatedConversions * 4.5) // Average commission of $4.50 per conversion
     };
   } catch (error) {
     console.error('Error getting analytics summary:', error);
@@ -134,8 +201,34 @@ export const getAnalyticsSummary = () => {
       uniqueProducts: 0,
       clicksByDay: {},
       topProducts: [],
-      clicksBySource: {}
+      clicksBySource: {},
+      estimatedConversions: 0,
+      conversionRate: 0,
+      estimatedRevenue: 0
     };
+  }
+};
+
+/**
+ * Mark a click as converted (for when you have confirmation of a sale)
+ */
+export const markClickAsConverted = (clickId: number): boolean => {
+  try {
+    const existingData = localStorage.getItem(localStorageKeys.ANALYTICS_DATA);
+    if (!existingData) return false;
+    
+    const analyticsData: AnalyticsData = JSON.parse(existingData);
+    
+    if (clickId >= 0 && clickId < analyticsData.clicks.length) {
+      analyticsData.clicks[clickId].convertedStatus = 'confirmed';
+      localStorage.setItem(localStorageKeys.ANALYTICS_DATA, JSON.stringify(analyticsData));
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error marking click as converted:', error);
+    return false;
   }
 };
 
