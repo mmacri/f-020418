@@ -64,17 +64,19 @@ export const applyStickyPolyfill = () => {
       const stickyElements = document.querySelectorAll('.sticky');
       
       stickyElements.forEach((element) => {
+        // Cast element to HTMLElement to access style property
+        const htmlElement = element as HTMLElement;
         let currentTop = element.getBoundingClientRect().top;
         const originalTop = currentTop;
         
         const checkPosition = () => {
           currentTop = element.getBoundingClientRect().top;
           if (currentTop <= 0) {
-            element.style.position = 'fixed';
-            element.style.top = '0';
+            htmlElement.style.position = 'fixed';
+            htmlElement.style.top = '0';
           } else if (window.scrollY <= originalTop) {
-            element.style.position = 'static';
-            element.style.top = 'auto';
+            htmlElement.style.position = 'static';
+            htmlElement.style.top = 'auto';
           }
         };
         
