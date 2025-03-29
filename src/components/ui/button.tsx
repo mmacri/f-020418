@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -42,6 +43,19 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    
+    // If we don't have aria-label or children, add a warning
+    if (process.env.NODE_ENV !== 'production') {
+      if (!asChild && !props['aria-label'] && (!props.children || typeof props.children === 'object')) {
+        console.warn('Button is missing aria-label or discernible text content. Add either aria-label or text content for accessibility.')
+      }
+    }
+    
+    // If no title is provided and we have a text child, use it for the title
+    if (!props.title && typeof props.children === 'string') {
+      props.title = props.children
+    }
+    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}

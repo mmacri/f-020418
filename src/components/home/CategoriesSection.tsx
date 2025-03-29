@@ -9,6 +9,21 @@ interface CategoriesSectionProps {
   categories?: Category[];
 }
 
+const DEFAULT_IMAGE = '/placeholder.svg';
+const FALLBACK_IMAGE = '/placeholder.svg';
+
+// Helper function to add cache busting to image URLs
+const addCacheBusting = (url: string): string => {
+  if (!url) return FALLBACK_IMAGE;
+  
+  // Don't add cache busting to local images
+  if (url.startsWith('/')) return url;
+  
+  // Add timestamp as cache buster
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}t=${Date.now()}`;
+};
+
 const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propCategories }) => {
   const [categories, setCategories] = useState<Category[]>(propCategories || []);
   const [isLoading, setIsLoading] = useState(!propCategories);
@@ -69,15 +84,20 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propC
           {categories.map(category => (
             <Card key={category.id} className="overflow-hidden hover:shadow-xl transition-shadow border shadow-md">
               <CardContent className="p-0">
-                <Link to={`/categories/${category.slug}`} className="block">
+                <Link 
+                  to={`/categories/${category.slug}`} 
+                  className="block"
+                  title={`Browse ${category.name} category`}
+                  aria-label={`Browse ${category.name} category with ${category.subcategories?.length || 0} subcategories`}
+                >
                   <div className="relative h-48 overflow-hidden">
                     <img 
-                      src={category.imageUrl || 'https://ext.same-assets.com/30303033/bands-category.jpg'} 
-                      alt={category.name} 
+                      src={addCacheBusting(category.imageUrl || FALLBACK_IMAGE)} 
+                      alt={`${category.name} category image`} 
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = 'https://ext.same-assets.com/30303033/bands-category.jpg';
+                        target.src = FALLBACK_IMAGE;
                       }}
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
@@ -93,7 +113,7 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propC
                         {category.subcategories?.length || 0} Subcategories
                       </span>
                       <div className="text-primary flex items-center">
-                        View Products <ChevronRight className="h-4 w-4 ml-1" />
+                        View Products <ChevronRight className="h-4 w-4 ml-1" aria-hidden="true" />
                       </div>
                     </div>
                   </div>
