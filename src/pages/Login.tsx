@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Eye, EyeOff, AlertCircle, Info } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, ShieldCheck } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
-import { login } from "@/services/userService";
+import { login } from "@/services/authService";
 import { useToast } from "@/hooks/use-toast";
 
-// Form validation schema with more detailed error messages
+// Form validation schema
 const loginSchema = z.object({
   email: z
     .string()
@@ -34,8 +32,7 @@ const loginSchema = z.object({
     .min(1, { message: "Password is required" })
     .min(8, { message: "Password must be at least 8 characters" })
     .optional()
-    .or(z.literal('')),
-  rememberMe: z.boolean().optional().default(false)
+    .or(z.literal(''))
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -52,9 +49,8 @@ const Login = () => {
     defaultValues: {
       email: "",
       password: "",
-      rememberMe: false
     },
-    mode: "onChange" // Enable real-time validation as user types
+    mode: "onChange"
   });
 
   // Clear error message when form values change
@@ -69,26 +65,19 @@ const Login = () => {
       setLoading(true);
       setLoginError(null);
       
-      // Check for demo credentials and provide helpful message
-      if (values.email === "user@example.com" && values.password !== "password123") {
-        setLoginError("For the demo account, please use password: password123");
-        setLoading(false);
-        return;
-      }
-      
-      const result = await login({
-        email: values.email,
-        password: values.password || "" // Handle optional case
-      });
+      const result = await login(
+        values.email,
+        values.password || ""
+      );
       
       if (result.success) {
         toast({
           title: "Login successful",
-          description: "You have been successfully logged in"
+          description: "Welcome to the admin dashboard"
         });
-        navigate("/");
+        navigate("/admin");
       } else {
-        setLoginError(result.message || "Invalid email or password");
+        setLoginError(result.message || "Invalid admin credentials");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -106,25 +95,20 @@ const Login = () => {
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
           <div className="text-center">
             <h1 className="mt-2 text-3xl font-extrabold text-gray-900">
-              Sign in to your account
+              Admin Login
             </h1>
             <p className="mt-2 text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Sign up
-              </Link>
+              Access restricted to administrators only
             </p>
           </div>
           
-          {/* Demo Credentials Notice */}
-          <div className="bg-blue-50 rounded-md p-4 text-sm text-blue-700" role="note" aria-label="Demo Credentials">
-            <div className="flex items-start">
-              <Info className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
-              <div>
-                <p className="font-medium mb-1">Demo Credentials</p>
-                <p>Email: <span className="font-medium">user@example.com</span></p>
-                <p>Password: <span className="font-medium">password123</span></p>
-              </div>
+          {/* Admin Info Notice */}
+          <div className="bg-blue-50 rounded-md p-4 text-sm text-blue-700 flex items-start" role="note">
+            <ShieldCheck className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <div>
+              <p className="font-medium mb-1">Admin Access Only</p>
+              <p>This login page is restricted to site administrators.</p>
+              <p className="mt-2 font-medium">Demo Admin: admin@recoveryessentials.com / admin123</p>
             </div>
           </div>
           
@@ -142,12 +126,12 @@ const Login = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="email">Email Address</FormLabel>
+                    <FormLabel htmlFor="email">Admin Email</FormLabel>
                     <FormControl>
                       <Input 
                         id="email"
                         type="email" 
-                        placeholder="Enter your email" 
+                        placeholder="Enter admin email" 
                         autoComplete="email"
                         aria-required="true"
                         aria-invalid={!!form.formState.errors.email}
@@ -164,18 +148,13 @@ const Login = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel htmlFor="password">Password</FormLabel>
-                      <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
-                        Forgot password?
-                      </Link>
-                    </div>
+                    <FormLabel htmlFor="password">Password</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input 
                           id="password"
                           type={showPassword ? "text" : "password"} 
-                          placeholder="Enter your password" 
+                          placeholder="Enter admin password" 
                           autoComplete="current-password"
                           aria-required="true"
                           aria-invalid={!!form.formState.errors.password}
@@ -196,30 +175,6 @@ const Login = () => {
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="rememberMe"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
-                    <FormControl>
-                      <Checkbox
-                        id="remember_me"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel
-                        htmlFor="remember_me"
-                        className="text-sm font-normal"
-                      >
-                        Remember me
-                      </FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              
               <div>
                 <Button 
                   type="submit" 
@@ -227,24 +182,11 @@ const Login = () => {
                   disabled={loading}
                   aria-busy={loading}
                 >
-                  {loading ? "Signing In..." : "Sign In"}
+                  {loading ? "Signing In..." : "Sign In as Admin"}
                 </Button>
               </div>
             </form>
           </Form>
-          
-          <div className="mt-6">
-            <p className="text-xs text-center text-gray-600">
-              By signing in, you agree to our{' '}
-              <Link to="/terms" className="text-indigo-600 hover:text-indigo-500">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="text-indigo-600 hover:text-indigo-500">
-                Privacy Policy
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
 

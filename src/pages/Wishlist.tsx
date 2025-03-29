@@ -1,50 +1,116 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2, ShoppingCart, Heart } from 'lucide-react';
-import { useWishlist } from '@/hooks/useWishlist';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { isAuthenticated } from '@/services/userService';
-import { Product } from '@/services/productService';
+import { getProducts, Product } from '@/services/productService';
+import { useToast } from '@/hooks/use-toast';
+import { localStorageKeys } from '@/lib/constants';
 
 const Wishlist = () => {
-  const { 
-    wishlistItems, 
-    isLoading, 
-    removeFromWishlist, 
-    clearWishlist,
-    isPending 
-  } = useWishlist();
+  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, setIsPending] = useState(false);
+  const { toast } = useToast();
   
-  const isLoggedIn = isAuthenticated();
-
-  if (!isLoggedIn) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div className="text-center">
-              <Heart className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Your Wishlist</h1>
-              <p className="text-gray-500 mb-8">
-                Please log in to view and manage your saved products.
-              </p>
-              <Link to="/login">
-                <Button>
-                  Log in
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  useEffect(() => {
+    loadWishlistItems();
+  }, []);
+  
+  const loadWishlistItems = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get saved product IDs from localStorage
+      const savedProductIds = JSON.parse(localStorage.getItem(localStorageKeys.WISHLIST_ITEMS) || '[]');
+      
+      if (savedProductIds.length === 0) {
+        setWishlistItems([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Get all products
+      const allProducts = await getProducts();
+      
+      // Filter products that are in the wishlist
+      const wishlistProducts = allProducts.filter(product => 
+        savedProductIds.includes(product.id)
+      );
+      
+      setWishlistItems(wishlistProducts);
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load your wishlist items",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const removeFromWishlist = async (productId: number) => {
+    try {
+      setIsPending(true);
+      
+      // Get current saved items
+      const savedItems = JSON.parse(localStorage.getItem(localStorageKeys.WISHLIST_ITEMS) || '[]');
+      
+      // Remove the product
+      const updatedItems = savedItems.filter((id: number) => id !== productId);
+      
+      // Save back to localStorage
+      localStorage.setItem(localStorageKeys.WISHLIST_ITEMS, JSON.stringify(updatedItems));
+      
+      // Update state
+      setWishlistItems(prev => prev.filter(item => item.id !== productId));
+      
+      toast({
+        title: "Item removed",
+        description: "Item has been removed from your wishlist"
+      });
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove item from wishlist",
+        variant: "destructive"
+      });
+    } finally {
+      setIsPending(false);
+    }
+  };
+  
+  const clearWishlist = async () => {
+    try {
+      setIsPending(true);
+      
+      // Clear wishlist in localStorage
+      localStorage.setItem(localStorageKeys.WISHLIST_ITEMS, JSON.stringify([]));
+      
+      // Update state
+      setWishlistItems([]);
+      
+      toast({
+        title: "Wishlist cleared",
+        description: "All items have been removed from your wishlist"
+      });
+    } catch (error) {
+      console.error('Error clearing wishlist:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear wishlist",
+        variant: "destructive"
+      });
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -82,7 +148,7 @@ const Wishlist = () => {
             </div>
           ) : wishlistItems.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(wishlistItems as Product[]).map(product => (
+              {wishlistItems.map(product => (
                 <div key={product.id} className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
                   <Link to={`/products/${product.slug}`} className="block">
                     <div className="h-48 bg-gray-100 p-4 flex items-center justify-center">

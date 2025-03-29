@@ -5,8 +5,7 @@ import {
   getCurrentUser as getUserFromService, 
   login as userServiceLogin, 
   logout as userServiceLogout,
-  isAdmin as checkIsAdmin,
-  isEditorOrAdmin as checkIsEditorOrAdmin
+  isAdmin as checkIsAdmin
 } from "@/services/userService";
 
 // Re-export getCurrentUser from userService
@@ -23,6 +22,14 @@ export const login = async (email: string, password: string): Promise<{
     password: password
   });
   
+  // Only allow admin users to login
+  if (result.success && result.user && result.user.role !== 'admin') {
+    return {
+      success: false,
+      message: "Only administrators can log in to this application."
+    };
+  }
+  
   return {
     success: result.success,
     user: result.user,
@@ -34,8 +41,8 @@ export const login = async (email: string, password: string): Promise<{
 export const logout = async (): Promise<void> => {
   await userServiceLogout();
   
-  // Redirect to login page after logout
-  window.location.href = '/login';
+  // Redirect to home page after logout
+  window.location.href = '/';
 };
 
 // Check if user is authenticated
@@ -53,12 +60,7 @@ export const isAdmin = (): boolean => {
   return checkIsAdmin();
 };
 
-// Check if user has editor or admin role
-export const isEditorOrAdmin = (): boolean => {
-  return checkIsEditorOrAdmin();
-};
-
-// Navigate to profile page
-export const goToProfile = (): void => {
-  window.location.href = '/profile';
+// Check if user is an admin and authenticated
+export const isAuthenticatedAdmin = (): boolean => {
+  return isAuthenticated() && isAdmin();
 };

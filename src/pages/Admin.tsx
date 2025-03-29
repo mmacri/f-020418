@@ -26,6 +26,13 @@ const Admin = () => {
       setIsAuthorized(true);
     } else {
       setIsAuthorized(false);
+      // Redirect non-admin users to home page
+      toast({
+        title: "Access denied",
+        description: "You need administrator privileges to access this page",
+        variant: "destructive",
+      });
+      navigate("/");
     }
   };
 
@@ -35,10 +42,6 @@ const Admin = () => {
       title: "Login successful",
       description: "Welcome to the admin dashboard",
     });
-  };
-  
-  const handleGoToProfile = () => {
-    navigate('/profile');
   };
 
   if (!isAuthorized) {
@@ -60,8 +63,13 @@ const Admin = () => {
       <div className="container mx-auto px-4 py-8 flex-grow">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <Button variant="outline" onClick={handleGoToProfile}>
-            View My Profile
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              navigate("/");
+            }}
+          >
+            View Website
           </Button>
         </div>
         

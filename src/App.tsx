@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -6,9 +7,6 @@ import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import Profile from "@/pages/Profile";
-import Wishlist from "@/pages/Wishlist";
 import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
 import RecoveryApps from "@/pages/RecoveryApps";
@@ -23,7 +21,6 @@ import Admin from "@/pages/Admin";
 import WorkflowDemo from "@/pages/WorkflowDemo";
 import AutoWorkflowDemo from "@/pages/AutoWorkflowDemo";
 import NotFound from "@/pages/NotFound";
-// Add this import for our new page:
 import ProductComparisonPage from "@/pages/ProductComparisonPage";
 
 function App() {
@@ -36,9 +33,6 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/recovery-apps" element={<RecoveryApps />} />
