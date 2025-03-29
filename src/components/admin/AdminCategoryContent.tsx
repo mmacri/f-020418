@@ -2,573 +2,781 @@
 import React, { useState, useEffect } from 'react';
 import { 
   getCategoryContent, 
-  getCategoryContentBySlug, 
-  saveCategoryContent,
-  CategoryContent, 
-  CategoryContentFAQ as CategoryFAQ 
+  createCategoryContent, 
+  updateCategoryContent,
+  deleteCategoryContent
 } from '@/services/categoryContentService';
 import { getNavigationCategories } from '@/services/categoryService';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CategoryContent, CategoryContentSection, CategoryContentRecommendation, CategoryContentFAQ } from '@/services/categoryContentService';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  PenSquare,
-  Save,
-  Trash2,
-  PlusCircle,
-  AlertCircle,
-  Video,
-  HelpCircle,
-  Link,
-  RefreshCw
-} from 'lucide-react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
+import { PlusCircle, Save, Trash2, Plus, Copy, FileText, Edit, Eye } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const AdminCategoryContent = () => {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [categoryContent, setCategoryContent] = useState<CategoryContent[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [currentContent, setCurrentContent] = useState<Partial<CategoryContent>>({});
-  const [faqs, setFaqs] = useState<CategoryFAQ[]>([]);
-  const [benefits, setBenefits] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [importUrl, setImportUrl] = useState('');
-  const [isImporting, setIsImporting] = useState(false);
+  const [content, setContent] = useState<CategoryContent[]>([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formContent, setFormContent] = useState<Partial<CategoryContent>>({
+    meta: {
+      title: '',
+      description: '',
+      canonical: ''
+    },
+    slug: '',
+    headline: '',
+    introduction: '',
+    sections: [],
+    recommendations: [],
+    faqs: []
+  });
   const { toast } = useToast();
 
+  // Load content and categories on component mount
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const categoriesList = await getNavigationCategories();
-        setCategories(categoriesList);
-        
-        const contentList = await getCategoryContent();
-        setCategoryContent(contentList);
-        
-        if (categoriesList.length > 0 && !selectedCategory) {
-          handleCategorySelect(categoriesList[0].slug);
-        }
-      } catch (error) {
-        console.error('Error loading category data:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load categories and content',
-          variant: 'destructive',
-        });
-      }
-    };
-    
-    loadData();
+    loadCategories();
+    loadAllContent();
   }, []);
 
-  const handleCategorySelect = async (slug: string) => {
-    setSelectedCategory(slug);
-    setIsLoading(true);
-    
+  // Load categories for dropdowns
+  const loadCategories = async () => {
     try {
-      const content = await getCategoryContentBySlug(slug);
-      
-      if (content) {
-        setCurrentContent(content);
-        setFaqs(content.faqs || []);
-        // Initialize benefits array from sections or as empty array
-        const sectionContent = content.sections?.[0]?.content || '';
-        const extractedBenefits = sectionContent
-          .split('\n')
-          .filter(line => line.trim().startsWith('•'))
-          .map(line => line.trim().substring(1).trim());
-        setBenefits(extractedBenefits.length > 0 ? extractedBenefits : []);
-      } else {
-        setCurrentContent({
-          slug,
-          headline: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          introduction: '',
-          meta: {
-            title: '',
-            description: ''
-          },
-          sections: [],
-          recommendations: [],
-          faqs: []
-        });
-        setFaqs([]);
-        setBenefits([]);
-      }
+      const data = await getNavigationCategories();
+      setCategories(data);
     } catch (error) {
-      console.error('Error loading category content:', error);
+      console.error('Error loading categories:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load categories',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Load all content from the service
+  const loadAllContent = async () => {
+    setIsLoading(true);
+    try {
+      const allContent = await getCategoryContent();
+      setContent(allContent);
+    } catch (error) {
+      console.error('Error loading content:', error);
       toast({
         title: 'Error',
         description: 'Failed to load category content',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setCurrentContent(prev => ({ ...prev, [name]: value }));
+  // Get category name by ID
+  const getCategoryNameById = (id: number) => {
+    const category = categories.find(cat => cat.id === id);
+    return category ? category.name : 'Unknown Category';
   };
 
-  const handleAddBenefit = () => {
-    setBenefits([...benefits, '']);
-  };
+  // Create empty content for a category
+  const createEmptyContent = (categoryId: number) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    if (!category) return;
 
-  const handleUpdateBenefit = (index: number, value: string) => {
-    const updatedBenefits = [...benefits];
-    updatedBenefits[index] = value;
-    setBenefits(updatedBenefits);
-  };
-
-  const handleRemoveBenefit = (index: number) => {
-    const updatedBenefits = benefits.filter((_, i) => i !== index);
-    setBenefits(updatedBenefits);
-  };
-
-  const handleAddFaq = () => {
-    setFaqs([...faqs, { id: `faq-${Date.now()}`, question: '', answer: '' }]);
-  };
-
-  const handleUpdateFaq = (index: number, field: 'question' | 'answer', value: string) => {
-    const updatedFaqs = [...faqs];
-    updatedFaqs[index] = { ...updatedFaqs[index], [field]: value };
-    setFaqs(updatedFaqs);
-  };
-
-  const handleRemoveFaq = (index: number) => {
-    const updatedFaqs = faqs.filter((_, i) => i !== index);
-    setFaqs(updatedFaqs);
-  };
-
-  // Since we don't have importContentFromUrl, let's implement a basic version
-  const importContentFromUrl = async (categorySlug: string, url: string) => {
-    // This would normally call an API, but we'll simulate it
-    toast({
-      title: 'Import Simulation',
-      description: 'This would import content from ' + url,
+    setFormContent({
+      meta: {
+        title: `${category.name} - Recovery Essentials Guide`,
+        description: `Everything you need to know about ${category.name.toLowerCase()} for recovery and performance.`
+      },
+      slug: category.slug,
+      headline: `${category.name} Guide: Everything You Need To Know`,
+      introduction: `Welcome to our comprehensive guide on ${category.name.toLowerCase()}. In this article, we'll cover everything you need to know about choosing and using ${category.name.toLowerCase()} for recovery and performance enhancement.`,
+      sections: [
+        {
+          title: 'What to Look For',
+          content: `When shopping for ${category.name.toLowerCase()}, consider these important factors...`
+        }
+      ],
+      recommendations: [],
+      faqs: [
+        {
+          question: `What are the benefits of using ${category.name.toLowerCase()}?`,
+          answer: 'Benefits include...'
+        }
+      ]
     });
-    
-    // Return the current content for now
-    return getCategoryContentBySlug(categorySlug);
+    setSelectedCategoryId(categoryId);
+    setIsEditing(true);
   };
 
-  const handleImportFromUrl = async () => {
-    if (!selectedCategory || !importUrl) return;
-    
-    setIsImporting(true);
-    
+  // Edit existing content
+  const editContent = (contentItem: CategoryContent) => {
+    setFormContent({
+      ...contentItem,
+      meta: {
+        ...contentItem.meta
+      }
+    });
+    setSelectedCategoryId(contentItem.categoryId);
+    setIsEditing(true);
+  };
+
+  // Add a new section to the form
+  const addSection = () => {
+    setFormContent(prev => ({
+      ...prev,
+      sections: [
+        ...(prev.sections || []),
+        {
+          title: '',
+          content: ''
+        }
+      ]
+    }));
+  };
+
+  // Add a new recommendation to the form
+  const addRecommendation = () => {
+    setFormContent(prev => ({
+      ...prev,
+      recommendations: [
+        ...(prev.recommendations || []),
+        {
+          title: '',
+          description: '',
+          imageUrl: '',
+          buttonText: 'View Product',
+          buttonUrl: ''
+        }
+      ]
+    }));
+  };
+
+  // Add a new FAQ to the form
+  const addFaq = () => {
+    setFormContent(prev => ({
+      ...prev,
+      faqs: [
+        ...(prev.faqs || []),
+        {
+          question: '',
+          answer: ''
+        }
+      ]
+    }));
+  };
+
+  // Handle section input changes
+  const handleSectionChange = (index: number, field: string, value: string) => {
+    setFormContent(prev => {
+      const updatedSections = [...(prev.sections || [])];
+      updatedSections[index] = {
+        ...updatedSections[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        sections: updatedSections
+      };
+    });
+  };
+
+  // Handle recommendation input changes
+  const handleRecommendationChange = (index: number, field: string, value: string) => {
+    setFormContent(prev => {
+      const updatedRecommendations = [...(prev.recommendations || [])];
+      updatedRecommendations[index] = {
+        ...updatedRecommendations[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        recommendations: updatedRecommendations
+      };
+    });
+  };
+
+  // Handle FAQ input changes
+  const handleFaqChange = (index: number, field: string, value: string) => {
+    setFormContent(prev => {
+      const updatedFaqs = [...(prev.faqs || [])];
+      updatedFaqs[index] = {
+        ...updatedFaqs[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        faqs: updatedFaqs
+      };
+    });
+  };
+
+  // Remove a section from the form
+  const removeSection = (index: number) => {
+    setFormContent(prev => {
+      const updatedSections = [...(prev.sections || [])];
+      updatedSections.splice(index, 1);
+      return {
+        ...prev,
+        sections: updatedSections
+      };
+    });
+  };
+
+  // Remove a recommendation from the form
+  const removeRecommendation = (index: number) => {
+    setFormContent(prev => {
+      const updatedRecommendations = [...(prev.recommendations || [])];
+      updatedRecommendations.splice(index, 1);
+      return {
+        ...prev,
+        recommendations: updatedRecommendations
+      };
+    });
+  };
+
+  // Remove a FAQ from the form
+  const removeFaq = (index: number) => {
+    setFormContent(prev => {
+      const updatedFaqs = [...(prev.faqs || [])];
+      updatedFaqs.splice(index, 1);
+      return {
+        ...prev,
+        faqs: updatedFaqs
+      };
+    });
+  };
+
+  // Handle meta data changes
+  const handleMetaChange = (field: string, value: string) => {
+    setFormContent(prev => ({
+      ...prev,
+      meta: {
+        ...prev.meta,
+        [field]: value
+      }
+    }));
+  };
+
+  // Handle basic field changes
+  const handleFieldChange = (field: string, value: string) => {
+    setFormContent(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Save content (create or update)
+  const saveContent = async () => {
     try {
-      const importedContent = await importContentFromUrl(selectedCategory, importUrl);
-      
-      if (importedContent) {
-        setCurrentContent(importedContent);
-        setFaqs(importedContent.faqs || []);
-        // Extract benefits from sections content if available
-        const sectionContent = importedContent.sections?.[0]?.content || '';
-        const extractedBenefits = sectionContent
-          .split('\n')
-          .filter(line => line.trim().startsWith('•'))
-          .map(line => line.trim().substring(1).trim());
-        setBenefits(extractedBenefits);
-        
-        setCategoryContent(prev => 
-          prev.map(c => c.slug === selectedCategory ? importedContent : c)
-        );
-        
-        toast({
-          title: 'Success',
-          description: 'Content imported successfully',
-        });
-      } else {
+      if (!selectedCategoryId) {
         toast({
           title: 'Error',
-          description: 'Failed to import content from URL',
-          variant: 'destructive',
+          description: 'Please select a category',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      const formattedContent = {
+        ...formContent,
+        categoryId: selectedCategoryId,
+        lastUpdated: new Date().toISOString()
+      };
+
+      if (formContent.id) {
+        // Update existing content
+        await updateCategoryContent(formContent.id, formattedContent);
+        toast({
+          title: 'Success',
+          description: 'Content updated successfully'
+        });
+      } else {
+        // Create new content
+        await createCategoryContent(formattedContent);
+        toast({
+          title: 'Success',
+          description: 'Content created successfully'
         });
       }
+
+      loadAllContent();
+      setIsEditing(false);
     } catch (error) {
-      console.error('Error importing content:', error);
+      console.error('Error saving content:', error);
       toast({
         title: 'Error',
-        description: 'Failed to import content from URL',
-        variant: 'destructive',
+        description: 'Failed to save content',
+        variant: 'destructive'
       });
-    } finally {
-      setIsImporting(false);
-      setImportUrl('');
     }
   };
 
-  const handleSaveContent = async () => {
-    if (!selectedCategory) return;
-    
-    setIsLoading(true);
-    
+  // Delete content
+  const handleDeleteContent = async (contentId: string) => {
+    if (!window.confirm('Are you sure you want to delete this content? This action cannot be undone.')) {
+      return;
+    }
+
     try {
-      // Create a proper section from benefits if any
-      const sections = [...(currentContent.sections || [])];
-      
-      // Update first section with benefits or create one if none exists
-      if (benefits.length > 0) {
-        const benefitsContent = `
-          ${benefits.map(benefit => `• ${benefit}`).join('\n')}
-        `;
-        
-        if (sections.length > 0) {
-          sections[0] = {
-            ...sections[0],
-            content: benefitsContent
-          };
-        } else {
-          sections.push({
-            id: `section-${Date.now()}`,
-            title: 'Benefits',
-            content: benefitsContent
-          });
-        }
-      }
-      
-      const dataToSave: CategoryContent = {
-        ...currentContent as CategoryContent,
-        sections,
-        faqs,
-        lastUpdated: new Date().toISOString().split('T')[0]
-      };
-      
-      const savedContent = await saveCategoryContent(dataToSave);
-      
-      if (savedContent) {
-        setCategoryContent(prev => 
-          prev.map(c => c.slug === selectedCategory ? savedContent : c)
-        );
-        
-        toast({
-          title: 'Success',
-          description: 'Category content has been saved successfully',
-        });
-      }
+      await deleteCategoryContent(contentId);
+      toast({
+        title: 'Success',
+        description: 'Content deleted successfully'
+      });
+      loadAllContent();
     } catch (error) {
-      console.error('Error saving category content:', error);
+      console.error('Error deleting content:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save category content',
-        variant: 'destructive',
+        description: 'Failed to delete content',
+        variant: 'destructive'
       });
-    } finally {
-      setIsLoading(false);
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    } catch (e) {
+      return 'Invalid date';
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Category Content Management</h2>
-        <Button 
-          onClick={handleSaveContent} 
-          disabled={isLoading || !selectedCategory}
-        >
-          <Save className="mr-2 h-4 w-4" />
-          Save Changes
-        </Button>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold">Category Content</h2>
+        {!isEditing && (
+          <div className="flex gap-2">
+            <Select onValueChange={(value) => setSelectedCategoryId(Number(value))}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={() => selectedCategoryId && createEmptyContent(selectedCategoryId)}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Create Content
+            </Button>
+          </div>
+        )}
       </div>
-      
-      <div className="flex gap-4">
-        <div className="w-1/4">
+
+      {isEditing ? (
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Categories</CardTitle>
-              <CardDescription>Select a category to edit its content</CardDescription>
+              <CardTitle>
+                {formContent.id ? 'Edit Content' : 'Create Content'} for {getCategoryNameById(selectedCategoryId)}
+              </CardTitle>
+              <CardDescription>
+                Create rich content for your category pages to improve SEO and user experience.
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {categories.map(category => (
-                  <Button
-                    key={category.slug}
-                    variant={selectedCategory === category.slug ? "default" : "outline"}
-                    className="w-full justify-start"
-                    onClick={() => handleCategorySelect(category.slug)}
-                  >
-                    <PenSquare className="mr-2 h-4 w-4" />
-                    {category.name}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          
-          {selectedCategory && (
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle>Import Content</CardTitle>
-                <CardDescription>Import content from external sources</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="importUrl">Affiliate URL</Label>
-                  <div className="flex mt-1 gap-2">
+            <CardContent className="space-y-6">
+              <Tabs defaultValue="basic">
+                <TabsList className="grid grid-cols-5 w-full">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="sections">Sections</TabsTrigger>
+                  <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+                  <TabsTrigger value="faqs">FAQs</TabsTrigger>
+                  <TabsTrigger value="meta">SEO & Meta</TabsTrigger>
+                </TabsList>
+
+                {/* Basic Info */}
+                <TabsContent value="basic" className="space-y-4 pt-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="slug">Slug</Label>
                     <Input
-                      id="importUrl"
-                      value={importUrl}
-                      onChange={(e) => setImportUrl(e.target.value)}
-                      placeholder="https://example.com/product"
-                      className="flex-grow"
+                      id="slug"
+                      value={formContent.slug || ''}
+                      onChange={(e) => handleFieldChange('slug', e.target.value)}
+                      placeholder="category-slug"
                     />
-                    <Button 
-                      variant="outline"
-                      onClick={handleImportFromUrl}
-                      disabled={isImporting || !importUrl}
-                    >
-                      <Link className="h-4 w-4 mr-1" />
-                      Import
+                    <p className="text-xs text-gray-500">Should match the category slug for best results.</p>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="headline">Headline</Label>
+                    <Input
+                      id="headline"
+                      value={formContent.headline || ''}
+                      onChange={(e) => handleFieldChange('headline', e.target.value)}
+                      placeholder="Main headline for the category page"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="introduction">Introduction</Label>
+                    <Textarea
+                      id="introduction"
+                      value={formContent.introduction || ''}
+                      onChange={(e) => handleFieldChange('introduction', e.target.value)}
+                      placeholder="Introduction paragraph(s)"
+                      className="min-h-[150px]"
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* Sections */}
+                <TabsContent value="sections" className="space-y-4 pt-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Content Sections</h3>
+                    <Button onClick={addSection} variant="outline" size="sm">
+                      <Plus className="mr-1 h-4 w-4" /> Add Section
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Import content from affiliate product pages
-                  </p>
-                </div>
-                
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleCategorySelect(selectedCategory)}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Reset to Default
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
+                  <div className="space-y-4">
+                    {formContent.sections?.length ? (
+                      formContent.sections.map((section, index) => (
+                        <Card key={index}>
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-md">Section {index + 1}</CardTitle>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeSection(index)}
+                                className="h-8 w-8 text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid gap-2">
+                              <Label htmlFor={`section-title-${index}`}>Title</Label>
+                              <Input
+                                id={`section-title-${index}`}
+                                value={section.title}
+                                onChange={(e) => handleSectionChange(index, 'title', e.target.value)}
+                                placeholder="Section Title"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor={`section-content-${index}`}>Content</Label>
+                              <Textarea
+                                id={`section-content-${index}`}
+                                value={section.content}
+                                onChange={(e) => handleSectionChange(index, 'content', e.target.value)}
+                                placeholder="Section content goes here..."
+                                className="min-h-[150px]"
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg border-gray-200">
+                        <p className="text-gray-500">No sections added yet</p>
+                        <Button onClick={addSection} variant="ghost" size="sm" className="mt-2">
+                          <Plus className="mr-1 h-4 w-4" /> Add Your First Section
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Recommendations */}
+                <TabsContent value="recommendations" className="space-y-4 pt-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Product Recommendations</h3>
+                    <Button onClick={addRecommendation} variant="outline" size="sm">
+                      <Plus className="mr-1 h-4 w-4" /> Add Recommendation
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {formContent.recommendations?.length ? (
+                      formContent.recommendations.map((rec, index) => (
+                        <Card key={index}>
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-md">Recommendation {index + 1}</CardTitle>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeRecommendation(index)}
+                                className="h-8 w-8 text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid gap-2">
+                              <Label htmlFor={`rec-title-${index}`}>Title</Label>
+                              <Input
+                                id={`rec-title-${index}`}
+                                value={rec.title}
+                                onChange={(e) => handleRecommendationChange(index, 'title', e.target.value)}
+                                placeholder="Recommendation Title"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor={`rec-desc-${index}`}>Description</Label>
+                              <Textarea
+                                id={`rec-desc-${index}`}
+                                value={rec.description}
+                                onChange={(e) => handleRecommendationChange(index, 'description', e.target.value)}
+                                placeholder="Brief description..."
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor={`rec-img-${index}`}>Image URL</Label>
+                              <Input
+                                id={`rec-img-${index}`}
+                                value={rec.imageUrl}
+                                onChange={(e) => handleRecommendationChange(index, 'imageUrl', e.target.value)}
+                                placeholder="https://example.com/image.jpg"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="grid gap-2">
+                                <Label htmlFor={`rec-btn-text-${index}`}>Button Text</Label>
+                                <Input
+                                  id={`rec-btn-text-${index}`}
+                                  value={rec.buttonText}
+                                  onChange={(e) => handleRecommendationChange(index, 'buttonText', e.target.value)}
+                                  placeholder="View on Amazon"
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label htmlFor={`rec-btn-url-${index}`}>Button URL</Label>
+                                <Input
+                                  id={`rec-btn-url-${index}`}
+                                  value={rec.buttonUrl}
+                                  onChange={(e) => handleRecommendationChange(index, 'buttonUrl', e.target.value)}
+                                  placeholder="https://amazon.com/..."
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg border-gray-200">
+                        <p className="text-gray-500">No recommendations added yet</p>
+                        <Button onClick={addRecommendation} variant="ghost" size="sm" className="mt-2">
+                          <Plus className="mr-1 h-4 w-4" /> Add Your First Recommendation
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* FAQs */}
+                <TabsContent value="faqs" className="space-y-4 pt-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Frequently Asked Questions</h3>
+                    <Button onClick={addFaq} variant="outline" size="sm">
+                      <Plus className="mr-1 h-4 w-4" /> Add FAQ
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {formContent.faqs?.length ? (
+                      formContent.faqs.map((faq, index) => (
+                        <Card key={index}>
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-md">FAQ {index + 1}</CardTitle>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeFaq(index)}
+                                className="h-8 w-8 text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid gap-2">
+                              <Label htmlFor={`faq-question-${index}`}>Question</Label>
+                              <Input
+                                id={`faq-question-${index}`}
+                                value={faq.question}
+                                onChange={(e) => handleFaqChange(index, 'question', e.target.value)}
+                                placeholder="What is...?"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor={`faq-answer-${index}`}>Answer</Label>
+                              <Textarea
+                                id={`faq-answer-${index}`}
+                                value={faq.answer}
+                                onChange={(e) => handleFaqChange(index, 'answer', e.target.value)}
+                                placeholder="The answer is..."
+                                className="min-h-[100px]"
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg border-gray-200">
+                        <p className="text-gray-500">No FAQs added yet</p>
+                        <Button onClick={addFaq} variant="ghost" size="sm" className="mt-2">
+                          <Plus className="mr-1 h-4 w-4" /> Add Your First FAQ
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* SEO & Meta */}
+                <TabsContent value="meta" className="space-y-4 pt-4">
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="meta-title">Meta Title</Label>
+                      <Input
+                        id="meta-title"
+                        value={formContent.meta?.title || ''}
+                        onChange={(e) => handleMetaChange('title', e.target.value)}
+                        placeholder="SEO Title for this category page"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Recommended length: 50-60 characters
+                      </p>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="meta-description">Meta Description</Label>
+                      <Textarea
+                        id="meta-description"
+                        value={formContent.meta?.description || ''}
+                        onChange={(e) => handleMetaChange('description', e.target.value)}
+                        placeholder="Brief description for search engines"
+                        className="min-h-[100px]"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Recommended length: 150-160 characters
+                      </p>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="meta-canonical">Canonical URL</Label>
+                      <Input
+                        id="meta-canonical"
+                        value={formContent.meta?.canonical || ''}
+                        onChange={(e) => handleMetaChange('canonical', e.target.value)}
+                        placeholder="https://recovery-essentials.com/categories/..."
+                      />
+                      <p className="text-xs text-gray-500">
+                        Optional. Use this if this content should be canonicalized to another URL.
+                      </p>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+              <Button onClick={saveContent}>
+                <Save className="mr-2 h-4 w-4" /> Save Content
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
-        
-        <div className="w-3/4">
-          {selectedCategory ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Edit {currentContent.headline || selectedCategory}</CardTitle>
-                <CardDescription>
-                  Update the content that appears on the category page
+      ) : isLoading ? (
+        <div className="text-center py-10">Loading content...</div>
+      ) : content.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className="mb-4">No content found. Create your first category content to get started.</p>
+            {selectedCategoryId ? (
+              <Button onClick={() => createEmptyContent(selectedCategoryId)}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Create Content
+              </Button>
+            ) : (
+              <p className="text-sm text-gray-500">Select a category first</p>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {content.map((item) => (
+            <Card key={item.id}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-xl truncate" title={item.headline}>
+                    {item.headline}
+                  </CardTitle>
+                  <div className="flex space-x-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => editContent(item)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleDeleteContent(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+                <CardDescription className="mt-2 line-clamp-2">
+                  {getCategoryNameById(item.categoryId)}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="basic">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                    <TabsTrigger value="benefits">Benefits</TabsTrigger>
-                    <TabsTrigger value="sections">Sections</TabsTrigger>
-                    <TabsTrigger value="guide">Buying Guide</TabsTrigger>
-                    <TabsTrigger value="faqs">FAQs</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="basic" className="space-y-4">
-                    <div>
-                      <Label htmlFor="headline">Title</Label>
-                      <Input 
-                        id="headline" 
-                        name="headline" 
-                        value={currentContent.headline || ''} 
-                        onChange={handleInputChange} 
-                        placeholder="Category Title"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="meta.description">Meta Description</Label>
-                      <Input 
-                        id="meta.description" 
-                        name="meta.description" 
-                        value={currentContent.meta?.description || ''} 
-                        onChange={(e) => {
-                          setCurrentContent(prev => ({
-                            ...prev,
-                            meta: {
-                              ...(prev.meta || {}),
-                              description: e.target.value
-                            }
-                          }));
-                        }} 
-                        placeholder="Brief category description (for SEO)"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="introduction">Introduction</Label>
-                      <Textarea 
-                        id="introduction" 
-                        name="introduction" 
-                        value={currentContent.introduction || ''} 
-                        onChange={handleInputChange} 
-                        placeholder="Full introduction paragraph"
-                        rows={5}
-                      />
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="benefits" className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-medium">Product Benefits</h3>
-                      <Button type="button" variant="outline" onClick={handleAddBenefit}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Benefit
-                      </Button>
-                    </div>
-                    
-                    {benefits.length === 0 ? (
-                      <div className="text-center p-6 bg-gray-50 rounded-lg">
-                        <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-4 text-gray-500">No benefits added yet. Add some benefits to highlight product advantages.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {benefits.map((benefit, index) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <div className="flex-grow">
-                              <Textarea 
-                                value={benefit} 
-                                onChange={(e) => handleUpdateBenefit(index, e.target.value)}
-                                placeholder="E.g., Accelerated Recovery: Reduces post-workout soreness and recovery time"
-                                rows={2}
-                              />
-                            </div>
-                            <Button 
-                              variant="destructive" 
-                              size="icon" 
-                              onClick={() => handleRemoveBenefit(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="sections" className="space-y-4">
-                    <div>
-                      <Label>Sections Management</Label>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Sections are managed through the benefits and guide tabs for now.
-                      </p>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="guide" className="space-y-4">
-                    <div>
-                      <Label htmlFor="buyingGuide">Buying Guide Content</Label>
-                      <Textarea 
-                        id="buyingGuide" 
-                        name="buyingGuide" 
-                        value={currentContent.sections?.find(s => s.title === "Buying Guide")?.content || ''} 
-                        onChange={(e) => {
-                          const newSections = [...(currentContent.sections || [])];
-                          const guideIndex = newSections.findIndex(s => s.title === "Buying Guide");
-                          
-                          if (guideIndex >= 0) {
-                            newSections[guideIndex] = {
-                              ...newSections[guideIndex],
-                              content: e.target.value
-                            };
-                          } else {
-                            newSections.push({
-                              id: `guide-${Date.now()}`,
-                              title: "Buying Guide",
-                              content: e.target.value
-                            });
-                          }
-                          
-                          setCurrentContent(prev => ({
-                            ...prev,
-                            sections: newSections
-                          }));
-                        }}
-                        placeholder="Write a helpful buying guide for visitors looking to purchase products in this category"
-                        rows={10}
-                      />
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="faqs" className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-medium">Frequently Asked Questions</h3>
-                      <Button type="button" variant="outline" onClick={handleAddFaq}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add FAQ
-                      </Button>
-                    </div>
-                    
-                    {faqs.length === 0 ? (
-                      <div className="text-center p-6 bg-gray-50 rounded-lg">
-                        <HelpCircle className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-4 text-gray-500">No FAQs added yet. Add some frequently asked questions to help your visitors.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {faqs.map((faq, index) => (
-                          <div key={index} className="border rounded-lg p-4 space-y-3">
-                            <div className="flex justify-between items-center">
-                              <h4 className="font-medium">FAQ #{index + 1}</h4>
-                              <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                onClick={() => handleRemoveFaq(index)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Remove
-                              </Button>
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor={`faq-q-${index}`}>Question</Label>
-                              <Input 
-                                id={`faq-q-${index}`}
-                                value={faq.question} 
-                                onChange={(e) => handleUpdateFaq(index, 'question', e.target.value)}
-                                placeholder="E.g., How often should I use a massage gun?"
-                              />
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor={`faq-a-${index}`}>Answer</Label>
-                              <Textarea 
-                                id={`faq-a-${index}`}
-                                value={faq.answer} 
-                                onChange={(e) => handleUpdateFaq(index, 'answer', e.target.value)}
-                                placeholder="Provide a detailed answer to the question"
-                                rows={3}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
+                <div className="space-y-2">
+                  <div className="text-sm flex gap-2">
+                    <FileText className="h-4 w-4" />
+                    <span>{item.sections?.length || 0} sections</span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">Last Updated:</span>{' '}
+                    {item.lastUpdated ? formatDate(item.lastUpdated) : 'Never'}
+                  </div>
+                </div>
               </CardContent>
+              <CardFooter>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  asChild
+                >
+                  <a href={`/categories/${item.slug}`} target="_blank" rel="noopener noreferrer">
+                    View Page <Eye className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              </CardFooter>
             </Card>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center p-10">
-                <AlertCircle className="h-16 w-16 text-gray-300 mb-4" />
-                <p className="text-lg text-gray-500">Select a category from the list to edit its content</p>
-              </CardContent>
-            </Card>
-          )}
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -35,8 +35,9 @@ const QuickCompare: React.FC<QuickCompareProps> = ({
     const firstImage = product.images[0];
     if (typeof firstImage === 'string') {
       return firstImage;
-    } else if (firstImage && typeof firstImage === 'object' && 'url' in firstImage) {
-      return firstImage.url || product.imageUrl || '/placeholder.svg';
+    } else if (firstImage && typeof firstImage === 'object') {
+      // Safely check for url property without assuming its structure
+      return (firstImage as any).url || product.imageUrl || '/placeholder.svg';
     }
     
     return product.imageUrl || '/placeholder.svg';
