@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getNavigationCategories, createCategory, updateCategory, deleteCategory } from '@/services/categoryService';
 import { Button } from '@/components/ui/button';
@@ -106,18 +105,10 @@ const AdminCategories = () => {
     e.preventDefault();
     
     try {
-      // If using file upload and a file exists, we would usually upload it to a server here
-      // For this example, we'll handle it as if the upload was successful
       let finalImageUrl = formData.imageUrl;
       
       if (imageMethod === 'upload' && uploadedImage) {
-        // In a real implementation, you would upload the file to a server
-        // and get the URL back. Here we're just creating a local URL for demo
         finalImageUrl = URL.createObjectURL(uploadedImage);
-        
-        // You should implement a real file upload here:
-        // const uploadResult = await uploadFile(uploadedImage);
-        // finalImageUrl = uploadResult.url;
       }
       
       const dataToSave = {
@@ -184,24 +175,24 @@ const AdminCategories = () => {
         <Button 
           onClick={handleOpenCreateModal}
           size="lg"
-          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 font-medium flex items-center gap-2"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 font-medium shadow-md border border-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97]"
         >
-          <PlusCircle className="h-5 w-5" /> Add Category
+          <PlusCircle className="h-5 w-5 mr-2" /> Add Category
         </Button>
       </div>
 
       {isLoading ? (
         <div className="text-center py-10 text-foreground">Loading categories...</div>
       ) : categories.length === 0 ? (
-        <Card className="border border-border shadow-sm">
+        <Card className="border border-border shadow-sm bg-card">
           <CardContent className="pt-6 text-center py-12">
             <p className="mb-6 text-foreground text-lg">No categories found. Create your first category to get started.</p>
             <Button 
               onClick={handleOpenCreateModal}
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-white px-6 py-2 font-medium flex items-center gap-2"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 font-medium shadow-md border border-primary/20 transition-all hover:scale-[1.03] active:scale-[0.97]"
             >
-              <PlusCircle className="h-5 w-5" /> Add Category
+              <PlusCircle className="h-5 w-5 mr-2" /> Add Category
             </Button>
           </CardContent>
         </Card>
@@ -219,8 +210,8 @@ const AdminCategories = () => {
       )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden bg-background border border-border">
-          <DialogHeader className="p-6 pb-2 bg-background">
+        <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden bg-background border border-border shadow-lg">
+          <DialogHeader className="p-6 pb-2 bg-background border-b border-border/50">
             <DialogTitle className="text-2xl font-bold text-foreground">
               {editingCategory ? `Edit Category: ${editingCategory.name}` : 'Create New Category'}
             </DialogTitle>
