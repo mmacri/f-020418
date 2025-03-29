@@ -6,3 +6,5 @@ export { default as AdminCategoryContent } from "./AdminCategoryContent";
 export { default as AdminDashboard } from "./AdminDashboard";
 export { default as AdminProducts } from "./AdminProducts";
 export { default as AdminSettings } from "./AdminSettings";
+export { default as CategoryCard } from "./CategoryCard";
+export { default as CategoryForm } from "./CategoryForm";

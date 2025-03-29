@@ -1,17 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { getNavigationCategories, createCategory, updateCategory, deleteCategory } from '@/services/categoryService';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowUpRight, Edit, Trash2, PlusCircle, ArrowUpToLine } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { FileUpload } from '@/components/FileUpload';
+import { PlusCircle } from 'lucide-react';
+import CategoryCard from './CategoryCard';
+import CategoryForm from './CategoryForm';
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -204,62 +200,12 @@ const AdminCategories = () => {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
-            <Card key={category.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-xl">{category.name}</CardTitle>
-                  <div className="flex space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleOpenEditModal(category)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleDeleteCategory(category)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
-                {category.showInNavigation !== false && (
-                  <Badge variant="outline" className="bg-green-50">Navigation</Badge>
-                )}
-                <CardDescription className="mt-2 line-clamp-2">
-                  {category.description || 'No description'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-medium">Slug:</span> {category.slug}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-medium">Subcategories:</span> {category.subcategories?.length || 0}
-                  </div>
-                  {category.navigationOrder !== undefined && (
-                    <div className="text-sm">
-                      <span className="font-medium">Nav Order:</span> {category.navigationOrder}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  asChild
-                >
-                  <a href={`/categories/${category.slug}`} target="_blank" rel="noopener noreferrer">
-                    View Category <ArrowUpRight className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
-              </CardFooter>
-            </Card>
+            <CategoryCard 
+              key={category.id}
+              category={category}
+              onEdit={handleOpenEditModal}
+              onDelete={handleDeleteCategory}
+            />
           ))}
         </div>
       )}
@@ -275,119 +221,17 @@ const AdminCategories = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Category Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="e.g. Massage Guns"
-                  value={formData.name}
-                  onChange={handleNameChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="slug">URL Slug</Label>
-                <Input
-                  id="slug"
-                  name="slug"
-                  placeholder="e.g. massage-guns"
-                  value={formData.slug}
-                  onChange={handleInputChange}
-                  required
-                />
-                <p className="text-xs text-gray-500">
-                  This will be used in the URL: /categories/{formData.slug}
-                </p>
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  placeholder="Brief description of this category"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className="min-h-[100px]"
-                />
-              </div>
-              
-              <div className="space-y-3">
-                <Label>Category Image</Label>
-                <Tabs value={imageMethod} onValueChange={handleImageMethodChange} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="url">Image URL</TabsTrigger>
-                    <TabsTrigger value="upload">Upload Image</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="url" className="space-y-4 mt-2">
-                    <div className="grid gap-2">
-                      <Input
-                        id="imageUrl"
-                        name="imageUrl"
-                        placeholder="https://example.com/image.jpg"
-                        value={formData.imageUrl}
-                        onChange={handleInputChange}
-                      />
-                      <p className="text-xs text-gray-500">
-                        Enter a direct URL to an image for this category
-                      </p>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="upload" className="space-y-4 mt-2">
-                    <FileUpload 
-                      onFileChange={handleFileChange}
-                      accept="image/*"
-                      maxSizeMB={2}
-                    />
-                    <p className="text-xs text-gray-500">
-                      Upload an image file (max 2MB). Supported formats: PNG, JPEG, GIF
-                    </p>
-                  </TabsContent>
-                </Tabs>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="showInNavigation"
-                    name="showInNavigation"
-                    checked={formData.showInNavigation}
-                    onChange={handleInputChange}
-                    className="rounded border-gray-300"
-                  />
-                  <Label htmlFor="showInNavigation">Show in Navigation</Label>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="navigationOrder">Navigation Order</Label>
-                  <Input
-                    id="navigationOrder"
-                    name="navigationOrder"
-                    type="number"
-                    min="0"
-                    value={formData.navigationOrder}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                {editingCategory ? 'Update Category' : 'Create Category'}
-              </Button>
-            </DialogFooter>
-          </form>
+          <CategoryForm 
+            formData={formData}
+            isEditing={!!editingCategory}
+            onInputChange={handleInputChange}
+            onNameChange={handleNameChange}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsModalOpen(false)}
+            imageMethod={imageMethod}
+            onImageMethodChange={handleImageMethodChange}
+            onFileChange={handleFileChange}
+          />
         </DialogContent>
       </Dialog>
     </div>
