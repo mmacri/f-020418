@@ -11,7 +11,7 @@ import {
 // Re-export getCurrentUser from userService
 export const getCurrentUser = getUserFromService;
 
-// Login function (wrapper around userService.login)
+// Login function (wrapper around userService.login) - ONLY for admins
 export const login = async (email: string, password: string): Promise<{
   success: boolean;
   user?: User;
