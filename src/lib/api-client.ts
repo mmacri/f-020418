@@ -247,7 +247,7 @@ export class ApiClient {
       }
       
       if (endpoint === '/categories/content') {
-        if (method === 'GET') return categoryContentService.getAllCategoryContent() as unknown as T;
+        if (method === 'GET') return categoryContentService.getCategoryContent() as unknown as T;
       }
       
       // Handle category content by slug
@@ -255,7 +255,7 @@ export class ApiClient {
         const slug = endpoint.split('/').pop();
         if (slug) {
           if (method === 'GET') return categoryContentService.getCategoryContentBySlug(slug) as unknown as T;
-          if (method === 'PUT') return categoryContentService.updateCategoryContent(slug, data) as unknown as T;
+          if (method === 'PUT') return categoryContentService.saveCategoryContent(data) as unknown as T;
         }
       }
       

@@ -1,175 +1,202 @@
 
 import React from 'react';
-import { Check, X, Award } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { handleAffiliateClick } from '@/lib/affiliate-utils';
-import { formatPrice } from '@/lib/product-utils';
+import { Check, Minus, Star } from 'lucide-react';
 import { Product } from '@/services/productService';
+import { Link } from 'react-router-dom';
+import { formatPrice } from '@/lib/product-utils';
+import { handleAffiliateClick } from '@/lib/affiliate-utils';
 
 interface ProductComparisonTableProps {
   products: Product[];
-  highlightBestProduct?: boolean;
+  showReviewLink?: boolean;
 }
 
 const ProductComparisonTable: React.FC<ProductComparisonTableProps> = ({ 
-  products,
-  highlightBestProduct = false
+  products, 
+  showReviewLink = true
 }) => {
-  if (products.length < 2) return null;
+  // Get common specifications keys
+  const getSpecKeys = () => {
+    const allKeys = new Set<string>();
+    
+    products.forEach(product => {
+      if (product.specifications) {
+        Object.keys(product.specifications).forEach(key => allKeys.add(key));
+      }
+    });
+    
+    // Prioritize important specs
+    const priorityKeys = [
+      'Brand', 'Model', 'Weight', 'Dimensions', 'Power', 'Battery Life',
+      'Speed Settings', 'Attachments', 'Warranty', 'Noise Level', 'Best For'
+    ];
+    
+    const sortedKeys = [...allKeys].sort((a, b) => {
+      const indexA = priorityKeys.indexOf(a);
+      const indexB = priorityKeys.indexOf(b);
+      
+      if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+    
+    return sortedKeys;
+  };
   
-  // Find the best overall product based on rating if needed
-  const bestProductId = highlightBestProduct
-    ? products.reduce((bestId, product, _, arr) => {
-        const current = arr.find(p => p.id === bestId);
-        return (current && current.rating > product.rating) ? bestId : product.id;
-      }, products[0].id)
-    : null;
+  const specKeys = getSpecKeys();
   
-  // Get all unique specification keys from all products
-  const allSpecKeys = Array.from(
-    new Set(
-      products.flatMap(product => 
-        product.specifications ? Object.keys(product.specifications) : []
-      )
-    )
-  );
-  
+  // Helper to get image URL from product
+  const getProductImageUrl = (product: Product): string => {
+    if (!product.images || product.images.length === 0) {
+      return product.imageUrl || '/placeholder.svg';
+    }
+    
+    const firstImage = product.images[0];
+    if (typeof firstImage === 'string') {
+      return firstImage;
+    } else if (firstImage && typeof firstImage === 'object' && 'url' in firstImage) {
+      return firstImage.url || product.imageUrl || '/placeholder.svg';
+    }
+    
+    return product.imageUrl || '/placeholder.svg';
+  };
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-      <table className="w-full text-sm text-left">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-3 text-gray-700 text-md font-semibold border-b">Features</th>
-            {products.map((product) => (
-              <th key={product.id} className="px-4 py-3 text-gray-700 font-semibold border-b min-w-[260px]">
-                <div className="space-y-2">
-                  <div className="h-32 flex items-center justify-center mb-2">
+    <div className="overflow-x-auto">
+      <Table className="border-collapse">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-48">Product</TableHead>
+            {products.map(product => (
+              <TableHead key={product.id} className="w-48 text-center">
+                <div className="flex flex-col items-center space-y-2 p-2">
+                  <div className="h-24 flex items-center justify-center">
                     <img 
-                      src={typeof product.images[0] === 'string' 
-                        ? product.images[0] 
-                        : product.images[0]?.url || product.imageUrl} 
+                      src={getProductImageUrl(product)}
                       alt={product.name} 
-                      className="max-h-full max-w-[180px] object-contain" 
+                      className="max-h-full max-w-full object-contain" 
                     />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <h3 className={`text-md ${product.id === bestProductId ? 'text-amber-600 font-bold' : ''}`}>
-                      {product.id === bestProductId && (
-                        <Award className="h-4 w-4 inline mr-1 text-amber-500" />
-                      )}
-                      {product.name}
-                    </h3>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <span className="text-amber-500 mr-1">
-                      {Array(5).fill(0).map((_, i) => (
-                        <span key={i}>{i < Math.floor(product.rating) ? "★" : "☆"}</span>
-                      ))}
-                    </span>
-                    <span>{product.rating.toFixed(1)}</span>
-                  </div>
+                  <Link to={`/products/${product.slug}`} className="font-bold hover:text-indigo-600 text-sm">
+                    {product.name}
+                  </Link>
                 </div>
-              </th>
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          <tr className="bg-white">
-            <td className="px-4 py-3 font-medium text-gray-700">Price</td>
-            {products.map((product) => (
-              <td key={`${product.id}-price`} className={`px-4 py-3 ${product.id === bestProductId ? 'bg-amber-50' : ''}`}>
-                <div className="font-bold text-indigo-600">{formatPrice(product.price)}</div>
-                {product.originalPrice && (
-                  <div className="text-gray-500 line-through text-xs">
-                    {formatPrice(product.originalPrice)}
-                  </div>
-                )}
-              </td>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell className="font-medium">Price</TableCell>
+            {products.map(product => (
+              <TableCell key={product.id} className="text-center font-bold text-indigo-600">
+                {formatPrice(product.price)}
+              </TableCell>
             ))}
-          </tr>
+          </TableRow>
           
-          {/* Specifications rows */}
-          {allSpecKeys.map((specKey) => (
-            <tr key={specKey} className="bg-white">
-              <td className="px-4 py-3 font-medium text-gray-700">{specKey}</td>
-              {products.map((product) => (
-                <td 
-                  key={`${product.id}-${specKey}`} 
-                  className={`px-4 py-3 ${product.id === bestProductId ? 'bg-amber-50' : ''}`}
-                >
-                  {product.specifications && product.specifications[specKey] 
-                    ? product.specifications[specKey] 
-                    : <span className="text-gray-400">—</span>}
-                </td>
+          <TableRow>
+            <TableCell className="font-medium">Rating</TableCell>
+            {products.map(product => (
+              <TableCell key={product.id} className="text-center">
+                <div className="flex items-center justify-center">
+                  <div className="flex text-amber-400">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star 
+                        key={i}
+                        className={`h-4 w-4 ${i < Math.floor(product.rating) ? 'fill-amber-400' : 'fill-gray-200'}`} 
+                      />
+                    ))}
+                  </div>
+                  <span className="ml-1 text-sm">({product.reviewCount})</span>
+                </div>
+              </TableCell>
+            ))}
+          </TableRow>
+          
+          {specKeys.map(key => (
+            <TableRow key={key}>
+              <TableCell className="font-medium">{key}</TableCell>
+              {products.map(product => (
+                <TableCell key={product.id} className="text-center">
+                  {product.specifications && product.specifications[key] 
+                    ? product.specifications[key] 
+                    : <Minus className="mx-auto h-4 w-4 text-gray-300" />
+                  }
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
           
-          {/* Features rows - show first 3 features */}
-          <tr className="bg-white">
-            <td className="px-4 py-3 font-medium text-gray-700">Key Features</td>
-            {products.map((product) => (
-              <td 
-                key={`${product.id}-features`} 
-                className={`px-4 py-3 ${product.id === bestProductId ? 'bg-amber-50' : ''}`}
-              >
-                <ul className="list-disc pl-5 space-y-1">
-                  {product.features ? (
-                    product.features.slice(0, 3).map((feature, index) => (
-                      <li key={index} className="text-gray-700">{feature}</li>
-                    ))
-                  ) : (
-                    <li className="text-gray-400">No features listed</li>
-                  )}
-                </ul>
-              </td>
-            ))}
-          </tr>
-          
-          {/* In stock status */}
-          <tr className="bg-white">
-            <td className="px-4 py-3 font-medium text-gray-700">Availability</td>
-            {products.map((product) => (
-              <td 
-                key={`${product.id}-stock`} 
-                className={`px-4 py-3 ${product.id === bestProductId ? 'bg-amber-50' : ''}`}
-              >
-                {product.inStock !== false ? (
-                  <span className="text-green-600 flex items-center">
-                    <Check className="h-4 w-4 mr-1" />
-                    In Stock
-                  </span>
+          <TableRow>
+            <TableCell className="font-medium">Key Features</TableCell>
+            {products.map(product => (
+              <TableCell key={product.id}>
+                {product.features && product.features.length > 0 ? (
+                  <ul className="list-disc pl-5 text-sm space-y-1">
+                    {product.features.slice(0, 3).map((feature, i) => (
+                      <li key={i}>{feature}</li>
+                    ))}
+                    {product.features.length > 3 && <li>+ {product.features.length - 3} more</li>}
+                  </ul>
                 ) : (
-                  <span className="text-red-600 flex items-center">
-                    <X className="h-4 w-4 mr-1" />
-                    Out of Stock
-                  </span>
+                  <span className="text-gray-400">No features listed</span>
                 )}
-              </td>
+              </TableCell>
             ))}
-          </tr>
+          </TableRow>
           
-          {/* Buy button */}
-          <tr className="bg-gray-50">
-            <td className="px-4 py-4 font-medium text-gray-700"></td>
-            {products.map((product) => (
-              <td key={`${product.id}-buy`} className="px-4 py-4">
-                <Button
-                  className={`w-full ${product.id === bestProductId ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
-                  onClick={() => {
-                    const url = product.affiliateLink || product.affiliateUrl || 
-                      (product.asin ? `https://www.amazon.com/dp/${product.asin}?tag=recoveryessentials-20` : '#');
-                    handleAffiliateClick(url, product.id, product.name, product.asin);
-                  }}
-                  disabled={product.inStock === false}
-                >
-                  View on Amazon
-                </Button>
-              </td>
+          <TableRow>
+            <TableCell className="font-medium">Pros</TableCell>
+            {products.map(product => (
+              <TableCell key={product.id}>
+                {product.pros && product.pros.length > 0 ? (
+                  <ul className="space-y-1 text-sm">
+                    {product.pros.slice(0, 3).map((pro, i) => (
+                      <li key={i} className="flex items-start">
+                        <Check className="h-4 w-4 text-green-500 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>{pro}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-gray-400">No pros listed</span>
+                )}
+              </TableCell>
             ))}
-          </tr>
-        </tbody>
-      </table>
+          </TableRow>
+          
+          <TableRow>
+            <TableCell className="font-medium">Actions</TableCell>
+            {products.map(product => (
+              <TableCell key={product.id} className="text-center">
+                <div className="flex flex-col space-y-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const url = product.affiliateLink || product.affiliateUrl || 
+                        (product.asin ? `https://www.amazon.com/dp/${product.asin}?tag=recoveryessentials-20` : '#');
+                      handleAffiliateClick(url, product.id, product.name, product.asin);
+                    }}
+                    className="w-full"
+                  >
+                    View on Amazon
+                  </Button>
+                  
+                  {showReviewLink && (
+                    <Button size="sm" variant="outline" asChild className="w-full">
+                      <Link to={`/products/${product.slug}`}>Read Review</Link>
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   );
 };

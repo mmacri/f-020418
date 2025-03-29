@@ -68,21 +68,50 @@ const CategoryPage = () => {
   
   // Default content if none is found
   const defaultContent = {
-    title: category ? category.name : (categorySlug ? categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : ''),
-    description: subcategory ? subcategory.description : (category ? category.description : "Discover the best recovery products in this category."),
+    headline: category ? category.name : (categorySlug ? categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : ''),
     introduction: "Discover the best recovery products to improve your recovery time and enhance your performance.",
-    benefits: [],
-    videoId: "",
-    videoTitle: "",
-    videoDescription: "",
+    meta: {
+      description: subcategory ? subcategory.description : (category ? category.description : "Discover the best recovery products in this category."),
+      title: ""
+    },
+    sections: [],
+    recommendations: [],
     faqs: [],
-    buyingGuide: ""
+    id: "",
+    slug: categorySlug || "",
+    lastUpdated: ""
   };
   
   // Use category content from service or default
   const content = categoryContent || defaultContent;
 
-  const pageTitle = subcategory ? `${subcategory.name} ${category?.name || ''}` : content.title;
+  // Extract benefits from the first section if it exists
+  const benefitsSection = content.sections?.find(section => 
+    section.title.toLowerCase().includes('benefit') || 
+    section.title.toLowerCase().includes('how') ||
+    section.content.includes('•')
+  );
+  
+  const benefits = benefitsSection ? 
+    benefitsSection.content
+      .split('\n')
+      .filter(line => line.trim().startsWith('•'))
+      .map(line => line.trim().substring(1).trim()) 
+    : [];
+  
+  // Find any section that might be a buying guide
+  const buyingGuideSection = content.sections?.find(section => 
+    section.title.toLowerCase().includes('guide') || 
+    section.title.toLowerCase().includes('choosing') ||
+    section.title.toLowerCase().includes('consider')
+  );
+  
+  // Find a section that might contain a video
+  const videoSection = content.sections?.find(section => section.videoUrl);
+  
+  const pageTitle = subcategory 
+    ? `${subcategory.name} ${category?.name || ''}` 
+    : content.headline;
   
   // Create breadcrumb data
   const breadcrumbs = [
@@ -129,7 +158,7 @@ const CategoryPage = () => {
       </div>
       
       {/* Category Hero */}
-      <CategoryHero categorySlug={categorySlug || ''} description={content.description} />
+      <CategoryHero categorySlug={categorySlug || ''} description={content.meta.description} />
       
       {/* Introduction */}
       <section className="py-12 bg-white">
@@ -142,11 +171,11 @@ const CategoryPage = () => {
               ))}
             </div>
 
-            {content.benefits.length > 0 && (
+            {benefits.length > 0 && (
               <div className="bg-indigo-50 p-6 rounded-lg my-8">
                 <h3 className="font-bold text-xl mb-4">Key Benefits of {pageTitle}</h3>
                 <ul className="space-y-3">
-                  {content.benefits.map((benefit, index) => (
+                  {benefits.map((benefit, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <CheckCircle className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
                       <span dangerouslySetInnerHTML={{ __html: benefit }}></span>
@@ -241,21 +270,23 @@ const CategoryPage = () => {
       </section>
       
       {/* Video Section */}
-      {content.videoId && (
+      {videoSection && videoSection.videoUrl && (
         <VideoSection 
-          title={content.videoTitle}
-          description={content.videoDescription}
-          videoId={content.videoId}
+          title={videoSection.title}
+          description={videoSection.content}
+          videoId={videoSection.videoUrl.includes('youtube.com/embed/') 
+            ? videoSection.videoUrl.split('/').pop() || '' 
+            : videoSection.videoUrl}
         />
       )}
       
       {/* Buying Guide Section */}
-      {content.buyingGuide && (
+      {buyingGuideSection && (
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8 text-center">Buying Guide: How to Choose the Right {pageTitle}</h2>
+            <h2 className="text-3xl font-bold mb-8 text-center">Buying Guide: {buyingGuideSection.title}</h2>
             <div className="bg-gray-50 p-8 rounded-lg shadow-sm">
-              {content.buyingGuide.split('\n').map((paragraph, index) => (
+              {buyingGuideSection.content.split('\n').map((paragraph, index) => (
                 <p key={index} className="text-gray-800 leading-relaxed mb-4">
                   {paragraph}
                 </p>

@@ -1,12 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  getAllCategoryContent, 
+  getCategoryContent, 
   getCategoryContentBySlug, 
-  updateCategoryContent,
-  importContentFromUrl,
+  saveCategoryContent,
   CategoryContent, 
-  CategoryFAQ 
+  CategoryContentFAQ as CategoryFAQ 
 } from '@/services/categoryContentService';
 import { getNavigationCategories } from '@/services/categoryService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,7 +54,7 @@ const AdminCategoryContent = () => {
         const categoriesList = await getNavigationCategories();
         setCategories(categoriesList);
         
-        const contentList = await getAllCategoryContent();
+        const contentList = await getCategoryContent();
         setCategoryContent(contentList);
         
         if (categoriesList.length > 0 && !selectedCategory) {
@@ -84,17 +83,25 @@ const AdminCategoryContent = () => {
       if (content) {
         setCurrentContent(content);
         setFaqs(content.faqs || []);
-        setBenefits(content.benefits || []);
+        // Initialize benefits array from sections or as empty array
+        const sectionContent = content.sections?.[0]?.content || '';
+        const extractedBenefits = sectionContent
+          .split('\n')
+          .filter(line => line.trim().startsWith('•'))
+          .map(line => line.trim().substring(1).trim());
+        setBenefits(extractedBenefits.length > 0 ? extractedBenefits : []);
       } else {
         setCurrentContent({
           slug,
-          title: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          description: '',
+          headline: slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
           introduction: '',
-          videoId: '',
-          videoTitle: '',
-          videoDescription: '',
-          buyingGuide: '',
+          meta: {
+            title: '',
+            description: ''
+          },
+          sections: [],
+          recommendations: [],
+          faqs: []
         });
         setFaqs([]);
         setBenefits([]);
@@ -132,7 +139,7 @@ const AdminCategoryContent = () => {
   };
 
   const handleAddFaq = () => {
-    setFaqs([...faqs, { question: '', answer: '' }]);
+    setFaqs([...faqs, { id: `faq-${Date.now()}`, question: '', answer: '' }]);
   };
 
   const handleUpdateFaq = (index: number, field: 'question' | 'answer', value: string) => {
@@ -146,6 +153,18 @@ const AdminCategoryContent = () => {
     setFaqs(updatedFaqs);
   };
 
+  // Since we don't have importContentFromUrl, let's implement a basic version
+  const importContentFromUrl = async (categorySlug: string, url: string) => {
+    // This would normally call an API, but we'll simulate it
+    toast({
+      title: 'Import Simulation',
+      description: 'This would import content from ' + url,
+    });
+    
+    // Return the current content for now
+    return getCategoryContentBySlug(categorySlug);
+  };
+
   const handleImportFromUrl = async () => {
     if (!selectedCategory || !importUrl) return;
     
@@ -157,7 +176,13 @@ const AdminCategoryContent = () => {
       if (importedContent) {
         setCurrentContent(importedContent);
         setFaqs(importedContent.faqs || []);
-        setBenefits(importedContent.benefits || []);
+        // Extract benefits from sections content if available
+        const sectionContent = importedContent.sections?.[0]?.content || '';
+        const extractedBenefits = sectionContent
+          .split('\n')
+          .filter(line => line.trim().startsWith('•'))
+          .map(line => line.trim().substring(1).trim());
+        setBenefits(extractedBenefits);
         
         setCategoryContent(prev => 
           prev.map(c => c.slug === selectedCategory ? importedContent : c)
@@ -193,13 +218,37 @@ const AdminCategoryContent = () => {
     setIsLoading(true);
     
     try {
-      const dataToSave = {
-        ...currentContent,
-        benefits,
-        faqs
+      // Create a proper section from benefits if any
+      const sections = [...(currentContent.sections || [])];
+      
+      // Update first section with benefits or create one if none exists
+      if (benefits.length > 0) {
+        const benefitsContent = `
+          ${benefits.map(benefit => `• ${benefit}`).join('\n')}
+        `;
+        
+        if (sections.length > 0) {
+          sections[0] = {
+            ...sections[0],
+            content: benefitsContent
+          };
+        } else {
+          sections.push({
+            id: `section-${Date.now()}`,
+            title: 'Benefits',
+            content: benefitsContent
+          });
+        }
+      }
+      
+      const dataToSave: CategoryContent = {
+        ...currentContent as CategoryContent,
+        sections,
+        faqs,
+        lastUpdated: new Date().toISOString().split('T')[0]
       };
       
-      const savedContent = await updateCategoryContent(selectedCategory, dataToSave);
+      const savedContent = await saveCategoryContent(dataToSave);
       
       if (savedContent) {
         setCategoryContent(prev => 
@@ -310,7 +359,7 @@ const AdminCategoryContent = () => {
           {selectedCategory ? (
             <Card>
               <CardHeader>
-                <CardTitle>Edit {currentContent.title || selectedCategory}</CardTitle>
+                <CardTitle>Edit {currentContent.headline || selectedCategory}</CardTitle>
                 <CardDescription>
                   Update the content that appears on the category page
                 </CardDescription>
@@ -320,30 +369,38 @@ const AdminCategoryContent = () => {
                   <TabsList className="mb-4">
                     <TabsTrigger value="basic">Basic Info</TabsTrigger>
                     <TabsTrigger value="benefits">Benefits</TabsTrigger>
-                    <TabsTrigger value="video">Video</TabsTrigger>
+                    <TabsTrigger value="sections">Sections</TabsTrigger>
                     <TabsTrigger value="guide">Buying Guide</TabsTrigger>
                     <TabsTrigger value="faqs">FAQs</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="basic" className="space-y-4">
                     <div>
-                      <Label htmlFor="title">Title</Label>
+                      <Label htmlFor="headline">Title</Label>
                       <Input 
-                        id="title" 
-                        name="title" 
-                        value={currentContent.title || ''} 
+                        id="headline" 
+                        name="headline" 
+                        value={currentContent.headline || ''} 
                         onChange={handleInputChange} 
                         placeholder="Category Title"
                       />
                     </div>
                     
                     <div>
-                      <Label htmlFor="description">Meta Description</Label>
+                      <Label htmlFor="meta.description">Meta Description</Label>
                       <Input 
-                        id="description" 
-                        name="description" 
-                        value={currentContent.description || ''} 
-                        onChange={handleInputChange} 
+                        id="meta.description" 
+                        name="meta.description" 
+                        value={currentContent.meta?.description || ''} 
+                        onChange={(e) => {
+                          setCurrentContent(prev => ({
+                            ...prev,
+                            meta: {
+                              ...(prev.meta || {}),
+                              description: e.target.value
+                            }
+                          }));
+                        }} 
                         placeholder="Brief category description (for SEO)"
                       />
                     </div>
@@ -400,80 +457,13 @@ const AdminCategoryContent = () => {
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="video" className="space-y-4">
-                    <div className="mb-6">
-                      <Label htmlFor="videoId">YouTube Video ID</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          id="videoId" 
-                          name="videoId" 
-                          value={currentContent.videoId || ''} 
-                          onChange={handleInputChange} 
-                          placeholder="e.g., hKYEn-6Dt_M"
-                        />
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline">
-                              <HelpCircle className="h-4 w-4 mr-1" />
-                              Help
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>How to find a YouTube Video ID</DialogTitle>
-                              <DialogDescription>
-                                The Video ID is the part after "v=" in a YouTube URL.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <p className="text-sm">For example, in the URL:</p>
-                              <p className="bg-gray-100 p-2 rounded text-sm">https://www.youtube.com/watch?v=<span className="font-bold">hKYEn-6Dt_M</span></p>
-                              <p className="text-sm">The Video ID is <span className="font-bold">hKYEn-6Dt_M</span></p>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </div>
-                    
+                  <TabsContent value="sections" className="space-y-4">
                     <div>
-                      <Label htmlFor="videoTitle">Video Title</Label>
-                      <Input 
-                        id="videoTitle" 
-                        name="videoTitle" 
-                        value={currentContent.videoTitle || ''} 
-                        onChange={handleInputChange} 
-                        placeholder="E.g., How to Use a Massage Gun Effectively"
-                      />
+                      <Label>Sections Management</Label>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Sections are managed through the benefits and guide tabs for now.
+                      </p>
                     </div>
-                    
-                    <div>
-                      <Label htmlFor="videoDescription">Video Description</Label>
-                      <Textarea 
-                        id="videoDescription" 
-                        name="videoDescription" 
-                        value={currentContent.videoDescription || ''} 
-                        onChange={handleInputChange} 
-                        placeholder="Brief description of what visitors will learn from the video"
-                        rows={3}
-                      />
-                    </div>
-                    
-                    {currentContent.videoId && (
-                      <div className="mt-6">
-                        <h3 className="text-lg font-medium mb-2">Video Preview</h3>
-                        <div className="aspect-video">
-                          <iframe 
-                            width="100%" 
-                            height="100%" 
-                            src={`https://www.youtube.com/embed/${currentContent.videoId}`}
-                            title={currentContent.videoTitle || "YouTube Video"} 
-                            frameBorder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowFullScreen
-                          ></iframe>
-                        </div>
-                      </div>
-                    )}
                   </TabsContent>
                   
                   <TabsContent value="guide" className="space-y-4">
@@ -482,8 +472,29 @@ const AdminCategoryContent = () => {
                       <Textarea 
                         id="buyingGuide" 
                         name="buyingGuide" 
-                        value={currentContent.buyingGuide || ''} 
-                        onChange={handleInputChange} 
+                        value={currentContent.sections?.find(s => s.title === "Buying Guide")?.content || ''} 
+                        onChange={(e) => {
+                          const newSections = [...(currentContent.sections || [])];
+                          const guideIndex = newSections.findIndex(s => s.title === "Buying Guide");
+                          
+                          if (guideIndex >= 0) {
+                            newSections[guideIndex] = {
+                              ...newSections[guideIndex],
+                              content: e.target.value
+                            };
+                          } else {
+                            newSections.push({
+                              id: `guide-${Date.now()}`,
+                              title: "Buying Guide",
+                              content: e.target.value
+                            });
+                          }
+                          
+                          setCurrentContent(prev => ({
+                            ...prev,
+                            sections: newSections
+                          }));
+                        }}
                         placeholder="Write a helpful buying guide for visitors looking to purchase products in this category"
                         rows={10}
                       />

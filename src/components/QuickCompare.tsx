@@ -27,15 +27,19 @@ const QuickCompare: React.FC<QuickCompareProps> = ({
   const displayProducts = products.slice(0, 3);
 
   // Helper to get image URL from product
-  const getProductImageUrl = (product: Product) => {
+  const getProductImageUrl = (product: Product): string => {
     if (!product.images || product.images.length === 0) {
       return product.imageUrl || '/placeholder.svg';
     }
     
     const firstImage = product.images[0];
-    return typeof firstImage === 'string' 
-      ? firstImage 
-      : firstImage?.url || product.imageUrl || '/placeholder.svg';
+    if (typeof firstImage === 'string') {
+      return firstImage;
+    } else if (firstImage && typeof firstImage === 'object' && 'url' in firstImage) {
+      return firstImage.url || product.imageUrl || '/placeholder.svg';
+    }
+    
+    return product.imageUrl || '/placeholder.svg';
   };
 
   return (

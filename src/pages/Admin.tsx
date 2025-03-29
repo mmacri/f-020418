@@ -7,12 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import AdminAuth from "@/components/admin/AdminAuth";
-import AdminProducts from "@/components/admin/AdminProducts";
-import AdminBlog from "@/components/admin/AdminBlog";
-import AdminCategories from "@/components/admin/AdminCategories";
-import AdminDashboard from "@/components/admin/AdminDashboard";
-import AdminSettings from "@/components/admin/AdminSettings";
+import { AdminAuth, AdminProducts, AdminBlog, AdminCategories, AdminCategoryContent, AdminDashboard, AdminSettings } from "@/components/admin";
 import { isAdmin, isAuthenticated } from "@/services/authService";
 
 const Admin = () => {
@@ -69,11 +64,12 @@ const Admin = () => {
         </div>
         
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full mb-4">
+          <TabsList className="grid grid-cols-7 w-full mb-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="blog">Blog Posts</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="content">Category Content</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
             <TabsTrigger value="help">Help</TabsTrigger>
           </TabsList>
@@ -92,6 +88,10 @@ const Admin = () => {
           
           <TabsContent value="categories">
             <AdminCategories />
+          </TabsContent>
+          
+          <TabsContent value="content">
+            <AdminCategoryContent />
           </TabsContent>
           
           <TabsContent value="settings">
