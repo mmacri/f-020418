@@ -22,16 +22,19 @@ const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = ({ produ
         <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Featured Recovery Products</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map(product => {
-            // Create a modified product with properly formatted images for ProductCard
-            const formattedImages = product.images.map(img => ({ url: img }));
+            // First, create a copy of the product without images
+            const { images, ...productWithoutImages } = product;
+            
+            // Then create the correctly formatted product with the right image format
+            const productForCard = {
+              ...productWithoutImages,
+              images: images.map(img => ({ url: img }))
+            };
             
             return (
               <ProductCard 
                 key={product.id} 
-                product={{
-                  ...product,
-                  images: formattedImages
-                }} 
+                product={productForCard as any} 
                 featured={true} 
               />
             );
