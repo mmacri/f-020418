@@ -42,6 +42,18 @@ const BestOfList: React.FC<BestOfListProps> = ({
     }
   };
   
+  // Helper to get image URL from product
+  const getProductImageUrl = (product: Product) => {
+    if (!product.images || product.images.length === 0) {
+      return product.imageUrl || '/placeholder.svg';
+    }
+    
+    const firstImage = product.images[0];
+    return typeof firstImage === 'string' 
+      ? firstImage 
+      : firstImage?.url || product.imageUrl || '/placeholder.svg';
+  };
+  
   return (
     <div className="py-8">
       <div className="flex justify-between items-center mb-6">
@@ -67,9 +79,7 @@ const BestOfList: React.FC<BestOfListProps> = ({
                 <div className="md:w-1/4 p-4 flex items-center justify-center bg-gray-50">
                   <div className="relative">
                     <img 
-                      src={typeof product.images[0] === 'string' 
-                        ? product.images[0] 
-                        : product.images[0]?.url || product.imageUrl} 
+                      src={getProductImageUrl(product)} 
                       alt={product.name} 
                       className="max-h-40 object-contain" 
                     />

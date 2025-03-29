@@ -26,6 +26,18 @@ const QuickCompare: React.FC<QuickCompareProps> = ({
   // Limit to 3 products for quick comparison
   const displayProducts = products.slice(0, 3);
 
+  // Helper to get image URL from product
+  const getProductImageUrl = (product: Product) => {
+    if (!product.images || product.images.length === 0) {
+      return product.imageUrl || '/placeholder.svg';
+    }
+    
+    const firstImage = product.images[0];
+    return typeof firstImage === 'string' 
+      ? firstImage 
+      : firstImage?.url || product.imageUrl || '/placeholder.svg';
+  };
+
   return (
     <div className="my-8">
       <div className="flex justify-between items-center mb-4">
@@ -42,9 +54,7 @@ const QuickCompare: React.FC<QuickCompareProps> = ({
           <Card key={product.id} className="overflow-hidden">
             <div className="h-40 bg-gray-50 p-4 flex items-center justify-center">
               <img 
-                src={typeof product.images[0] === 'string' 
-                  ? product.images[0] 
-                  : product.images[0]?.url || product.imageUrl} 
+                src={getProductImageUrl(product)} 
                 alt={product.name} 
                 className="max-h-full object-contain" 
               />

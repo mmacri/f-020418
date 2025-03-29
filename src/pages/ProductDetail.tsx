@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getProductBySlug } from '@/services/productService';
@@ -14,7 +13,7 @@ import {
   AccordionTrigger 
 } from '@/components/ui/accordion';
 import ProductCard from '@/components/ProductCard';
-import { trackAffiliateClick } from '@/lib/affiliate-utils';
+import { handleAffiliateClick } from '@/lib/affiliate-utils';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -69,8 +68,7 @@ const ProductDetail = () => {
 
   const handleBuyNow = () => {
     if (product && product.affiliateLink) {
-      trackAffiliateClick(product.id, product.name);
-      window.open(product.affiliateLink, '_blank');
+      handleAffiliateClick(product.affiliateLink, product.id, product.name, product.asin);
     }
   };
 
