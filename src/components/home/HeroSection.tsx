@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { localStorageKeys, imageUrls } from '@/lib/constants';
-import { ImageWithFallback } from '@/lib/image-utils';
+import { ImageWithFallback } from '@/lib/images';
 
 const HeroSection: React.FC = () => {
   const [heroImageUrl, setHeroImageUrl] = useState<string>(imageUrls.HERO_DEFAULT);

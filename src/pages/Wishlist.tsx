@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Trash2, ShoppingCart } from 'lucide-react';
 import { useWishlist } from '@/hooks/useWishlist';
 import { Link } from 'react-router-dom';
-import { ImageWithFallback } from '@/lib/image-utils';
+import { ImageWithFallback } from '@/lib/images';
 import { formatPrice } from '@/lib/product-utils';
 import { handleAffiliateClick } from '@/lib/affiliate-utils';
 

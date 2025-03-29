@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { getCategoryName } from '@/lib/product-utils';
-import { ImageWithFallback } from '@/lib/image-utils';
+import { ImageWithFallback } from '@/lib/images';
 import { imageUrls } from '@/lib/constants';
 
 interface CategoryHeroProps {
