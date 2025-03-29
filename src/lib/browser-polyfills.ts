@@ -152,35 +152,36 @@ export const applyStickyPolyfill = () => {
 
 // Text-size-adjust polyfill
 const applyTextSizeAdjustPolyfill = () => {
-  if (typeof document !== 'undefined') {
+  if (typeof window !== 'undefined') {
     // Apply text-size-adjust to html element
     const html = document.documentElement;
     if (html) {
-      html.style.textSizeAdjust = '100%';
-      html.style.msTextSizeAdjust = '100%';
-      html.style.WebkitTextSizeAdjust = '100%';
+      // Using string indexers to avoid TypeScript errors with vendor prefixes
+      (html.style as any)['textSizeAdjust'] = '100%';
+      (html.style as any)['-ms-text-size-adjust'] = '100%';
+      (html.style as any)['-webkit-text-size-adjust'] = '100%';
     }
   }
 };
 
 // Apply IE-specific fixes for grid and flex
 const applyIEGridFlexFixes = () => {
-  if (typeof document !== 'undefined') {
+  if (typeof window !== 'undefined') {
     // Find all grid elements and apply IE-specific styles
     const gridElements = document.querySelectorAll('.grid');
     gridElements.forEach((element) => {
       const htmlElement = element as HTMLElement;
-      htmlElement.style.display = '-ms-grid';
+      (htmlElement.style as any)['display'] = '-ms-grid';
       
       // Check for grid columns and apply IE-specific columns
       if (element.classList.contains('grid-cols-1')) {
-        htmlElement.style.msGridColumns = '1fr';
+        (htmlElement.style as any)['-ms-grid-columns'] = '1fr';
       } else if (element.classList.contains('grid-cols-2')) {
-        htmlElement.style.msGridColumns = '1fr 1fr';
+        (htmlElement.style as any)['-ms-grid-columns'] = '1fr 1fr';
       } else if (element.classList.contains('grid-cols-3')) {
-        htmlElement.style.msGridColumns = '1fr 1fr 1fr';
+        (htmlElement.style as any)['-ms-grid-columns'] = '1fr 1fr 1fr';
       } else if (element.classList.contains('grid-cols-4')) {
-        htmlElement.style.msGridColumns = '1fr 1fr 1fr 1fr';
+        (htmlElement.style as any)['-ms-grid-columns'] = '1fr 1fr 1fr 1fr';
       }
     });
     
@@ -188,34 +189,34 @@ const applyIEGridFlexFixes = () => {
     const flexElements = document.querySelectorAll('.flex');
     flexElements.forEach((element) => {
       const htmlElement = element as HTMLElement;
-      htmlElement.style.display = '-ms-flexbox';
+      (htmlElement.style as any)['display'] = '-ms-flexbox';
       
       // Add IE-specific flex direction properties
       if (element.classList.contains('flex-col')) {
-        htmlElement.style.msFlexDirection = 'column';
+        (htmlElement.style as any)['-ms-flex-direction'] = 'column';
       } else if (element.classList.contains('flex-row')) {
-        htmlElement.style.msFlexDirection = 'row';
+        (htmlElement.style as any)['-ms-flex-direction'] = 'row';
       }
       
       // Add IE-specific flex wrap properties
       if (element.classList.contains('flex-wrap')) {
-        htmlElement.style.msFlexWrap = 'wrap';
+        (htmlElement.style as any)['-ms-flex-wrap'] = 'wrap';
       }
       
       // Add IE-specific flex grow properties
       if (element.classList.contains('flex-grow')) {
-        htmlElement.style.msFlexPositive = '1';
+        (htmlElement.style as any)['-ms-flex-positive'] = '1';
       }
       
       // Add IE-specific alignment properties
       if (element.classList.contains('items-center')) {
-        htmlElement.style.msFlexAlign = 'center';
+        (htmlElement.style as any)['-ms-flex-align'] = 'center';
       }
       
       if (element.classList.contains('justify-center')) {
-        htmlElement.style.msFlexPack = 'center';
+        (htmlElement.style as any)['-ms-flex-pack'] = 'center';
       } else if (element.classList.contains('justify-between')) {
-        htmlElement.style.msFlexPack = 'justify';
+        (htmlElement.style as any)['-ms-flex-pack'] = 'justify';
       }
     });
   }
@@ -223,7 +224,7 @@ const applyIEGridFlexFixes = () => {
 
 // Apply button type attribute fix
 const applyButtonTypeFix = () => {
-  if (typeof document !== 'undefined') {
+  if (typeof window !== 'undefined') {
     // Find all buttons without type attribute and set to "button"
     const buttons = document.querySelectorAll('button:not([type])');
     buttons.forEach((button) => {

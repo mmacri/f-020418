@@ -10,6 +10,7 @@
     
     <!-- Security headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <!-- Note: frame-ancestors should be set as an HTTP header, not in meta -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src * data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.gpteng.co https://polyfill.io 'unsafe-inline';" />
     
     <!-- Cache control - using meta tag since we can't directly modify HTTP headers -->
@@ -61,6 +62,15 @@
     
     <!-- For internet explorer - favicon with error handling -->
     <link rel="shortcut icon" href="/favicon.ico" onerror="this.href='/placeholder.svg'" />
+    
+    <!-- Global error handler for unhandled Promise rejections -->
+    <script>
+      window.addEventListener('unhandledrejection', function(event) {
+        console.warn('Unhandled Promise rejection:', event.reason);
+        // Prevent the error from being shown to the user
+        event.preventDefault();
+      });
+    </script>
   </head>
 
   <body>
