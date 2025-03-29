@@ -72,6 +72,15 @@
         // Prevent the error from being shown to the user
         event.preventDefault();
       });
+      
+      // Handle general errors
+      window.addEventListener('error', function(event) {
+        console.warn('Captured error:', event.message);
+        // This helps prevent white screens on uncaught errors
+        if (event.error && event.error.stack) {
+          console.warn('Error stack:', event.error.stack);
+        }
+      });
     </script>
   </head>
 
