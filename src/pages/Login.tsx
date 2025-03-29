@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Eye, EyeOff, AlertCircle, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -98,18 +98,8 @@ const Login = () => {
               Admin Login
             </h1>
             <p className="mt-2 text-sm text-gray-600">
-              Access restricted to administrators only
+              Please sign in with your credentials
             </p>
-          </div>
-          
-          {/* Admin Info Notice */}
-          <div className="bg-blue-50 rounded-md p-4 text-sm text-blue-700 flex items-start" role="note">
-            <ShieldCheck className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
-            <div>
-              <p className="font-medium mb-1">Admin Access Only</p>
-              <p>This login page is restricted to site administrators.</p>
-              <p className="mt-2 font-medium">Demo Admin: admin@recoveryessentials.com / admin123</p>
-            </div>
           </div>
           
           {loginError && (

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Info, Lock, Mail } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -72,19 +72,6 @@ const AdminAuth = ({ onAuthSuccess }: AdminAuthProps) => {
           <CardDescription>Login to access the admin dashboard</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 text-yellow-800 mb-6">
-            <div className="flex items-center mb-2">
-              <Info className="w-5 h-5 mr-2" />
-              <p className="font-medium">Access Restricted</p>
-            </div>
-            <p className="text-sm">
-              Please log in with administrator credentials to access the dashboard.
-            </p>
-            <p className="text-sm mt-2 font-medium">
-              Demo Admin: admin@recoveryessentials.com / admin123
-            </p>
-          </div>
-          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField

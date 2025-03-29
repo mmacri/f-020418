@@ -55,7 +55,7 @@ const Wishlist = () => {
                       <div className="w-full sm:w-1/4 p-4">
                         <Link to={`/products/${product.slug}`}>
                           <ImageWithFallback
-                            src={product.images?.[0]?.url || ''}
+                            src={product.images?.[0] || ''}
                             alt={product.name}
                             className="w-full h-40 object-contain"
                             type="product"

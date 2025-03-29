@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { getNavigationCategories, createCategory, updateCategory, deleteCategory } from '@/services/categoryService';
-import { getCategoryContent } from '@/services/categoryContentService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,16 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowUpRight, Edit, Trash2, PlusCircle, ChevronRight, Folder, FileText } from 'lucide-react';
+import { ArrowUpRight, Edit, Trash2, PlusCircle, ArrowUpToLine } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import AdminCategoryContent from './AdminCategoryContent';
+import { FileUpload } from '@/components/FileUpload';
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url');
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -67,6 +68,14 @@ const AdminCategories = () => {
     });
   };
 
+  const handleImageMethodChange = (value: 'url' | 'upload') => {
+    setImageMethod(value);
+  };
+  
+  const handleFileChange = (file: File | null) => {
+    setUploadedImage(file);
+  };
+
   const handleOpenCreateModal = () => {
     setEditingCategory(null);
     setFormData({
@@ -77,6 +86,8 @@ const AdminCategories = () => {
       showInNavigation: true,
       navigationOrder: categories.length + 1,
     });
+    setImageMethod('url');
+    setUploadedImage(null);
     setIsModalOpen(true);
   };
 
@@ -90,6 +101,8 @@ const AdminCategories = () => {
       showInNavigation: category.showInNavigation !== false,
       navigationOrder: category.navigationOrder || 0,
     });
+    setImageMethod('url');
+    setUploadedImage(null);
     setIsModalOpen(true);
   };
 
@@ -97,9 +110,28 @@ const AdminCategories = () => {
     e.preventDefault();
     
     try {
+      // If using file upload and a file exists, we would usually upload it to a server here
+      // For this example, we'll handle it as if the upload was successful
+      let finalImageUrl = formData.imageUrl;
+      
+      if (imageMethod === 'upload' && uploadedImage) {
+        // In a real implementation, you would upload the file to a server
+        // and get the URL back. Here we're just creating a local URL for demo
+        finalImageUrl = URL.createObjectURL(uploadedImage);
+        
+        // You should implement a real file upload here:
+        // const uploadResult = await uploadFile(uploadedImage);
+        // finalImageUrl = uploadResult.url;
+      }
+      
+      const dataToSave = {
+        ...formData,
+        imageUrl: finalImageUrl,
+      };
+      
       if (editingCategory) {
         await updateCategory(editingCategory.id, {
-          ...formData,
+          ...dataToSave,
           subcategories: editingCategory.subcategories,
         });
         toast({
@@ -108,7 +140,7 @@ const AdminCategories = () => {
         });
       } else {
         await createCategory({
-          ...formData,
+          ...dataToSave,
           subcategories: [],
         });
         toast({
@@ -284,15 +316,40 @@ const AdminCategories = () => {
                 />
               </div>
               
-              <div className="grid gap-2">
-                <Label htmlFor="imageUrl">Image URL</Label>
-                <Input
-                  id="imageUrl"
-                  name="imageUrl"
-                  placeholder="https://example.com/image.jpg"
-                  value={formData.imageUrl}
-                  onChange={handleInputChange}
-                />
+              <div className="space-y-3">
+                <Label>Category Image</Label>
+                <Tabs value={imageMethod} onValueChange={handleImageMethodChange} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="url">Image URL</TabsTrigger>
+                    <TabsTrigger value="upload">Upload Image</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="url" className="space-y-4 mt-2">
+                    <div className="grid gap-2">
+                      <Input
+                        id="imageUrl"
+                        name="imageUrl"
+                        placeholder="https://example.com/image.jpg"
+                        value={formData.imageUrl}
+                        onChange={handleInputChange}
+                      />
+                      <p className="text-xs text-gray-500">
+                        Enter a direct URL to an image for this category
+                      </p>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="upload" className="space-y-4 mt-2">
+                    <FileUpload 
+                      onFileChange={handleFileChange}
+                      accept="image/*"
+                      maxSizeMB={2}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Upload an image file (max 2MB). Supported formats: PNG, JPEG, GIF
+                    </p>
+                  </TabsContent>
+                </Tabs>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
