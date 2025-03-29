@@ -8,10 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { AdminAuth, AdminProducts, AdminBlog, AdminCategories, AdminCategoryContent, AdminDashboard, AdminSettings } from "@/components/admin";
+import HeroImageSettings from "@/components/admin/HeroImageSettings";
 import { isAdmin, isAuthenticated } from "@/services/authService";
 
 const Admin = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -63,7 +65,7 @@ const Admin = () => {
           </Button>
         </div>
         
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid grid-cols-7 w-full mb-4">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
@@ -95,7 +97,10 @@ const Admin = () => {
           </TabsContent>
           
           <TabsContent value="settings">
-            <AdminSettings />
+            <div className="space-y-6">
+              <AdminSettings />
+              <HeroImageSettings />
+            </div>
           </TabsContent>
           
           <TabsContent value="help">

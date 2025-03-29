@@ -12,6 +12,7 @@ export const localStorageKeys = {
   AFFILIATE_CLICKS: 'recovery-essentials-affiliate-clicks',
   ANALYTICS_DATA: 'recovery-essentials-analytics-data',
   CATEGORY_CONTENT: 'recovery-essentials-category-content',
+  HERO_IMAGE: "recovery_essentials_hero_image"
 };
 
 // Default category slugs for the application
