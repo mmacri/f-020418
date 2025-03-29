@@ -13,14 +13,25 @@ export const localStorageKeys = {
   // Authentication
   AUTH_TOKEN: 'recovery-essentials-auth-token',
   USER_DATA: 'recovery-essentials-user-data',
+  USER_ID: 'recovery-essentials-user-id',
   
   // Application state
   WISHLIST: 'recovery-essentials-wishlist',
+  WISHLIST_ITEMS: 'recovery-essentials-wishlist-items',
   VIEWED_PRODUCTS: 'recovery-essentials-viewed-products',
   COMPARISON_PRODUCTS: 'recovery-essentials-comparison-products',
   
   // Feature flags
-  FEATURES: 'recovery-essentials-features'
+  FEATURES: 'recovery-essentials-features',
+  
+  // Analytics and tracking
+  ANALYTICS_DATA: 'recovery-essentials-analytics-data',
+  AFFILIATE_CLICKS: 'recovery-essentials-affiliate-clicks',
+  
+  // Content storage
+  BLOG_POSTS: 'recovery-essentials-blog-posts',
+  PRODUCTS: 'recovery-essentials-products',
+  CATEGORY_CONTENT: 'recovery-essentials-category-content'
 };
 
 // Image fallback URLs
@@ -49,4 +60,71 @@ export const routes = {
   CATEGORIES: '/categories',
   BLOG: '/blog',
   ADMIN: '/admin'
+};
+
+// Default navigation structure
+export const DEFAULT_NAVIGATION = {
+  mainMenu: [
+    {
+      id: 1,
+      title: "Home",
+      type: "link",
+      url: "/",
+      showInHeader: true
+    },
+    {
+      id: 2,
+      title: "Categories",
+      type: "category-dropdown",
+      showInHeader: true,
+      items: [] // This will be populated dynamically
+    },
+    {
+      id: 3,
+      title: "Blog",
+      type: "link",
+      url: "/blog",
+      showInHeader: true
+    },
+    {
+      id: 4,
+      title: "About",
+      type: "link",
+      url: "/about",
+      showInHeader: true
+    },
+    {
+      id: 5,
+      title: "Contact",
+      type: "link",
+      url: "/contact",
+      showInHeader: false
+    }
+  ],
+  footerLinks: [
+    {
+      id: 1,
+      title: "Company",
+      items: [
+        { id: 101, title: "About Us", url: "/about" },
+        { id: 102, title: "Contact", url: "/contact" },
+        { id: 103, title: "Privacy Policy", url: "/privacy-policy" },
+        { id: 104, title: "Terms of Service", url: "/terms" }
+      ]
+    },
+    {
+      id: 2,
+      title: "Resources",
+      items: [
+        { id: 201, title: "Blog", url: "/blog" },
+        { id: 202, title: "Recovery Guide", url: "/recovery-guide" },
+        { id: 203, title: "Newsletter", url: "/newsletter" }
+      ]
+    },
+    {
+      id: 3,
+      title: "Product Categories",
+      items: [] // This will be populated dynamically
+    }
+  ]
 };
