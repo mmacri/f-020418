@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
@@ -157,8 +156,24 @@ const CategoryPage = () => {
         </div>
       </div>
       
-      {/* Category Hero */}
-      <CategoryHero categorySlug={categorySlug || ''} description={content.meta.description} />
+      {/* Category Hero - pass the full category object */}
+      {!subcategory && (
+        <CategoryHero 
+          categorySlug={categorySlug || ''} 
+          description={content.meta.description}
+          category={category}
+        />
+      )}
+      
+      {/* Subcategory Hero - use this if subcategory is present */}
+      {subcategory && category && (
+        <SubcategoryHero
+          categoryName={category.name}
+          subcategoryName={subcategory.name}
+          description={subcategory.description || content.meta.description}
+          subcategory={subcategory}
+        />
+      )}
       
       {/* Introduction */}
       <section className="py-12 bg-white">

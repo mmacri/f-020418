@@ -8,14 +8,19 @@ interface SubcategoryHeroProps {
   subcategoryName: string;
   description?: string;
   backgroundImage?: string;
+  subcategory?: any;
 }
 
 const SubcategoryHero: React.FC<SubcategoryHeroProps> = ({ 
   categoryName, 
   subcategoryName, 
   description, 
-  backgroundImage 
+  backgroundImage,
+  subcategory 
 }) => {
+  // Use backgroundImage prop first, then check subcategory data for image, or fall back to parent category's image
+  const imageUrl = backgroundImage || subcategory?.imageUrl || imageUrls.CATEGORY_DEFAULT;
+  
   return (
     <section 
       className="hero-bg text-white py-12 relative min-h-[240px]" 
@@ -31,7 +36,7 @@ const SubcategoryHero: React.FC<SubcategoryHeroProps> = ({
         className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat overflow-hidden"
       >
         <ImageWithFallback
-          src={backgroundImage || imageUrls.CATEGORY_DEFAULT}
+          src={imageUrl}
           alt={`${subcategoryName} subcategory background`}
           fallbackSrc={imageUrls.DEFAULT_FALLBACK}
           className="w-full h-full object-cover"
@@ -44,7 +49,7 @@ const SubcategoryHero: React.FC<SubcategoryHeroProps> = ({
             {subcategoryName}: The Best {categoryName} for Recovery
           </h1>
           <p className="text-lg mb-4">
-            {description || `Comprehensive guide to the top ${subcategoryName.toLowerCase()} products for improving flexibility, mobility, and aiding recovery`}
+            {description || subcategory?.description || `Comprehensive guide to the top ${subcategoryName.toLowerCase()} products for improving flexibility, mobility, and aiding recovery`}
           </p>
           <p className="text-sm bg-indigo-700 inline-block px-3 py-1 rounded-full">
             <span className="mr-1">ⓘ</span> Affiliate Disclosure: We may earn commissions from qualifying purchases

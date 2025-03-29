@@ -8,14 +8,17 @@ interface CategoryHeroProps {
   categorySlug: string;
   description?: string;
   backgroundImage?: string;
+  category?: any;
 }
 
 const CategoryHero: React.FC<CategoryHeroProps> = ({ 
   categorySlug, 
   description, 
-  backgroundImage 
+  backgroundImage,
+  category
 }) => {
-  const categoryName = getCategoryName(categorySlug);
+  const categoryName = category?.name || getCategoryName(categorySlug);
+  const imageUrl = backgroundImage || category?.imageUrl || imageUrls.CATEGORY_DEFAULT;
   
   return (
     <section 
@@ -32,7 +35,7 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
         className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat overflow-hidden"
       >
         <ImageWithFallback
-          src={backgroundImage || imageUrls.CATEGORY_DEFAULT}
+          src={imageUrl}
           alt={`${categoryName} category background`}
           fallbackSrc={imageUrls.DEFAULT_FALLBACK}
           className="w-full h-full object-cover"
@@ -45,7 +48,7 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
             The Best {categoryName} for Recovery and Mobility
           </h1>
           <p className="text-lg mb-4">
-            {description || `Comprehensive guide to the top ${categoryName.toLowerCase()} for improving flexibility, mobility, and aiding recovery`}
+            {description || category?.description || `Comprehensive guide to the top ${categoryName.toLowerCase()} for improving flexibility, mobility, and aiding recovery`}
           </p>
           <p className="text-sm bg-indigo-700 inline-block px-3 py-1 rounded-full">
             <span className="mr-1">ⓘ</span> Affiliate Disclosure: We may earn commissions from qualifying purchases

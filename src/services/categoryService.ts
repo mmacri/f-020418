@@ -6,6 +6,8 @@ export interface Subcategory {
   name: string;
   slug: string;
   description?: string;
+  imageUrl?: string;
+  showInNavigation?: boolean;
 }
 
 export interface Category {
@@ -24,6 +26,8 @@ export type SubcategoryInput = {
   name: string;
   slug: string;
   description?: string;
+  imageUrl?: string;
+  showInNavigation?: boolean;
 };
 
 export type CategoryInput = {
@@ -31,13 +35,13 @@ export type CategoryInput = {
   slug: string;
   description?: string;
   imageUrl?: string;
-  subcategories: any[]; // Changed from Subcategory[] to any[] for more flexibility
-  parentId?: number | null; // Added to match the form data
+  subcategories: any[];
+  parentId?: number | null;
   showInNavigation?: boolean;
   navigationOrder?: number;
 };
 
-// Mock categories data
+// Mock categories data - add imageUrl to subcategories
 let CATEGORIES: Category[] = [
   {
     id: 1,
@@ -50,19 +54,22 @@ let CATEGORIES: Category[] = [
         id: 1,
         name: "Percussion",
         slug: "percussion",
-        description: "High-intensity percussion massage guns"
+        description: "High-intensity percussion massage guns",
+        imageUrl: "https://ext.same-assets.com/1001010126/percussion-subcategory.jpg"
       },
       {
         id: 2,
         name: "Vibration",
         slug: "vibration",
-        description: "Vibration-based massage devices"
+        description: "Vibration-based massage devices",
+        imageUrl: "https://ext.same-assets.com/1001010126/vibration-subcategory.jpg"
       },
       {
         id: 3,
         name: "Heated",
         slug: "heated",
-        description: "Massage guns with heat therapy"
+        description: "Massage guns with heat therapy",
+        imageUrl: "https://ext.same-assets.com/1001010126/heated-subcategory.jpg"
       }
     ],
     showInNavigation: true,

@@ -1,55 +1,40 @@
 
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
 import SubcategoryHero from '@/components/SubcategoryHero';
-import FeaturedProduct from '@/components/FeaturedProduct';
-import ProductComparison from '@/components/ProductComparison';
-import VideoSection from '@/components/VideoSection';
+import { getSubcategoryBySlug } from '@/services/categoryService';
 import { getProductsByCategory } from '@/lib/product-utils';
-import { Button } from '@/components/ui/button';
-import { 
-  getCategoryBySlug, 
-  getSubcategoryBySlug 
-} from '@/services/categoryService';
-import { getCategoryContentBySlug, CategoryContent } from '@/services/categoryContentService';
-import { Loader2, CheckCircle, ShoppingCart, ArrowRight, Star } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Card, CardContent } from '@/components/ui/card';
+import { generateCategoryBreadcrumbs } from '@/lib/category-utils';
+import { Breadcrumbs } from '@/components/product';
 import ProductCard from '@/components/ProductCard';
-import ProductReviews from '@/components/product/ProductReviews';
-import FeaturedProductsSection from '@/components/home/FeaturedProductsSection';
+import { Loader2 } from 'lucide-react';
 
 const SubcategoryPage = () => {
-  const { categorySlug, subSlug } = useParams<{ categorySlug: string; subSlug: string }>();
-  const [products, setProducts] = useState<any[]>([]);
-  const [categoryContent, setCategoryContent] = useState<CategoryContent | null>(null);
+  const { categorySlug, subcategorySlug } = useParams<{ categorySlug: string; subcategorySlug: string }>();
   const [isLoading, setIsLoading] = useState(true);
-  const [category, setCategory] = useState<any>(null);
-  const [subcategory, setSubcategory] = useState<any>(null);
-  
+  const [subcategoryData, setSubcategoryData] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [breadcrumbs, setBreadcrumbs] = useState<any[]>([]);
+
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
+      if (!categorySlug || !subcategorySlug) return;
       
+      setIsLoading(true);
       try {
-        // Get category information
-        if (categorySlug && subSlug) {
-          const categoryData = await getCategoryBySlug(categorySlug);
-          setCategory(categoryData);
-          
-          if (categoryData) {
-            const subcategoryData = await getSubcategoryBySlug(categorySlug, subSlug);
-            setSubcategory(subcategoryData?.subcategory || null);
-          }
+        // Get subcategory data
+        const data = await getSubcategoryBySlug(categorySlug, subcategorySlug);
+        setSubcategoryData(data);
+        
+        if (data) {
+          // Generate breadcrumbs
+          const crumbs = generateCategoryBreadcrumbs(data.category, data.subcategory);
+          setBreadcrumbs(crumbs);
           
           // Get products for this subcategory
-          const categoryProducts = await getProductsByCategory(categorySlug, subSlug);
-          setProducts(categoryProducts);
-          
-          // Get category content
-          const content = await getCategoryContentBySlug(categorySlug);
-          setCategoryContent(content);
+          const subcategoryProducts = await getProductsByCategory(categorySlug, subcategorySlug);
+          setProducts(subcategoryProducts);
         }
       } catch (error) {
         console.error('Error loading subcategory data:', error);
@@ -59,69 +44,7 @@ const SubcategoryPage = () => {
     };
     
     fetchData();
-  }, [categorySlug, subSlug]);
-  
-  // Get featured products (first 2 products in the category)
-  const featuredProduct = products.length > 0 ? products[0] : null;
-  const secondFeaturedProduct = products.length > 1 ? products[1] : null;
-  
-  // Default content if none is found
-  const defaultContent = {
-    headline: subcategory ? subcategory.name : (subSlug ? subSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : ''),
-    introduction: subcategory ? (subcategory.description || "Discover the best recovery products in this subcategory.") : "Discover the best recovery products to improve your recovery time and enhance your performance.",
-    meta: {
-      description: subcategory ? subcategory.description : "Discover the best recovery products in this subcategory.",
-      title: ""
-    },
-    sections: [],
-    recommendations: [],
-    faqs: [],
-    id: "",
-    slug: subSlug || "",
-    lastUpdated: ""
-  };
-  
-  // Use category content from service or default
-  const content = categoryContent || defaultContent;
-
-  // Extract benefits from the first section if it exists
-  const benefitsSection = content.sections?.find(section => 
-    section.title.toLowerCase().includes('benefit') || 
-    section.title.toLowerCase().includes('how') ||
-    section.content.includes('•')
-  );
-  
-  const benefits = benefitsSection ? 
-    benefitsSection.content
-      .split('\n')
-      .filter(line => line.trim().startsWith('•'))
-      .map(line => line.trim().substring(1).trim()) 
-    : [];
-  
-  // Find any section that might be a buying guide
-  const buyingGuideSection = content.sections?.find(section => 
-    section.title.toLowerCase().includes('guide') || 
-    section.title.toLowerCase().includes('choosing') ||
-    section.title.toLowerCase().includes('consider')
-  );
-  
-  // Find a section that might contain a video
-  const videoSection = content.sections?.find(section => section.videoUrl);
-  
-  const pageTitle = subcategory ? subcategory.name : "Products";
-  
-  // Create breadcrumb data
-  const breadcrumbs = [
-    { name: 'Home', url: '/' },
-    { name: category?.name || 'Category', url: `/categories/${categorySlug}` },
-  ];
-  
-  if (subcategory) {
-    breadcrumbs.push({
-      name: subcategory.name,
-      url: `/categories/${categorySlug}/${subSlug}`
-    });
-  }
+  }, [categorySlug, subcategorySlug]);
 
   if (isLoading) {
     return (
@@ -134,126 +57,42 @@ const SubcategoryPage = () => {
     );
   }
 
+  if (!subcategoryData) {
+    return (
+      <MainLayout>
+        <div className="min-h-screen flex flex-col items-center justify-center">
+          <h1 className="text-2xl font-bold">Subcategory not found</h1>
+          <p className="mt-2">The subcategory you're looking for doesn't exist.</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const { category, subcategory } = subcategoryData;
+
   return (
     <MainLayout>
       {/* Breadcrumbs */}
       <div className="bg-gray-50 py-2">
         <div className="container mx-auto px-4">
-          <nav className="text-sm text-gray-600">
-            {breadcrumbs.map((crumb, index) => (
-              <span key={index}>
-                {index > 0 && <span className="mx-2">/</span>}
-                {index === breadcrumbs.length - 1 ? (
-                  <span className="font-medium text-gray-900">{crumb.name}</span>
-                ) : (
-                  <Link to={crumb.url} className="hover:text-indigo-600">{crumb.name}</Link>
-                )}
-              </span>
-            ))}
-          </nav>
+          <Breadcrumbs items={breadcrumbs} />
         </div>
       </div>
       
       {/* Subcategory Hero */}
       <SubcategoryHero 
-        categoryName={category?.name || ''} 
-        subcategoryName={subcategory?.name || ''} 
-        description={subcategory?.description || ''} 
+        categoryName={category.name}
+        subcategoryName={subcategory.name}
+        description={subcategory.description}
+        backgroundImage={subcategory.imageUrl}
+        subcategory={subcategory}
       />
       
-      {/* Introduction */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="prose lg:prose-xl">
-            <h1 className="text-3xl md:text-4xl font-bold text-center mb-8">{pageTitle}</h1>
-            <div className="text-lg font-medium text-gray-800 mb-8 leading-relaxed">
-              {subcategory?.description?.split('\n').map((paragraph: string, index: number) => (
-                <p key={index} className="mb-4">{paragraph}</p>
-              ))}
-            </div>
-
-            {benefits.length > 0 && (
-              <div className="bg-indigo-50 p-6 rounded-lg my-8">
-                <h3 className="font-bold text-xl mb-4">Key Benefits of {pageTitle}</h3>
-                <ul className="space-y-3">
-                  {benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
-                      <span dangerouslySetInnerHTML={{ __html: benefit }}></span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-      
-      {/* Featured Product */}
-      {featuredProduct && <FeaturedProduct product={featuredProduct} />}
-      
-      {/* Second Product */}
-      {secondFeaturedProduct && (
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-10 text-center">
-              Best Overall: {secondFeaturedProduct.name}
-            </h2>
-            
-            <div className="flex flex-col md:flex-row gap-8 mb-10">
-              <div className="md:w-1/2">
-                <img 
-                  src={secondFeaturedProduct.images[0]} 
-                  alt={secondFeaturedProduct.name} 
-                  className="rounded-lg shadow-md w-full object-cover"
-                />
-              </div>
-              <div className="md:w-1/2">
-                <div className="mb-3 text-amber-500">
-                  <span className="text-xl font-bold">{secondFeaturedProduct.rating}/5</span>
-                  <div className="flex items-center ml-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`h-4 w-4 ${
-                          i < Math.floor(secondFeaturedProduct.rating) 
-                            ? "fill-amber-500 text-amber-500" 
-                            : "text-gray-300"
-                        }`} 
-                      />
-                    ))}
-                    <span className="text-sm text-gray-500 ml-1">({secondFeaturedProduct.reviewCount}+ reviews)</span>
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">{secondFeaturedProduct.name}</h3>
-                <p className="text-gray-800 mb-3 text-lg font-semibold">${secondFeaturedProduct.price.toFixed(2)}</p>
-                <div className="mb-5">
-                  <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-2">Premium Quality</span>
-                  <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Top Rated</span>
-                </div>
-                <p className="text-gray-600 mb-6">
-                  {secondFeaturedProduct.description}
-                </p>
-                {secondFeaturedProduct.affiliateLink && (
-                  <Button 
-                    onClick={() => window.open(secondFeaturedProduct.affiliateLink, '_blank')}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg"
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Check Price on Amazon
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-      
-      {/* All Subcategory Products Grid */}
+      {/* Products Grid */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-8 text-center">
-            All {subcategory?.name || ''} Products
+            {subcategory.name} Products
           </h2>
           
           {products.length > 0 ? (
@@ -267,132 +106,6 @@ const SubcategoryPage = () => {
               <p className="text-gray-500">No products found in this subcategory.</p>
             </div>
           )}
-        </div>
-      </section>
-      
-      {/* Video Section */}
-      {videoSection && videoSection.videoUrl && (
-        <VideoSection 
-          title={videoSection.title}
-          description={videoSection.content}
-          videoId={videoSection.videoUrl.includes('youtube.com/embed/') 
-            ? videoSection.videoUrl.split('/').pop() || '' 
-            : videoSection.videoUrl}
-        />
-      )}
-      
-      {/* Buying Guide Section */}
-      {buyingGuideSection && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8 text-center">Buying Guide: {buyingGuideSection.title}</h2>
-            <div className="bg-gray-50 p-8 rounded-lg shadow-sm">
-              {buyingGuideSection.content.split('\n').map((paragraph, index) => (
-                <p key={index} className="text-gray-800 leading-relaxed mb-4">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-      
-      {/* Product Comparison */}
-      {products.length > 1 && <ProductComparison products={products} />}
-      
-      {/* Reviews Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl font-bold mb-8 text-center">Customer Reviews</h2>
-          {subcategory && (
-            <ProductReviews 
-              productId={parseInt(subcategory.id.toString())} 
-              productSlug={subSlug || ''}
-            />
-          )}
-        </div>
-      </section>
-      
-      {/* FAQ Section */}
-      {content.faqs && content.faqs.length > 0 && (
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
-            <Accordion type="single" collapsible className="w-full">
-              {content.faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-left text-lg font-medium">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-gray-700">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </section>
-      )}
-      
-      {/* Related Products */}
-      {products.length > 0 && (
-        <FeaturedProductsSection 
-          products={products} 
-          title={`Related ${subcategory?.name || ''} Products`}
-          subtitle={`Explore more ${subcategory?.name || ''} products to enhance your recovery experience.`}
-          viewAllLink={`/categories/${categorySlug}`}
-          viewAllText="View All Category Products"
-          maxProducts={3}
-        />
-      )}
-      
-      {/* CTA Section */}
-      <section className="py-16 bg-indigo-600">
-        <div className="container mx-auto px-4 max-w-4xl text-center text-white">
-          <h2 className="text-3xl font-bold mb-6">Ready to Improve Your Recovery?</h2>
-          <p className="text-xl mb-8">
-            Find the perfect {subcategory?.name || ''} for your recovery needs and start experiencing improved mobility, flexibility, and faster recovery.
-          </p>
-          <div className="flex flex-col md:flex-row justify-center gap-4">
-            <Button 
-              onClick={() => window.open(`https://www.amazon.com/s?k=${subSlug?.replace(/-/g, '+')}&tag=recoveryessentials-20`, '_blank')}
-              className="bg-white text-indigo-600 hover:bg-gray-100 font-bold py-3 px-6 rounded-lg"
-              variant="outline"
-            >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Shop on Amazon
-            </Button>
-            <Button 
-              onClick={() => window.location.href = '/blog'}
-              className="bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 px-6 rounded-lg border border-white"
-            >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              View Recovery Tips
-            </Button>
-          </div>
-        </div>
-      </section>
-      
-      {/* Newsletter Sign-up */}
-      <section className="py-16 bg-gray-100">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <h2 className="text-3xl font-bold mb-4">Get Recovery Tips & Exclusive Deals</h2>
-          <p className="text-gray-600 mb-8">
-            Subscribe to our newsletter for expert recovery advice, product recommendations, and exclusive offers.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input 
-              type="email" 
-              placeholder="Your email address" 
-              className="flex-grow px-4 py-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-300" 
-            />
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-md">
-              Subscribe Now
-            </Button>
-          </div>
-          <p className="text-xs text-gray-500 mt-4">
-            We respect your privacy. Unsubscribe anytime.
-          </p>
         </div>
       </section>
     </MainLayout>
