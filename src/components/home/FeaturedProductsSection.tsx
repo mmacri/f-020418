@@ -11,23 +11,6 @@ type ProductImage = {
   url: string;
 };
 
-// Define the type that ProductCard expects
-interface ProductCardData {
-  id: string | number;
-  name: string;
-  slug: string;
-  category: string;
-  description: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  images: ProductImage[];
-  categoryId?: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 interface FeaturedProductsSectionProps {
   products: Product[];
 }
@@ -40,26 +23,15 @@ const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = ({ produ
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map(product => {
             // Transform product data to match what ProductCard expects
-            const productCardData: ProductCardData = {
-              id: product.id,
-              name: product.name,
-              slug: product.slug,
-              category: product.category,
-              description: product.description,
-              price: product.price,
-              originalPrice: product.originalPrice,
-              rating: product.rating,
-              reviewCount: product.reviewCount,
-              images: product.images.map(img => ({ url: img })),
-              categoryId: product.categoryId,
-              createdAt: product.createdAt,
-              updatedAt: product.updatedAt
+            const productForCard = {
+              ...product,
+              images: product.images.map(img => ({ url: img }))
             };
             
             return (
               <ProductCard 
                 key={product.id} 
-                product={productCardData} 
+                product={productForCard} 
                 featured={true} 
               />
             );
