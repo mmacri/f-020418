@@ -6,6 +6,28 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/services/productService';
 
+// Define the ProductImage type to match what ProductCard expects
+type ProductImage = {
+  url: string;
+};
+
+// Define the type that ProductCard expects
+interface ProductCardData {
+  id: string | number;
+  name: string;
+  slug: string;
+  category: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  rating: number;
+  reviewCount: number;
+  images: ProductImage[];
+  categoryId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface FeaturedProductsSectionProps {
   products: Product[];
 }
@@ -17,8 +39,8 @@ const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = ({ produ
         <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Featured Recovery Products</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map(product => {
-            // Create a productCard compatible object by explicitly constructing it
-            const productCardData = {
+            // Transform product data to match what ProductCard expects
+            const productCardData: ProductCardData = {
               id: product.id,
               name: product.name,
               slug: product.slug,
