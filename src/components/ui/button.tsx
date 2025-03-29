@@ -64,18 +64,30 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     
     // If we have an icon button with no accessible name, add a title based on context
     if (size === 'icon' && !props['aria-label'] && !props.title && !asChild) {
-      if (!props.title) {
-        // Try to infer a title from context - this is a fallback only
-        props.title = typeof props.children === 'string' 
-          ? props.children 
-          : 'Button';
+      // Icon buttons require an accessible name 
+      props.title = typeof props.children === 'string' 
+        ? props.children 
+        : props.title || 'Button';
+      
+      if (!props['aria-label']) {
+        props['aria-label'] = props.title;
       }
     }
+    
+    // IE-specific compatibility attribute
+    const ieAttributes = {
+      // Add MS-specific touch action for IE
+      style: {
+        '-ms-touch-action': 'manipulation',
+        'touch-action': 'manipulation',
+      } as React.CSSProperties
+    };
     
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        {...ieAttributes}
         {...props}
       />
     )

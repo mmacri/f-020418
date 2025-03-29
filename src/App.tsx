@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "@/pages/Index";
@@ -22,8 +22,14 @@ import WorkflowDemo from "@/pages/WorkflowDemo";
 import AutoWorkflowDemo from "@/pages/AutoWorkflowDemo";
 import NotFound from "@/pages/NotFound";
 import ProductComparisonPage from "@/pages/ProductComparisonPage";
+import initPolyfills from "@/lib/browser-polyfills";
 
 function App() {
+  useEffect(() => {
+    // Initialize browser polyfills for older browsers
+    initPolyfills();
+  }, []);
+
   return (
     <ThemeProvider>
       <Router>

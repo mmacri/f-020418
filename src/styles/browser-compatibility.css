@@ -1,0 +1,154 @@
+
+/* Polyfills for Internet Explorer and other older browsers */
+
+/* Flexbox support for IE10+ */
+.flex {
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.flex-col {
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.flex-row {
+  -ms-flex-direction: row;
+  flex-direction: row;
+}
+
+.flex-wrap {
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+.flex-grow {
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+}
+
+.flex-1 {
+  -ms-flex: 1 1 0%;
+  flex: 1 1 0%;
+}
+
+/* Grid support for IE10+ */
+.grid {
+  display: -ms-grid;
+  display: grid;
+}
+
+/* Additional grid properties for IE */
+.grid-cols-1 { -ms-grid-columns: 1fr; }
+.grid-cols-2 { -ms-grid-columns: 1fr 1fr; }
+.grid-cols-3 { -ms-grid-columns: 1fr 1fr 1fr; }
+.grid-cols-4 { -ms-grid-columns: 1fr 1fr 1fr 1fr; }
+
+/* Alignment properties */
+.items-center {
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.justify-center {
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.justify-between {
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+}
+
+/* Text size adjustment */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* User select */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Touch action */
+button, 
+a {
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+}
+
+/* Object fit fallback for IE */
+.object-cover,
+.object-contain {
+  font-family: 'object-fit: cover;'; /* Used with object-fit-images polyfill */
+}
+
+/* Opacity fallback for rgba backgrounds */
+.bg-black-opacity {
+  background-color: #000;
+  filter: alpha(opacity=80); /* For IE8 and earlier */
+}
+
+.bg-white-opacity {
+  background-color: #fff;
+  filter: alpha(opacity=80); /* For IE8 and earlier */
+}
+
+/* Position sticky fallback */
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  /* For IE and Edge, you'll need JavaScript for proper sticky positioning */
+}
+
+/* Filter fallback */
+.filter-effect {
+  /* IE does not support filter, use opacity or other alternative styles */
+  zoom: 1;
+}
+
+/* Aspect ratio fallback */
+.aspect-video,
+.aspect-square {
+  position: relative;
+  /* You'll need to set height explicitly for IE */
+}
+.aspect-video::before {
+  content: "";
+  display: block;
+  padding-top: 56.25%; /* 16:9 aspect ratio */
+}
+.aspect-square::before {
+  content: "";
+  display: block;
+  padding-top: 100%; /* 1:1 aspect ratio */
+}
+.aspect-ratio-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Gap fallback for grid and flexbox */
+/* You need to manually add margins to children in IE */
+.gap-2 > * {
+  margin: 0.5rem;
+}
+.gap-4 > * {
+  margin: 1rem;
+}
+.gap-8 > * {
+  margin: 2rem;
+}
+
+/* Width and max-width fallbacks */
+.max-w-content {
+  max-width: 1200px; /* Fallback for max-content */
+}
