@@ -45,7 +45,7 @@ const CategoryPage = () => {
           }
           
           // Get products for this category or subcategory
-          const categoryProducts = categorySlug ? getProductsByCategory(categorySlug, subSlug) : [];
+          const categoryProducts = await getProductsByCategory(categorySlug, subSlug);
           setProducts(categoryProducts);
           
           // Get category content

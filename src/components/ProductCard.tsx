@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { formatPrice, generateProductUrl } from '@/lib/product-utils';
+import { formatPrice, getProductUrl } from '@/lib/product-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star, StarHalf } from 'lucide-react';
 
@@ -23,9 +23,10 @@ interface ProductCardProps {
     images: ProductImage[];
   };
   isLoading?: boolean;
+  featured?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, featured = false }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const imageUrl = product?.images && product.images.length ? product.images[0].url : '/placeholder.svg';
 
@@ -50,7 +51,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false })
   }
 
   return (
-    <div className="card product-card rounded-lg shadow-sm overflow-hidden bg-white h-full flex flex-col">
+    <div className={`card product-card rounded-lg shadow-sm overflow-hidden bg-white h-full flex flex-col ${featured ? 'border-2 border-indigo-200' : ''}`}>
       <div className="product-card__image p-4 flex items-center justify-center h-48 bg-white relative">
         {!imageLoaded && (
           <Skeleton className="absolute inset-0 m-4" />
@@ -65,7 +66,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false })
       </div>
       <div className="product-card__content p-4 flex-grow flex flex-col">
         <h3 className="product-card__title text-lg font-medium mb-2">
-          <Link to={generateProductUrl(product)} className="text-gray-800 hover:text-indigo-600">
+          <Link to={getProductUrl(product)} className="text-gray-800 hover:text-indigo-600">
             {product.name}
           </Link>
         </h3>
@@ -90,7 +91,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false })
         </div>
         <div className="product-card__actions mt-auto">
           <Link 
-            to={generateProductUrl(product)} 
+            to={getProductUrl(product)} 
             className="btn btn-primary w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md inline-block text-center"
           >
             View Details

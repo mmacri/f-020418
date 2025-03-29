@@ -189,3 +189,15 @@ export const getBestProductsByCategory = async (categorySlug: string, limit: num
     return [];
   }
 };
+
+/**
+ * Get category name from slug
+ */
+export const getCategoryName = (categorySlug: string): string => {
+  // Convert slug to readable name (e.g., "massage-guns" to "Massage Guns")
+  return categorySlug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+

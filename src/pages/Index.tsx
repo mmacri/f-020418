@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
@@ -45,6 +44,27 @@ const Index = () => {
     
     fetchData();
   }, []);
+  
+  const renderFeaturedProducts = () => (
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">Featured Recovery Products</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {featuredProducts.map(product => (
+            <ProductCard key={product.id} product={product} featured={true} />
+          ))}
+        </div>
+        <div className="text-center mt-12">
+          <Button size="lg" asChild>
+            <Link to="/categories/massage-guns">
+              View All Products
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
   
   return (
     <MainLayout>
@@ -134,25 +154,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Featured Products */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Featured Recovery Products</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map(product => (
-              <ProductCard key={product.id} product={product} featured={true} />
-            ))}
-          </div>
-          <div className="text-center mt-12">
-            <Button size="lg" asChild>
-              <Link to="/categories/massage-guns">
-                View All Products
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      {renderFeaturedProducts()}
       
       {/* Why Choose Us */}
       <section className="py-16 bg-white">

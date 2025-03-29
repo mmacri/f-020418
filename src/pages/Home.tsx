@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
@@ -50,6 +49,43 @@ const Home = () => {
     
     fetchData();
   }, []);
+  
+  const renderFeaturedProducts = () => (
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-4">Featured Products</h2>
+        <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
+          Discover our hand-picked selection of the highest-rated recovery tools that deliver exceptional results.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {featuredProducts.map(product => (
+            <ProductCard key={product.id} product={product} featured={true} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+  
+  const renderBestSellers = () => (
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center mb-12">
+          <h2 className="text-3xl font-bold">Best Sellers</h2>
+          <Link to="/compare" className="text-indigo-600 font-medium flex items-center">
+            Compare Products
+            <ChevronRight className="h-5 w-5 ml-1" />
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {bestSellers.map(product => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
   
   return (
     <MainLayout>
@@ -129,21 +165,7 @@ const Home = () => {
         </div>
       </section>
       
-      {/* Featured Products */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">Featured Products</h2>
-          <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
-            Discover our hand-picked selection of the highest-rated recovery tools that deliver exceptional results.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredProducts.map(product => (
-              <ProductCard key={product.id} product={product} featured={true} />
-            ))}
-          </div>
-        </div>
-      </section>
+      {renderFeaturedProducts()}
       
       {/* Why Choose Us */}
       <section className="py-16">
@@ -185,24 +207,7 @@ const Home = () => {
         </div>
       </section>
       
-      {/* Best Sellers */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-3xl font-bold">Best Sellers</h2>
-            <Link to="/compare" className="text-indigo-600 font-medium flex items-center">
-              Compare Products
-              <ChevronRight className="h-5 w-5 ml-1" />
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {bestSellers.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+      {renderBestSellers()}
       
       {/* Newsletter */}
       <section className="py-16 bg-indigo-600 text-white">
