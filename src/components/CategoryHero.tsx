@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { getCategoryName } from '@/lib/product-utils';
-import { localStorageKeys } from '@/lib/constants';
+import { useImageWithFallback } from '@/lib/image-utils';
 
 interface CategoryHeroProps {
   categorySlug: string;
@@ -10,7 +10,6 @@ interface CategoryHeroProps {
 }
 
 const DEFAULT_BACKGROUND_IMAGE = "https://ext.same-assets.com/1001010126/massage-gun-category.jpg";
-const LOCAL_FALLBACK_IMAGE = "/placeholder.svg";
 
 const CategoryHero: React.FC<CategoryHeroProps> = ({ 
   categorySlug, 
@@ -18,29 +17,16 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
   backgroundImage 
 }) => {
   const categoryName = getCategoryName(categorySlug);
-  const [bgImage, setBgImage] = useState<string>(backgroundImage || DEFAULT_BACKGROUND_IMAGE);
-  const [useLocalFallback, setUseLocalFallback] = useState<boolean>(false);
-  
-  useEffect(() => {
-    // Check if we should use local fallback
-    const useLocal = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
-    setUseLocalFallback(useLocal);
-    
-    // Use provided background image or default
-    setBgImage(backgroundImage || DEFAULT_BACKGROUND_IMAGE);
-  }, [backgroundImage]);
-  
-  const handleImageError = () => {
-    const fallbackImage = useLocalFallback ? LOCAL_FALLBACK_IMAGE : DEFAULT_BACKGROUND_IMAGE;
-    setBgImage(fallbackImage);
-    console.log("Category hero background image failed to load. Using fallback image.");
-  };
+  const { imageUrl, handleImageError } = useImageWithFallback(backgroundImage || DEFAULT_BACKGROUND_IMAGE, {
+    defaultImage: DEFAULT_BACKGROUND_IMAGE,
+    localFallbackImage: "/placeholder.svg"
+  });
   
   return (
     <section 
       className="hero-bg text-white py-12" 
       style={{ 
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('${bgImage}')`,
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('${imageUrl}')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
@@ -62,7 +48,7 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
       
       {/* Hidden image for preloading and error handling */}
       <img 
-        src={bgImage} 
+        src={imageUrl} 
         alt="" 
         className="hidden" 
         onError={handleImageError}

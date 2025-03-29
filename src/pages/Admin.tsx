@@ -1,171 +1,94 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { AdminAuth, AdminProducts, AdminBlog, AdminCategories, AdminCategoryContent, AdminDashboard, AdminSettings } from "@/components/admin";
+
+import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import MainLayout from "@/components/layouts/MainLayout";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import AdminDashboard from "@/components/admin/AdminDashboard";
+import AdminProducts from "@/components/admin/AdminProducts";
+import AdminCategories from "@/components/admin/AdminCategories";
+import AdminBlog from "@/components/admin/AdminBlog";
+import AdminSettings from "@/components/admin/AdminSettings";
+import AdminAuth from "@/components/admin/AdminAuth";
 import HeroImageSettings from "@/components/admin/HeroImageSettings";
-import { isAdmin, isAuthenticated } from "@/services/authService";
+import ImageSettingsPanel from "@/components/admin/ImageSettingsPanel";
+import { isAdmin } from "@/services/authService";
 
 const Admin = () => {
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const location = useLocation();
+  const [authenticated, setAuthenticated] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const isAdminUser = await isAdmin();
+      setAuthenticated(isAdminUser);
+      setLoading(false);
+    };
+
     checkAuth();
   }, []);
 
-  const checkAuth = () => {
-    if (isAuthenticated() && isAdmin()) {
-      setIsAuthorized(true);
-    } else {
-      setIsAuthorized(false);
-      // Redirect non-admin users to home page
-      toast({
-        title: "Access denied",
-        description: "You need administrator privileges to access this page",
-        variant: "destructive",
-      });
-      navigate("/");
-    }
+  // Get current path to set active tab
+  const currentPath = location.pathname.split("/").pop() || "dashboard";
+  
+  const handleTabChange = (value: string) => {
+    navigate(`/admin/${value}`);
   };
 
-  const handleAuthSuccess = () => {
-    setIsAuthorized(true);
-    toast({
-      title: "Login successful",
-      description: "Welcome to the admin dashboard",
-    });
-  };
-
-  if (!isAuthorized) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-100">
-        <Header />
-        <div className="container mx-auto px-4 py-8 flex-grow">
-          <AdminAuth onAuthSuccess={handleAuthSuccess} />
+      <MainLayout>
+        <div className="container mx-auto p-6">
+          <Card className="p-8">
+            <div className="text-center">
+              <div className="w-8 h-8 mx-auto border-4 border-t-indigo-600 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              <p className="mt-4">Loading admin panel...</p>
+            </div>
+          </Card>
         </div>
-        <Footer />
-      </div>
+      </MainLayout>
     );
   }
 
+  if (!authenticated) {
+    return <AdminAuth onAuthSuccess={() => setAuthenticated(true)} />;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-8 flex-grow">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              navigate("/");
-            }}
-          >
-            View Website
-          </Button>
+    <MainLayout>
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Admin Panel</h1>
+          <p className="text-gray-500">Manage your website content and settings</p>
         </div>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-7 w-full mb-4">
+
+        <Tabs value={currentPath} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="mb-6 w-full justify-start overflow-x-auto">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="blog">Blog Posts</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="content">Category Content</TabsTrigger>
+            <TabsTrigger value="blog">Blog</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
-            <TabsTrigger value="help">Help</TabsTrigger>
+            <TabsTrigger value="hero">Hero Image</TabsTrigger>
+            <TabsTrigger value="image-settings">Image Settings</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="dashboard">
-            <AdminDashboard />
-          </TabsContent>
-          
-          <TabsContent value="products">
-            <AdminProducts />
-          </TabsContent>
-          
-          <TabsContent value="blog">
-            <AdminBlog />
-          </TabsContent>
-          
-          <TabsContent value="categories">
-            <AdminCategories />
-          </TabsContent>
-          
-          <TabsContent value="content">
-            <AdminCategoryContent />
-          </TabsContent>
-          
-          <TabsContent value="settings">
-            <div className="space-y-6">
-              <AdminSettings />
-              <HeroImageSettings />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="help">
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Help Documentation</CardTitle>
-                <CardDescription>
-                  Learn how to manage your affiliate marketing website efficiently.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Getting Started</h3>
-                  <p className="text-gray-500">
-                    This admin dashboard allows you to manage all aspects of your Recovery Essentials website.
-                    Use the tabs above to navigate between different sections.
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Product Management</h3>
-                  <p className="text-gray-500">
-                    Add, edit, and delete products with their Amazon affiliate links.
-                    Make sure to include high-quality images and detailed descriptions.
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Blog Management</h3>
-                  <p className="text-gray-500">
-                    Create and manage blog posts to drive traffic and improve SEO.
-                    You can use the rich text editor to format your content.
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">User Management</h3>
-                  <p className="text-gray-500">
-                    Update your profile details and password in the Settings tab.
-                    Admins can manage user accounts and permissions.
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Data Storage</h3>
-                  <p className="text-gray-500">
-                    Currently, all data is stored in your browser's localStorage.
-                    Use the export functionality in Settings to back up your data.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+
+          <Routes>
+            <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/dashboard" element={<AdminDashboard />} />
+            <Route path="/products" element={<AdminProducts />} />
+            <Route path="/categories" element={<AdminCategories />} />
+            <Route path="/blog" element={<AdminBlog />} />
+            <Route path="/settings" element={<AdminSettings />} />
+            <Route path="/hero" element={<HeroImageSettings />} />
+            <Route path="/image-settings" element={<ImageSettingsPanel />} />
+            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+          </Routes>
         </Tabs>
       </div>
-
-      <Footer />
-    </div>
+    </MainLayout>
   );
 };
 

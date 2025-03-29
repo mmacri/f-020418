@@ -22,6 +22,7 @@ import WorkflowDemo from "@/pages/WorkflowDemo";
 import AutoWorkflowDemo from "@/pages/AutoWorkflowDemo";
 import NotFound from "@/pages/NotFound";
 import ProductComparisonPage from "@/pages/ProductComparisonPage";
+import Wishlist from "@/pages/Wishlist";
 import initPolyfills from "@/lib/browser-polyfills";
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
           <Route path="/newsletter" element={<Newsletter />} />
           <Route path="/product-comparison" element={<ProductComparisonPage />} />
           <Route path="/product-comparison/:category" element={<ProductComparisonPage />} />
+          <Route path="/wishlist" element={<Wishlist />} />
 
           {/* Product routes */}
           <Route path="/products/:slug" element={<ProductDetail />} />
