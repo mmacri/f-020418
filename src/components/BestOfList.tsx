@@ -51,9 +51,8 @@ const BestOfList: React.FC<BestOfListProps> = ({
     const firstImage = product.images[0];
     if (typeof firstImage === 'string') {
       return firstImage;
-    } else if (firstImage && typeof firstImage === 'object') {
-      // Check if it has a url property using type assertion
-      return (firstImage as any).url || product.imageUrl || '/placeholder.svg';
+    } else if (firstImage && typeof firstImage === 'object' && 'url' in firstImage) {
+      return firstImage.url || product.imageUrl || '/placeholder.svg';
     }
     
     return product.imageUrl || '/placeholder.svg';
@@ -63,13 +62,13 @@ const BestOfList: React.FC<BestOfListProps> = ({
     <div className="py-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          {subtitle && <p className="text-gray-600 mt-1">{subtitle}</p>}
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h2>
+          {subtitle && <p className="text-gray-600 dark:text-gray-300 mt-1">{subtitle}</p>}
         </div>
         {shouldShowViewAll && categorySlug && (
           <Link 
             to={`/categories/${categorySlug}`}
-            className="text-indigo-600 hover:text-indigo-800 flex items-center text-sm font-medium"
+            className="text-primary hover:text-primary/80 flex items-center text-sm font-medium"
           >
             View All <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
@@ -78,10 +77,10 @@ const BestOfList: React.FC<BestOfListProps> = ({
       
       <div className="space-y-6">
         {displayProducts.map((product, index) => (
-          <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow">
+          <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow bg-card text-card-foreground">
             <CardContent className="p-0">
               <div className="flex flex-col md:flex-row">
-                <div className="md:w-1/4 p-4 flex items-center justify-center bg-gray-50">
+                <div className="md:w-1/4 p-4 flex items-center justify-center bg-muted/50">
                   <div className="relative">
                     <img 
                       src={getProductImageUrl(product)} 
@@ -100,16 +99,16 @@ const BestOfList: React.FC<BestOfListProps> = ({
                 <div className="md:w-3/4 p-6">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded mb-2">
+                      <div className="inline-block bg-primary/10 text-primary text-xs px-2 py-1 rounded mb-2">
                         {getAwardLabel(index)}
                       </div>
                       <h3 className="text-lg font-semibold mb-1">
-                        <Link to={`/products/${product.slug}`} className="hover:text-indigo-600">
+                        <Link to={`/products/${product.slug}`} className="hover:text-primary">
                           {product.name}
                         </Link>
                       </h3>
                     </div>
-                    <div className="text-xl font-bold text-indigo-600">
+                    <div className="text-xl font-bold text-primary">
                       {formatPrice(product.price)}
                     </div>
                   </div>
@@ -117,19 +116,19 @@ const BestOfList: React.FC<BestOfListProps> = ({
                   <div className="flex items-center mb-3">
                     <div className="flex text-amber-400 mr-2">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? 'fill-amber-400' : 'fill-gray-200'}`} />
+                        <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? 'fill-amber-400' : 'fill-gray-200 dark:fill-gray-600'}`} />
                       ))}
                     </div>
-                    <span className="text-gray-600 text-sm">{product.rating.toFixed(1)} ({product.reviewCount})</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{product.rating.toFixed(1)} ({product.reviewCount})</span>
                   </div>
                   
-                  <p className="text-gray-600 mb-4 line-clamp-2">
+                  <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
                     {product.shortDescription || (product.description && product.description.substring(0, 150))}
                   </p>
                   
                   <div className="flex flex-wrap gap-2 mb-4">
                     {product.features && product.features.slice(0, 3).map((feature, i) => (
-                      <div key={i} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                      <div key={i} className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded">
                         {feature.length > 30 ? `${feature.substring(0, 30)}...` : feature}
                       </div>
                     ))}
