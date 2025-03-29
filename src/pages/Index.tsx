@@ -71,7 +71,7 @@ const Index = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-24">
+      <section className="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-24">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 md:pr-8 mb-8 md:mb-0">
@@ -197,7 +197,7 @@ const Index = () => {
       </section>
       
       {/* Newsletter */}
-      <section className="py-16 bg-primary text-primary-foreground">
+      <section className="py-16 bg-indigo-600 text-primary-foreground">
         <div className="container mx-auto px-4 max-w-4xl text-center">
           <h2 className="text-3xl font-bold mb-4">Get Recovery Tips & Exclusive Deals</h2>
           <p className="text-xl opacity-90 mb-8">
@@ -209,7 +209,7 @@ const Index = () => {
               placeholder="Your email address" 
               className="flex-grow px-4 py-3 rounded-md border-0 focus:outline-none focus:ring-2 focus:ring-white text-foreground bg-background" 
             />
-            <Button className="bg-white text-primary hover:bg-gray-100 font-medium px-6 py-3">
+            <Button className="bg-white text-indigo-600 hover:bg-gray-100 font-medium px-6 py-3">
               Subscribe Now
             </Button>
           </div>
