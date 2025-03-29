@@ -6,15 +6,28 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/services/productService';
 
-// Define a proper interface for the product image format expected by ProductCard
-interface ProductImage {
+// Import the ProductImage type from ProductCard's props
+type ProductImage = {
   url: string;
-}
+};
 
-// Define an interface for the transformed product that ProductCard expects
-interface TransformedProduct extends Omit<Product, 'images'> {
+// Define the props expected by ProductCard to ensure type compatibility
+type ProductCardProps = {
+  id: string | number;
+  name: string;
+  slug: string;
+  category: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  rating: number;
+  reviewCount: number;
   images: ProductImage[];
-}
+  // Add other required fields that might be in the ProductCard's props
+  categoryId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 interface FeaturedProductsSectionProps {
   products: Product[];
@@ -22,11 +35,11 @@ interface FeaturedProductsSectionProps {
 
 const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = ({ products }) => {
   // Transform products to the format expected by ProductCard
-  const transformedProducts: TransformedProduct[] = products.map(product => {
+  const transformedProducts = products.map(product => {
     // Create a new object with all properties except images
     const { images, ...productProps } = product;
     
-    // Return a new object with transformed images
+    // Return a new object with transformed images and ensure it matches ProductCard's expected format
     return {
       ...productProps,
       images: images.map(img => ({ url: img }))
