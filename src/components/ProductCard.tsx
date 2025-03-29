@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPrice, getProductUrl } from '@/lib/product-utils';
@@ -11,7 +10,7 @@ type ProductImage = {
 };
 
 interface ProductCardProps {
-  product: Partial<Product> & {
+  product: {
     id: string | number;
     name: string;
     slug: string;
@@ -21,7 +20,7 @@ interface ProductCardProps {
     originalPrice?: number;
     rating: number;
     reviewCount: number;
-    images: ProductImage[];
+    images: ProductImage[] | string[];
   };
   isLoading?: boolean;
   featured?: boolean;
@@ -29,7 +28,17 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, featured = false }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const imageUrl = product?.images && product.images.length ? product.images[0].url : '/placeholder.svg';
+  
+  const getImageUrl = (): string => {
+    if (!product.images || product.images.length === 0) {
+      return '/placeholder.svg';
+    }
+    
+    const firstImage = product.images[0];
+    return typeof firstImage === 'string' ? firstImage : firstImage.url;
+  };
+  
+  const imageUrl = getImageUrl();
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -51,7 +60,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, f
     );
   }
 
-  // Create a fully compatible Product object by adding missing required fields with default values
   const productWithDefaults = {
     ...product,
     categoryId: product.categoryId || 0,
