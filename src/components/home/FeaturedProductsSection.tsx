@@ -6,13 +6,23 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/services/productService';
 
+// Define the ProductImage type to match what ProductCard expects
+type ProductImage = {
+  url: string;
+};
+
+// Define a type that matches what ProductCard expects
+type FormattedProduct = Omit<Product, 'images'> & {
+  images: ProductImage[];
+};
+
 interface FeaturedProductsSectionProps {
   products: Product[];
 }
 
 const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = ({ products }) => {
   // Transform products to ensure images are in the correct format for ProductCard
-  const formattedProducts = products.map(product => ({
+  const formattedProducts: FormattedProduct[] = products.map(product => ({
     ...product,
     // Convert string[] to ProductImage[] (where each item has a url property)
     images: product.images.map(img => ({ url: img }))
