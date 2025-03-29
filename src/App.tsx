@@ -14,6 +14,7 @@ import Search from "@/pages/Search";
 import Newsletter from "@/pages/Newsletter";
 import ProductDetail from "@/pages/ProductDetail";
 import CategoryPage from "@/pages/CategoryPage";
+import SubcategoryPage from "@/pages/SubcategoryPage";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Terms from "@/pages/Terms";
 import AffiliateDisclosure from "@/pages/AffiliateDisclosure";
@@ -57,7 +58,7 @@ function App() {
           
           {/* Category routes */}
           <Route path="/categories/:categorySlug" element={<CategoryPage />} />
-          <Route path="/categories/:categorySlug/:subcategorySlug" element={<CategoryPage />} />
+          <Route path="/categories/:categorySlug/:subSlug" element={<SubcategoryPage />} />
 
           {/* Legal pages */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

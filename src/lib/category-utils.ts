@@ -99,3 +99,37 @@ export const generateCategoryBreadcrumbs = (category: any, subcategory?: any) =>
   
   return breadcrumbs;
 };
+
+/**
+ * Get products for a subcategory
+ */
+export const getProductsForSubcategory = async (categorySlug: string, subcategorySlug: string) => {
+  try {
+    const category = await getCategoryBySlug(categorySlug);
+    if (!category) return [];
+    
+    const subcategory = category.subcategories.find(sub => sub.slug === subcategorySlug);
+    if (!subcategory) return [];
+    
+    // Implementation would vary based on your product service
+    // This is a placeholder that would need to be replaced with actual implementation
+    return [];
+  } catch (error) {
+    console.error("Error getting products for subcategory:", error);
+    return [];
+  }
+};
+
+/**
+ * Get subcategory details
+ */
+export const getSubcategoryDetails = async (categorySlug: string, subcategorySlug: string) => {
+  try {
+    const result = await getSubcategoryBySlug(categorySlug, subcategorySlug);
+    return result;
+  } catch (error) {
+    console.error("Error getting subcategory details:", error);
+    return null;
+  }
+};
+
