@@ -1,153 +1,150 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { formatPrice, getProductUrl } from '@/lib/product-utils';
-import { Product } from '@/services/productService';
+import { ArrowRight, Award, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Star, Trophy, ArrowRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { handleAffiliateClick } from '@/lib/affiliate-utils';
+import { formatPrice } from '@/lib/product-utils';
+import { Product } from '@/services/productService';
 
 interface BestOfListProps {
+  title: string;
+  subtitle?: string;
   products: Product[];
-  categoryName: string;
-  description?: string;
-  showFullList?: boolean;
-  categoryUrl?: string;
+  categorySlug?: string;
+  showViewAll?: boolean;
+  maxItems?: number;
 }
 
-const BestOfList: React.FC<BestOfListProps> = ({ 
-  products, 
-  categoryName, 
-  description,
-  showFullList = true,
-  categoryUrl
+const BestOfList: React.FC<BestOfListProps> = ({
+  title,
+  subtitle,
+  products,
+  categorySlug,
+  showViewAll = true,
+  maxItems = 5
 }) => {
-  if (!products || products.length === 0) return null;
-
-  // Determine rank labels based on position
-  const getRankLabel = (index: number): string => {
+  // Ensure we don't exceed available products
+  const displayProducts = products.slice(0, Math.min(maxItems, products.length));
+  
+  // Only show View All if we have more products than we're displaying
+  const shouldShowViewAll = showViewAll && products.length > maxItems;
+  
+  // Get award labels for positions
+  const getAwardLabel = (index: number): string => {
     switch (index) {
       case 0: return "Best Overall";
-      case 1: return "Runner Up";
+      case 1: return "Runner-Up";
       case 2: return "Best Value";
-      case 3: return "Premium Pick";
-      case 4: return "Budget Option";
-      default: return `#${index + 1} Pick`;
+      case 3: return "Budget Pick";
+      default: return "Top Pick";
     }
   };
-
+  
   return (
-    <section className="py-12">
-      <div className="container mx-auto px-4">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold mb-4">Best {categoryName} of {new Date().getFullYear()}</h2>
-          {description && <p className="text-gray-600 max-w-3xl mx-auto">{description}</p>}
+    <div className="py-8">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          {subtitle && <p className="text-gray-600 mt-1">{subtitle}</p>}
         </div>
-
-        <div className="space-y-8">
-          {products.slice(0, 5).map((product, index) => (
-            <div key={product.id} className="flex flex-col md:flex-row border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-              <div className="md:w-1/4 bg-gray-50 p-6 flex items-center justify-center relative">
-                <div className="absolute top-0 left-0 bg-amber-500 text-white px-3 py-1 text-sm font-bold">
-                  {getRankLabel(index)}
-                </div>
-                <img 
-                  src={product.images[0]?.url || product.imageUrl} 
-                  alt={product.name} 
-                  className="max-h-40 object-contain" 
-                />
-              </div>
-              
-              <div className="md:w-2/4 p-6">
-                <Link to={getProductUrl(product)} className="block mb-2">
-                  <h3 className="text-xl font-bold text-gray-900 hover:text-indigo-600 transition-colors">
-                    {product.name}
-                  </h3>
-                </Link>
-                
-                <div className="flex items-center mb-3">
-                  <div className="flex text-amber-400 mr-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${i < Math.floor(product.rating) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-gray-600 text-sm">
-                    {product.rating.toFixed(1)} ({product.reviewCount} reviews)
-                  </span>
-                </div>
-                
-                <p className="text-gray-700 mb-4 line-clamp-2">
-                  {product.shortDescription || product.description.slice(0, 150) + '...'}
-                </p>
-                
-                {product.features && product.features.length > 0 && (
-                  <div className="mb-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {product.features.slice(0, 4).map((feature, i) => (
-                        <div key={i} className="flex items-start">
-                          <Trophy className="h-4 w-4 text-amber-500 mr-2 mt-1 flex-shrink-0" />
-                          <span className="text-sm text-gray-600 line-clamp-1">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="md:w-1/4 p-6 flex flex-col justify-between bg-gray-50 border-t md:border-t-0 md:border-l">
-                <div>
-                  <div className="text-2xl font-bold text-indigo-600 mb-2">
-                    {formatPrice(product.price)}
-                  </div>
-                  {product.originalPrice && product.originalPrice > product.price && (
-                    <div className="flex items-center">
-                      <span className="text-gray-400 line-through text-sm mr-2">
-                        {formatPrice(product.originalPrice)}
-                      </span>
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                        Save {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="space-y-2 mt-4">
-                  <Button
-                    onClick={() => {
-                      const url = product.affiliateLink || product.affiliateUrl || 
-                        (product.asin ? `https://www.amazon.com/dp/${product.asin}?tag=recoveryessentials-20` : '#');
-                      handleAffiliateClick(url, product.id, product.name, product.asin);
-                    }}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    Check Amazon Price
-                  </Button>
-                  
-                  <Link to={getProductUrl(product)}>
-                    <Button variant="outline" className="w-full">
-                      Read Full Review
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {showFullList && categoryUrl && products.length > 5 && (
-          <div className="mt-10 text-center">
-            <Link to={categoryUrl}>
-              <Button variant="outline" className="px-6">
-                View All {categoryName} <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+        {shouldShowViewAll && categorySlug && (
+          <Link 
+            to={`/categories/${categorySlug}`}
+            className="text-indigo-600 hover:text-indigo-800 flex items-center text-sm font-medium"
+          >
+            View All <ArrowRight className="ml-1 h-4 w-4" />
+          </Link>
         )}
       </div>
-    </section>
+      
+      <div className="space-y-6">
+        {displayProducts.map((product, index) => (
+          <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow">
+            <CardContent className="p-0">
+              <div className="flex flex-col md:flex-row">
+                <div className="md:w-1/4 p-4 flex items-center justify-center bg-gray-50">
+                  <div className="relative">
+                    <img 
+                      src={typeof product.images[0] === 'string' 
+                        ? product.images[0] 
+                        : product.images[0]?.url || product.imageUrl} 
+                      alt={product.name} 
+                      className="max-h-40 object-contain" 
+                    />
+                    {index === 0 && (
+                      <div className="absolute -top-2 -right-2 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full border border-amber-200 flex items-center">
+                        <Award className="h-3 w-3 mr-1" />
+                        Editor's Choice
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="md:w-3/4 p-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded mb-2">
+                        {getAwardLabel(index)}
+                      </div>
+                      <h3 className="text-lg font-semibold mb-1">
+                        <Link to={`/products/${product.slug}`} className="hover:text-indigo-600">
+                          {product.name}
+                        </Link>
+                      </h3>
+                    </div>
+                    <div className="text-xl font-bold text-indigo-600">
+                      {formatPrice(product.price)}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center mb-3">
+                    <div className="flex text-amber-400 mr-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? 'fill-amber-400' : 'fill-gray-200'}`} />
+                      ))}
+                    </div>
+                    <span className="text-gray-600 text-sm">{product.rating.toFixed(1)} ({product.reviewCount})</span>
+                  </div>
+                  
+                  <p className="text-gray-600 mb-4 line-clamp-2">
+                    {product.shortDescription || (product.description && product.description.substring(0, 150))}
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {product.features && product.features.slice(0, 3).map((feature, i) => (
+                      <div key={i} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                        {feature.length > 30 ? `${feature.substring(0, 30)}...` : feature}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={() => {
+                        const url = product.affiliateLink || product.affiliateUrl || 
+                          (product.asin ? `https://www.amazon.com/dp/${product.asin}?tag=recoveryessentials-20` : '#');
+                        handleAffiliateClick(url, product.id, product.name, product.asin);
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600"
+                    >
+                      View on Amazon
+                    </Button>
+                    
+                    <Button variant="outline" asChild>
+                      <Link to={`/products/${product.slug}`}>
+                        Read Review
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 };
 

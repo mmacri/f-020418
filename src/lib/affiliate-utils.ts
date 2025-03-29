@@ -1,7 +1,7 @@
 
 import { localStorageKeys } from './constants';
 import { toast } from '@/hooks/use-toast';
-import { trackAffiliateClick } from './analytics-utils';
+import { trackAffiliateClick as trackAffiliateClickAnalytics } from './analytics-utils';
 
 interface AffiliateClick {
   productId: string | number;
@@ -14,7 +14,7 @@ interface AffiliateClick {
  * Track affiliate link clicks
  * @deprecated Use trackAffiliateClick from analytics-utils.ts instead
  */
-export const trackAffiliateClick = (
+export const trackAffiliateClickLegacy = (
   productId: string | number, 
   productName: string,
   asin?: string
@@ -53,12 +53,12 @@ export const handleAffiliateClick = (
   source: string = window.location.pathname
 ): void => {
   // Track the click using the new analytics system
-  import('./analytics-utils').then(({ trackAffiliateClick: trackClick }) => {
-    trackClick(productId, productName, url, source, asin);
+  import('./analytics-utils').then(({ trackAffiliateClick }) => {
+    trackAffiliateClick(productId, productName, url, source, asin);
   });
   
   // For backward compatibility
-  trackAffiliateClick(productId, productName, asin);
+  trackAffiliateClickLegacy(productId, productName, asin);
   
   // Open link in new tab
   window.open(url, '_blank');

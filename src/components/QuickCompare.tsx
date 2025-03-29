@@ -42,7 +42,9 @@ const QuickCompare: React.FC<QuickCompareProps> = ({
           <Card key={product.id} className="overflow-hidden">
             <div className="h-40 bg-gray-50 p-4 flex items-center justify-center">
               <img 
-                src={product.images[0]?.url || product.imageUrl} 
+                src={typeof product.images[0] === 'string' 
+                  ? product.images[0] 
+                  : product.images[0]?.url || product.imageUrl} 
                 alt={product.name} 
                 className="max-h-full object-contain" 
               />
