@@ -44,16 +44,32 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     
-    // If we don't have aria-label or children, add a warning
+    // Enhanced accessibility checks
     if (process.env.NODE_ENV !== 'production') {
-      if (!asChild && !props['aria-label'] && (!props.children || typeof props.children === 'object')) {
-        console.warn('Button is missing aria-label or discernible text content. Add either aria-label or text content for accessibility.')
+      // Check for either:
+      // 1. aria-label attribute
+      // 2. aria-labelledby attribute 
+      // 3. visible text content
+      // 4. title attribute
+      const missingAccessibleName = 
+        !props['aria-label'] && 
+        !props['aria-labelledby'] && 
+        (!props.children || typeof props.children === 'object') &&
+        !props.title;
+        
+      if (!asChild && missingAccessibleName) {
+        console.warn('Button is missing an accessible name. Add one of: aria-label, aria-labelledby, text content, or title attribute for accessibility.')
       }
     }
     
-    // If no title is provided and we have a text child, use it for the title
-    if (!props.title && typeof props.children === 'string') {
-      props.title = props.children
+    // If we have an icon button with no accessible name, add a title based on context
+    if (size === 'icon' && !props['aria-label'] && !props.title && !asChild) {
+      if (!props.title) {
+        // Try to infer a title from context - this is a fallback only
+        props.title = typeof props.children === 'string' 
+          ? props.children 
+          : 'Button';
+      }
     }
     
     return (

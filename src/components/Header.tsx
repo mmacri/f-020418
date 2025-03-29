@@ -87,6 +87,7 @@ const Header = () => {
             size="sm"
             className="text-sm"
             onClick={handleLogout}
+            aria-label="Sign out of admin account"
           >
             Sign Out
           </Button>
@@ -99,7 +100,7 @@ const Header = () => {
       return (
         <div className="hidden sm:flex items-center">
           <Link to="/login" className="text-sm">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label="Admin login">
               Admin Login
             </Button>
           </Link>
@@ -134,7 +135,11 @@ const Header = () => {
                 </NavLink>
               ) : item.type === "category-dropdown" && item.items ? (
                 <div key={item.id} className="relative group">
-                  <button className="text-gray-600 hover:text-gray-900">
+                  <button 
+                    className="text-gray-600 hover:text-gray-900"
+                    aria-label={`${item.title} dropdown menu`}
+                    title={`${item.title} categories`}
+                  >
                     {item.title}
                   </button>
                   <div className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-md hidden group-hover:block">
@@ -155,19 +160,25 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link to="/search">
-            <Search className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+          <Link to="/search" aria-label="Search products" title="Search products">
+            <Search className="h-5 w-5 text-gray-500 hover:text-gray-700" aria-hidden="true" />
           </Link>
-          <Link to="/wishlist">
-            <Heart className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+          <Link to="/wishlist" aria-label="Wishlist" title="View wishlist">
+            <Heart className="h-5 w-5 text-gray-500 hover:text-gray-700" aria-hidden="true" />
           </Link>
           <ThemeToggle />
           {renderAuthButtons()}
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="lg:hidden">
-                <Menu className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="lg:hidden"
+                aria-label="Open menu"
+                title="Menu"
+              >
+                <Menu className="h-5 w-5 text-gray-500 hover:text-gray-700" aria-hidden="true" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="sm:w-64">

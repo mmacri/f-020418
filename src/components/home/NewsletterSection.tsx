@@ -34,16 +34,20 @@ const NewsletterSection: React.FC = () => {
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
           <input 
             type="email" 
+            id="newsletter-email"
+            name="newsletter-email"
             placeholder="Your email address" 
             className="flex-grow px-4 py-3 rounded-md border-0 focus:outline-none focus:ring-2 focus:ring-white text-foreground bg-background" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            aria-label="Email address for newsletter"
           />
           <Button 
             type="submit"
             className="bg-white text-indigo-600 hover:bg-gray-100 font-medium px-6 py-3"
             disabled={isSubmitting}
+            aria-label="Subscribe to newsletter"
           >
             {isSubmitting ? 'Subscribing...' : 'Subscribe Now'}
           </Button>

@@ -23,17 +23,37 @@ const Footer = () => {
               Providing science-backed recommendations for the best fitness recovery products on the market.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Facebook size={20} />
+              <a 
+                href="#" 
+                className="text-gray-400 hover:text-white transition"
+                title="Follow us on Facebook" 
+                aria-label="Facebook"
+              >
+                <Facebook size={20} aria-hidden="true" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Twitter size={20} />
+              <a 
+                href="#" 
+                className="text-gray-400 hover:text-white transition"
+                title="Follow us on Twitter"
+                aria-label="Twitter"
+              >
+                <Twitter size={20} aria-hidden="true" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Instagram size={20} />
+              <a 
+                href="#" 
+                className="text-gray-400 hover:text-white transition"
+                title="Follow us on Instagram"
+                aria-label="Instagram"
+              >
+                <Instagram size={20} aria-hidden="true" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <BookOpen size={20} />
+              <a 
+                href="#" 
+                className="text-gray-400 hover:text-white transition"
+                title="Read our blog"
+                aria-label="Blog"
+              >
+                <BookOpen size={20} aria-hidden="true" />
               </a>
             </div>
           </div>
