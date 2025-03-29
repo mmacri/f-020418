@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { DialogFooter } from '@/components/ui/dialog';
 import { FileUpload } from '@/components/FileUpload';
+import { Switch } from '@/components/ui/switch';
 
 interface CategoryFormData {
   name: string;
@@ -41,10 +42,10 @@ const CategoryForm = ({
   onFileChange
 }: CategoryFormProps) => {
   return (
-    <form onSubmit={onSubmit}>
-      <div className="grid gap-4 py-4">
+    <form onSubmit={onSubmit} className="text-foreground">
+      <div className="grid gap-5 py-4">
         <div className="grid gap-2">
-          <Label htmlFor="name">Category Name</Label>
+          <Label htmlFor="name" className="text-foreground">Category Name</Label>
           <Input
             id="name"
             name="name"
@@ -52,11 +53,12 @@ const CategoryForm = ({
             value={formData.name}
             onChange={onNameChange}
             required
+            className="bg-background border-input"
           />
         </div>
         
         <div className="grid gap-2">
-          <Label htmlFor="slug">URL Slug</Label>
+          <Label htmlFor="slug" className="text-foreground">URL Slug</Label>
           <Input
             id="slug"
             name="slug"
@@ -64,30 +66,35 @@ const CategoryForm = ({
             value={formData.slug}
             onChange={onInputChange}
             required
+            className="bg-background border-input"
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             This will be used in the URL: /categories/{formData.slug}
           </p>
         </div>
         
         <div className="grid gap-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description" className="text-foreground">Description</Label>
           <Textarea
             id="description"
             name="description"
             placeholder="Brief description of this category"
             value={formData.description}
             onChange={onInputChange}
-            className="min-h-[100px]"
+            className="min-h-[100px] bg-background border-input"
           />
         </div>
         
         <div className="space-y-3">
-          <Label>Category Image</Label>
+          <Label className="text-foreground">Category Image</Label>
           <Tabs value={imageMethod} onValueChange={onImageMethodChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="url">Image URL</TabsTrigger>
-              <TabsTrigger value="upload">Upload Image</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-muted text-muted-foreground">
+              <TabsTrigger value="url" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+                Image URL
+              </TabsTrigger>
+              <TabsTrigger value="upload" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+                Upload Image
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="url" className="space-y-4 mt-2">
@@ -98,8 +105,9 @@ const CategoryForm = ({
                   placeholder="https://example.com/image.jpg"
                   value={formData.imageUrl}
                   onChange={onInputChange}
+                  className="bg-background border-input"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Enter a direct URL to an image for this category
                 </p>
               </div>
@@ -111,28 +119,40 @@ const CategoryForm = ({
                 accept="image/*"
                 maxSizeMB={2}
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Upload an image file (max 2MB). Supported formats: PNG, JPEG, GIF
               </p>
             </TabsContent>
           </Tabs>
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="showInNavigation" className="text-foreground">Show in Navigation</Label>
+              <p className="text-xs text-muted-foreground">
+                When enabled, this category will appear in the main navigation menu
+              </p>
+            </div>
+            <Switch
               id="showInNavigation"
               name="showInNavigation"
               checked={formData.showInNavigation}
-              onChange={onInputChange}
-              className="rounded border-gray-300"
+              onCheckedChange={(checked) => {
+                const event = {
+                  target: {
+                    name: 'showInNavigation',
+                    type: 'checkbox',
+                    checked,
+                  },
+                } as React.ChangeEvent<HTMLInputElement>;
+                onInputChange(event);
+              }}
             />
-            <Label htmlFor="showInNavigation">Show in Navigation</Label>
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="navigationOrder">Navigation Order</Label>
+            <Label htmlFor="navigationOrder" className="text-foreground">Navigation Order</Label>
             <Input
               id="navigationOrder"
               name="navigationOrder"
@@ -140,16 +160,28 @@ const CategoryForm = ({
               min="0"
               value={formData.navigationOrder}
               onChange={onInputChange}
+              className="bg-background border-input"
             />
+            <p className="text-xs text-muted-foreground">
+              Lower numbers will appear first in the navigation menu
+            </p>
           </div>
         </div>
       </div>
       
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <DialogFooter className="mt-6 gap-2">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          className="border-input text-foreground"
+        >
           Cancel
         </Button>
-        <Button type="submit">
+        <Button 
+          type="submit"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
           {isEditing ? 'Update Category' : 'Create Category'}
         </Button>
       </DialogFooter>

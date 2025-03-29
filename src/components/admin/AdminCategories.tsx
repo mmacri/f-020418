@@ -179,26 +179,34 @@ const AdminCategories = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">Categories</h2>
-        <Button onClick={handleOpenCreateModal}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add Category
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-foreground">Categories</h2>
+        <Button 
+          onClick={handleOpenCreateModal}
+          size="lg"
+          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 font-medium flex items-center gap-2"
+        >
+          <PlusCircle className="h-5 w-5" /> Add Category
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-10">Loading categories...</div>
+        <div className="text-center py-10 text-foreground">Loading categories...</div>
       ) : categories.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="mb-4">No categories found. Create your first category to get started.</p>
-            <Button onClick={handleOpenCreateModal}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Category
+        <Card className="border border-border shadow-sm">
+          <CardContent className="pt-6 text-center py-12">
+            <p className="mb-6 text-foreground text-lg">No categories found. Create your first category to get started.</p>
+            <Button 
+              onClick={handleOpenCreateModal}
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-white px-6 py-2 font-medium flex items-center gap-2"
+            >
+              <PlusCircle className="h-5 w-5" /> Add Category
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
             <CategoryCard 
               key={category.id}
@@ -211,27 +219,29 @@ const AdminCategories = () => {
       )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden bg-background border border-border">
+          <DialogHeader className="p-6 pb-2 bg-background">
+            <DialogTitle className="text-2xl font-bold text-foreground">
               {editingCategory ? `Edit Category: ${editingCategory.name}` : 'Create New Category'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-muted-foreground">
               Configure the category details below. Categories are used to organize your products.
             </DialogDescription>
           </DialogHeader>
           
-          <CategoryForm 
-            formData={formData}
-            isEditing={!!editingCategory}
-            onInputChange={handleInputChange}
-            onNameChange={handleNameChange}
-            onSubmit={handleSubmit}
-            onCancel={() => setIsModalOpen(false)}
-            imageMethod={imageMethod}
-            onImageMethodChange={handleImageMethodChange}
-            onFileChange={handleFileChange}
-          />
+          <div className="px-6 pb-6">
+            <CategoryForm 
+              formData={formData}
+              isEditing={!!editingCategory}
+              onInputChange={handleInputChange}
+              onNameChange={handleNameChange}
+              onSubmit={handleSubmit}
+              onCancel={() => setIsModalOpen(false)}
+              imageMethod={imageMethod}
+              onImageMethodChange={handleImageMethodChange}
+              onFileChange={handleFileChange}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
