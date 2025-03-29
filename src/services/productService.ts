@@ -20,6 +20,8 @@ export interface Product {
   rating: number;
   reviewCount: number;
   features?: string[];
+  pros?: string[]; // Add pros property for comparison tables
+  cons?: string[]; // Also add cons for completeness
   affiliateLink?: string;
   affiliateUrl?: string; // Add affiliateUrl as alias for affiliateLink
   brand?: string;

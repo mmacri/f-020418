@@ -51,8 +51,9 @@ const BestOfList: React.FC<BestOfListProps> = ({
     const firstImage = product.images[0];
     if (typeof firstImage === 'string') {
       return firstImage;
-    } else if (firstImage && typeof firstImage === 'object' && 'url' in firstImage) {
-      return firstImage.url || product.imageUrl || '/placeholder.svg';
+    } else if (firstImage && typeof firstImage === 'object') {
+      // Check if it has a url property using type assertion
+      return (firstImage as any).url || product.imageUrl || '/placeholder.svg';
     }
     
     return product.imageUrl || '/placeholder.svg';

@@ -1,8 +1,8 @@
-
 import { localStorageKeys } from '@/lib/constants';
 
 export interface CategoryContent {
   id: string;
+  categoryId?: number;
   slug: string;
   headline: string;
   introduction: string;
@@ -31,6 +31,8 @@ export interface CategoryContentRecommendation {
   productId: string | number;
   description: string;
   imageUrl?: string;
+  buttonText?: string;
+  buttonUrl?: string;
 }
 
 export interface CategoryContentFAQ {
@@ -209,6 +211,33 @@ export const getCategoryContentBySlug = async (slug: string): Promise<CategoryCo
       }
     }, 300); // Simulate API delay
   });
+};
+
+/**
+ * Create new category content
+ */
+export const createCategoryContent = async (content: Partial<CategoryContent>): Promise<CategoryContent> => {
+  // Generate a new ID if not provided
+  const newContent: CategoryContent = {
+    ...content as any,
+    id: content.id || Date.now().toString(),
+    lastUpdated: new Date().toISOString()
+  };
+  
+  return saveCategoryContent(newContent);
+};
+
+/**
+ * Update existing category content
+ */
+export const updateCategoryContent = async (id: string, content: Partial<CategoryContent>): Promise<CategoryContent> => {
+  const updatedContent: CategoryContent = {
+    ...content as any,
+    id,
+    lastUpdated: new Date().toISOString()
+  };
+  
+  return saveCategoryContent(updatedContent);
 };
 
 /**

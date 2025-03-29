@@ -4,10 +4,13 @@ import {
   getCategoryContent, 
   createCategoryContent, 
   updateCategoryContent,
-  deleteCategoryContent
+  deleteCategoryContent,
+  CategoryContent, 
+  CategoryContentSection, 
+  CategoryContentRecommendation, 
+  CategoryContentFAQ 
 } from '@/services/categoryContentService';
 import { getNavigationCategories } from '@/services/categoryService';
-import { CategoryContent, CategoryContentSection, CategoryContentRecommendation, CategoryContentFAQ } from '@/services/categoryContentService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -22,7 +25,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 const AdminCategoryContent = () => {
   const [content, setContent] = useState<CategoryContent[]>([]);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -96,11 +99,13 @@ const AdminCategoryContent = () => {
         title: `${category.name} - Recovery Essentials Guide`,
         description: `Everything you need to know about ${category.name.toLowerCase()} for recovery and performance.`
       },
+      categoryId: categoryId,
       slug: category.slug,
       headline: `${category.name} Guide: Everything You Need To Know`,
       introduction: `Welcome to our comprehensive guide on ${category.name.toLowerCase()}. In this article, we'll cover everything you need to know about choosing and using ${category.name.toLowerCase()} for recovery and performance enhancement.`,
       sections: [
         {
+          id: `s1-${Date.now()}`,
           title: 'What to Look For',
           content: `When shopping for ${category.name.toLowerCase()}, consider these important factors...`
         }
@@ -108,6 +113,7 @@ const AdminCategoryContent = () => {
       recommendations: [],
       faqs: [
         {
+          id: `f1-${Date.now()}`,
           question: `What are the benefits of using ${category.name.toLowerCase()}?`,
           answer: 'Benefits include...'
         }
@@ -125,53 +131,69 @@ const AdminCategoryContent = () => {
         ...contentItem.meta
       }
     });
-    setSelectedCategoryId(contentItem.categoryId);
+    setSelectedCategoryId(contentItem.categoryId || null);
     setIsEditing(true);
   };
 
   // Add a new section to the form
   const addSection = () => {
-    setFormContent(prev => ({
-      ...prev,
-      sections: [
+    setFormContent(prev => {
+      const newSections = [
         ...(prev.sections || []),
         {
+          id: `section-${Date.now()}`,
           title: '',
           content: ''
         }
-      ]
-    }));
+      ];
+      
+      return {
+        ...prev,
+        sections: newSections
+      };
+    });
   };
 
   // Add a new recommendation to the form
   const addRecommendation = () => {
-    setFormContent(prev => ({
-      ...prev,
-      recommendations: [
+    setFormContent(prev => {
+      const newRecommendations = [
         ...(prev.recommendations || []),
         {
+          id: `rec-${Date.now()}`,
           title: '',
+          productId: '',
           description: '',
           imageUrl: '',
           buttonText: 'View Product',
           buttonUrl: ''
         }
-      ]
-    }));
+      ];
+      
+      return {
+        ...prev,
+        recommendations: newRecommendations
+      };
+    });
   };
 
   // Add a new FAQ to the form
   const addFaq = () => {
-    setFormContent(prev => ({
-      ...prev,
-      faqs: [
+    setFormContent(prev => {
+      const newFaqs = [
         ...(prev.faqs || []),
         {
+          id: `faq-${Date.now()}`,
           question: '',
           answer: ''
         }
-      ]
-    }));
+      ];
+      
+      return {
+        ...prev,
+        faqs: newFaqs
+      };
+    });
   };
 
   // Handle section input changes

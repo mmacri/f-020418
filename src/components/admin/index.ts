@@ -1,7 +1,7 @@
 
 export { default as AdminAuth } from "./AdminAuth";
 export { default as AdminBlog } from "./AdminBlog";
-export { AdminCategories } from "./AdminCategories";
+export { default as AdminCategories } from "./AdminCategories";
 export { default as AdminCategoryContent } from "./AdminCategoryContent";
 export { default as AdminDashboard } from "./AdminDashboard";
 export { default as AdminProducts } from "./AdminProducts";

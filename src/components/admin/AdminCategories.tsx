@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getNavigationCategories, createCategory, updateCategory, deleteCategory } from '@/services/categoryService';
 import { getCategoryContent } from '@/services/categoryContentService';
@@ -15,7 +14,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import AdminCategoryContent from './AdminCategoryContent';
 
-// Component to manage categories in admin dashboard
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,12 +29,10 @@ const AdminCategories = () => {
   });
   const { toast } = useToast();
 
-  // Load categories on component mount
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Fetch all categories
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
@@ -54,7 +50,6 @@ const AdminCategories = () => {
     }
   };
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -63,7 +58,6 @@ const AdminCategories = () => {
     });
   };
 
-  // Auto-generate slug from name
   const handleNameChange = (e) => {
     const name = e.target.value;
     setFormData({
@@ -73,7 +67,6 @@ const AdminCategories = () => {
     });
   };
 
-  // Open modal for creating a new category
   const handleOpenCreateModal = () => {
     setEditingCategory(null);
     setFormData({
@@ -87,7 +80,6 @@ const AdminCategories = () => {
     setIsModalOpen(true);
   };
 
-  // Open modal for editing an existing category
   const handleOpenEditModal = (category) => {
     setEditingCategory(category);
     setFormData({
@@ -101,13 +93,11 @@ const AdminCategories = () => {
     setIsModalOpen(true);
   };
 
-  // Handle form submission (create or update)
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
       if (editingCategory) {
-        // Update existing category
         await updateCategory(editingCategory.id, {
           ...formData,
           subcategories: editingCategory.subcategories,
@@ -117,7 +107,6 @@ const AdminCategories = () => {
           description: `Category "${formData.name}" has been updated.`,
         });
       } else {
-        // Create new category
         await createCategory({
           ...formData,
           subcategories: [],
@@ -128,7 +117,6 @@ const AdminCategories = () => {
         });
       }
       
-      // Close modal and refresh categories
       setIsModalOpen(false);
       fetchCategories();
     } catch (error) {
@@ -141,7 +129,6 @@ const AdminCategories = () => {
     }
   };
 
-  // Handle category deletion
   const handleDeleteCategory = async (category) => {
     if (window.confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) {
       try {
@@ -245,7 +232,6 @@ const AdminCategories = () => {
         </div>
       )}
 
-      {/* Create/Edit Category Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

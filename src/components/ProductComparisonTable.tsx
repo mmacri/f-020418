@@ -11,11 +11,13 @@ import { handleAffiliateClick } from '@/lib/affiliate-utils';
 interface ProductComparisonTableProps {
   products: Product[];
   showReviewLink?: boolean;
+  highlightBestProduct?: boolean; // Add this missing prop
 }
 
 const ProductComparisonTable: React.FC<ProductComparisonTableProps> = ({ 
   products, 
-  showReviewLink = true
+  showReviewLink = true,
+  highlightBestProduct = false // Add default value
 }) => {
   // Get common specifications keys
   const getSpecKeys = () => {
@@ -57,8 +59,9 @@ const ProductComparisonTable: React.FC<ProductComparisonTableProps> = ({
     const firstImage = product.images[0];
     if (typeof firstImage === 'string') {
       return firstImage;
-    } else if (firstImage && typeof firstImage === 'object' && 'url' in firstImage) {
-      return firstImage.url || product.imageUrl || '/placeholder.svg';
+    } else if (firstImage && typeof firstImage === 'object') {
+      // Safely check for url property without assuming its structure
+      return (firstImage as any).url || product.imageUrl || '/placeholder.svg';
     }
     
     return product.imageUrl || '/placeholder.svg';
