@@ -3,12 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { localStorageKeys } from '@/lib/constants';
-
-const DEFAULT_HERO_IMAGE = "https://static.vecteezy.com/system/resources/previews/021/573/353/non_2x/arm-muscle-silhouette-logo-biceps-icon-free-vector.jpg";
+import { localStorageKeys, imageUrls } from '@/lib/constants';
+import { ImageWithFallback } from '@/lib/image-utils';
 
 const HeroSection: React.FC = () => {
-  const [heroImageUrl, setHeroImageUrl] = useState<string>(DEFAULT_HERO_IMAGE);
+  const [heroImageUrl, setHeroImageUrl] = useState<string>(imageUrls.HERO_DEFAULT);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   useEffect(() => {
     // Try to load the hero image from localStorage
@@ -53,16 +53,17 @@ const HeroSection: React.FC = () => {
               </Button>
             </div>
           </div>
-          <div className="md:w-1/2">
-            <img 
+          <div className="md:w-1/2 relative rounded-lg shadow-xl overflow-hidden bg-white/10 p-1">
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
+            )}
+            <ImageWithFallback 
               src={heroImageUrl} 
               alt="Recovery Equipment" 
-              className="rounded-lg shadow-xl w-full h-auto"
-              onError={(e) => {
-                // Fallback to default image if the custom one fails to load
-                const target = e.target as HTMLImageElement;
-                target.src = DEFAULT_HERO_IMAGE;
-              }}
+              className="rounded-lg w-full h-auto"
+              onLoad={() => setImageLoaded(true)}
+              fallbackSrc={imageUrls.HERO_DEFAULT}
+              disableCacheBusting={false}
             />
           </div>
         </div>

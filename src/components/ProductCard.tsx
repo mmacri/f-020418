@@ -5,6 +5,7 @@ import { formatPrice, getProductUrl } from '@/lib/product-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star, StarHalf } from 'lucide-react';
 import { Product } from '@/services/productService';
+import { ImageWithFallback, getProductImageUrl } from '@/lib/image-utils';
 
 type ProductImage = {
   url: string;
@@ -33,26 +34,6 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, featured = false }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   
-  const getImageUrl = (): string => {
-    if (!product.images || product.images.length === 0) {
-      return '/placeholder.svg';
-    }
-    
-    const firstImage = product.images[0];
-    if (typeof firstImage === 'string') {
-      return firstImage;
-    } else if (typeof firstImage === 'object' && 'url' in firstImage) {
-      return firstImage.url;
-    }
-    return '/placeholder.svg';
-  };
-  
-  const imageUrl = getImageUrl();
-
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
-
   if (isLoading) {
     return (
       <div className="card product-card rounded-lg shadow-sm overflow-hidden bg-white h-full flex flex-col">
@@ -83,12 +64,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false, f
         {!imageLoaded && (
           <Skeleton className="absolute inset-0 m-4" />
         )}
-        <img 
-          src={imageUrl} 
-          alt={product.name} 
-          className={`max-h-full object-contain transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+        <ImageWithFallback
+          src={getProductImageUrl(product)}
+          alt={product.name}
+          className="max-h-full object-contain transition-opacity duration-300"
           loading="lazy"
-          onLoad={handleImageLoad}
+          onLoad={() => setImageLoaded(true)}
+          fallbackSrc="/placeholder.svg"
         />
       </div>
       <div className="product-card__content p-4 flex-grow flex flex-col">

@@ -2,6 +2,7 @@
 import React from 'react';
 import { getCategoryName } from '@/lib/product-utils';
 import { useImageWithFallback } from '@/lib/image-utils';
+import { imageUrls } from '@/lib/constants';
 
 interface CategoryHeroProps {
   categorySlug: string;
@@ -9,7 +10,7 @@ interface CategoryHeroProps {
   backgroundImage?: string;
 }
 
-const DEFAULT_BACKGROUND_IMAGE = "https://ext.same-assets.com/1001010126/massage-gun-category.jpg";
+const DEFAULT_BACKGROUND_IMAGE = imageUrls.CATEGORY_DEFAULT;
 
 const CategoryHero: React.FC<CategoryHeroProps> = ({ 
   categorySlug, 
@@ -17,21 +18,35 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
   backgroundImage 
 }) => {
   const categoryName = getCategoryName(categorySlug);
-  const { imageUrl, handleImageError } = useImageWithFallback(backgroundImage || DEFAULT_BACKGROUND_IMAGE, {
-    defaultImage: DEFAULT_BACKGROUND_IMAGE,
-    localFallbackImage: "/placeholder.svg"
-  });
+  const { imageUrl, handleImageError, handleImageLoad, isLoading } = useImageWithFallback(
+    backgroundImage || DEFAULT_BACKGROUND_IMAGE, 
+    {
+      defaultImage: DEFAULT_BACKGROUND_IMAGE,
+      localFallbackImage: imageUrls.DEFAULT_FALLBACK,
+      useRemoteFallback: true
+    }
+  );
   
   return (
     <section 
-      className="hero-bg text-white py-12" 
+      className="hero-bg text-white py-12 relative min-h-[240px]" 
       style={{ 
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('${imageUrl}')`,
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7))`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
     >
+      {/* Background image as separate div for better control */}
+      <div 
+        className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
+        style={{ 
+          backgroundImage: `url('${imageUrl}')`,
+          opacity: isLoading ? 0 : 1,
+          transition: 'opacity 0.5s ease-in-out'
+        }}
+      ></div>
+      
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl font-bold mb-4">
@@ -52,6 +67,7 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
         alt="" 
         className="hidden" 
         onError={handleImageError}
+        onLoad={handleImageLoad}
       />
     </section>
   );

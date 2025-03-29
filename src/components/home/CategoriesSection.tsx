@@ -4,30 +4,16 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { getNavigationCategories, Category } from '@/services/categoryService';
+import { ImageWithFallback } from '@/lib/image-utils';
+import { imageUrls } from '@/lib/constants';
 
 interface CategoriesSectionProps {
   categories?: Category[];
 }
 
-const DEFAULT_IMAGE = '/placeholder.svg';
-const FALLBACK_IMAGE = '/placeholder.svg';
-
-// Helper function to add cache busting to image URLs
-const addCacheBusting = (url: string): string => {
-  if (!url) return FALLBACK_IMAGE;
-  
-  // Don't add cache busting to local images
-  if (url.startsWith('/')) return url;
-  
-  // Add timestamp as cache buster
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}t=${Date.now()}`;
-};
-
 const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propCategories }) => {
   const [categories, setCategories] = useState<Category[]>(propCategories || []);
   const [isLoading, setIsLoading] = useState(!propCategories);
-  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     if (propCategories) {
@@ -49,21 +35,6 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propC
 
     loadCategories();
   }, [propCategories]);
-
-  const handleImageError = (categoryId: string | number) => {
-    setImageErrors(prev => ({
-      ...prev,
-      [categoryId]: true
-    }));
-    console.log(`Image for category ${categoryId} failed to load. Using default image.`);
-  };
-
-  const getCategoryImageUrl = (category: Category) => {
-    if (imageErrors[category.id]) {
-      return FALLBACK_IMAGE;
-    }
-    return addCacheBusting(category.imageUrl || FALLBACK_IMAGE);
-  };
 
   if (isLoading) {
     return (
@@ -107,11 +78,12 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories: propC
                   aria-label={`Browse ${category.name} category with ${category.subcategories?.length || 0} subcategories`}
                 >
                   <div className="relative h-48 overflow-hidden">
-                    <img 
-                      src={getCategoryImageUrl(category)} 
-                      alt={`${category.name} category image`} 
+                    <ImageWithFallback
+                      src={category.imageUrl}
+                      alt={`${category.name} category image`}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      onError={() => handleImageError(category.id)}
+                      fallbackSrc={imageUrls.CATEGORY_DEFAULT}
+                      type="category"
                     />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                       <h3 className="text-white text-xl font-bold">{category.name}</h3>
