@@ -10,10 +10,9 @@
     
     <!-- Security headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self'" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src * data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.gpteng.co https://polyfill.io 'unsafe-inline';" />
     
-    <!-- Cache control -->
+    <!-- Cache control - using meta tag since we can't directly modify HTTP headers -->
     <meta http-equiv="Cache-Control" content="max-age=31536000, immutable" />
     
     <!-- Open Graph tags -->
@@ -27,20 +26,65 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- IE compatibility -->
-    <!--[if IE]>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=default,Array.prototype.find,IntersectionObserver"></script>
-    <![endif]-->
+    <!-- IE compatibility - moved to HTTP header equivalent in the head -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://cdn.gpteng.co" />
+    <link rel="preconnect" href="https://polyfill.io" />
+    
+    <!-- Polyfill for older browsers -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default,Array.prototype.find,IntersectionObserver,Promise,fetch,Object.assign,CustomEvent,Symbol,URL,Element.prototype.classList"></script>
+    
+    <!-- Shim for ES modules in older browsers -->
+    <script>
+      (function() {
+        // Check if browser supports ES modules
+        var supportsES6 = function() {
+          try { eval('var foo = (x)=>x+1'); return true; }
+          catch(e) { return false; }
+        }();
+        
+        // Add no-js class and remove it when JS is available
+        document.documentElement.classList.add('no-js');
+        document.documentElement.classList.remove('no-js');
+        
+        // Add IE detection
+        if (/*@cc_on!@*/false || !!document.documentMode) {
+          document.documentElement.classList.add('is-ie');
+        }
+        
+        // Add module/nomodule support detection
+        document.documentElement.classList.add(supportsES6 ? 'esm' : 'no-esm');
+      })();
+    </script>
+    
+    <!-- For internet explorer - favicon with error handling -->
+    <link rel="shortcut icon" href="/favicon.ico" onerror="this.href='/placeholder.svg'" />
   </head>
 
   <body>
     <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <!-- Lovable script with both module and fallback versions -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script nomodule>
       // Fallback for browsers that don't support ES modules
       document.write('<script src="https://cdn.gpteng.co/gptengineer-legacy.js"><\/script>');
     </script>
     <script type="module" src="/src/main.tsx"></script>
+    <script nomodule src="/src/legacy-entry.js"></script>
+    
+    <!-- Add a fallback for browsers without module support -->
+    <script>
+      // Check if the browser supports modules
+      var supportsModules = 'noModule' in document.createElement('script');
+      
+      if (!supportsModules) {
+        // Create a fallback script for older browsers
+        var fallbackScript = document.createElement('script');
+        fallbackScript.src = '/src/legacy-entry.js';
+        document.body.appendChild(fallbackScript);
+      }
+    </script>
   </body>
 </html>

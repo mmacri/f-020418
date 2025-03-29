@@ -1,6 +1,13 @@
 
 /* Polyfills for Internet Explorer and other older browsers */
 
+/* Text size adjustment for all browsers */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 /* Flexbox support for IE10+ */
 .flex {
   display: -ms-flexbox;
@@ -32,6 +39,21 @@
   flex: 1 1 0%;
 }
 
+.flex-auto {
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+}
+
+.flex-initial {
+  -ms-flex: 0 1 auto;
+  flex: 0 1 auto;
+}
+
+.flex-none {
+  -ms-flex: none;
+  flex: none;
+}
+
 /* Grid support for IE10+ */
 .grid {
   display: -ms-grid;
@@ -39,10 +61,37 @@
 }
 
 /* Additional grid properties for IE */
-.grid-cols-1 { -ms-grid-columns: 1fr; }
-.grid-cols-2 { -ms-grid-columns: 1fr 1fr; }
-.grid-cols-3 { -ms-grid-columns: 1fr 1fr 1fr; }
-.grid-cols-4 { -ms-grid-columns: 1fr 1fr 1fr 1fr; }
+.grid-cols-1 { -ms-grid-columns: 1fr; grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { -ms-grid-columns: 1fr 1fr; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-3 { -ms-grid-columns: 1fr 1fr 1fr; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-4 { -ms-grid-columns: 1fr 1fr 1fr 1fr; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid-cols-5 { -ms-grid-columns: 1fr 1fr 1fr 1fr 1fr; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.grid-cols-6 { -ms-grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.grid-cols-12 { -ms-grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+
+/* Grid column and row span for IE */
+.col-span-1 { -ms-grid-column-span: 1; grid-column: span 1; }
+.col-span-2 { -ms-grid-column-span: 2; grid-column: span 2; }
+.col-span-3 { -ms-grid-column-span: 3; grid-column: span 3; }
+.col-span-4 { -ms-grid-column-span: 4; grid-column: span 4; }
+.col-span-5 { -ms-grid-column-span: 5; grid-column: span 5; }
+.col-span-6 { -ms-grid-column-span: 6; grid-column: span 6; }
+
+.row-span-1 { -ms-grid-row-span: 1; grid-row: span 1; }
+.row-span-2 { -ms-grid-row-span: 2; grid-row: span 2; }
+.row-span-3 { -ms-grid-row-span: 3; grid-row: span 3; }
+.row-span-4 { -ms-grid-row-span: 4; grid-row: span 4; }
+
+/* Grid gaps (margins for children in IE) */
+.gap-1 > * { margin: 0.25rem; }
+.gap-2 > * { margin: 0.5rem; }
+.gap-3 > * { margin: 0.75rem; }
+.gap-4 > * { margin: 1rem; }
+.gap-5 > * { margin: 1.25rem; }
+.gap-6 > * { margin: 1.5rem; }
+.gap-8 > * { margin: 2rem; }
+.gap-10 > * { margin: 2.5rem; }
+.gap-12 > * { margin: 3rem; }
 
 /* Alignment properties */
 .items-center {
@@ -50,9 +99,39 @@
   align-items: center;
 }
 
+.items-start {
+  -ms-flex-align: start;
+  align-items: flex-start;
+}
+
+.items-end {
+  -ms-flex-align: end;
+  align-items: flex-end;
+}
+
+.items-stretch {
+  -ms-flex-align: stretch;
+  align-items: stretch;
+}
+
+.items-baseline {
+  -ms-flex-align: baseline;
+  align-items: baseline;
+}
+
 .justify-center {
   -ms-flex-pack: center;
   justify-content: center;
+}
+
+.justify-start {
+  -ms-flex-pack: start;
+  justify-content: flex-start;
+}
+
+.justify-end {
+  -ms-flex-pack: end;
+  justify-content: flex-end;
 }
 
 .justify-between {
@@ -60,11 +139,14 @@
   justify-content: space-between;
 }
 
-/* Text size adjustment */
-html {
-  -webkit-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+.justify-around {
+  -ms-flex-pack: distribute;
+  justify-content: space-around;
+}
+
+.justify-evenly {
+  -ms-flex-pack: space-evenly;
+  justify-content: space-evenly;
 }
 
 /* User select */
@@ -73,6 +155,27 @@ html {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+.select-text {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+.select-all {
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+.select-auto {
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto;
 }
 
 /* Touch action */
@@ -86,6 +189,47 @@ a {
 .object-cover,
 .object-contain {
   font-family: 'object-fit: cover;'; /* Used with object-fit-images polyfill */
+}
+
+.object-cover {
+  object-fit: cover;
+}
+
+.object-contain {
+  object-fit: contain;
+}
+
+.object-fill {
+  object-fit: fill;
+}
+
+.object-none {
+  object-fit: none;
+}
+
+.object-scale-down {
+  object-fit: scale-down;
+}
+
+/* Object position */
+.object-center {
+  object-position: center;
+}
+
+.object-top {
+  object-position: top;
+}
+
+.object-right {
+  object-position: right;
+}
+
+.object-bottom {
+  object-position: bottom;
+}
+
+.object-left {
+  object-position: left;
 }
 
 /* Opacity fallback for rgba backgrounds */
@@ -103,7 +247,7 @@ a {
 .sticky {
   position: -webkit-sticky;
   position: sticky;
-  /* For IE and Edge, you'll need JavaScript for proper sticky positioning */
+  /* For IE and Edge, JavaScript polyfill is used */
 }
 
 /* Filter fallback */
@@ -112,22 +256,41 @@ a {
   zoom: 1;
 }
 
+/* Blur filter fallback */
+.blur {
+  filter: blur(8px);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Blur(PixelRadius='8')";
+}
+
+/* Backdrop filter fallback */
+.backdrop-blur {
+  backdrop-filter: blur(8px);
+  /* For IE, create a semi-transparent overlay */
+  background-color: rgba(255, 255, 255, 0.5);
+  /* IE fallback */
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+}
+
 /* Aspect ratio fallback */
 .aspect-video,
-.aspect-square {
+.aspect-square,
+.aspect-auto {
   position: relative;
   /* You'll need to set height explicitly for IE */
 }
+
 .aspect-video::before {
   content: "";
   display: block;
   padding-top: 56.25%; /* 16:9 aspect ratio */
 }
+
 .aspect-square::before {
   content: "";
   display: block;
   padding-top: 100%; /* 1:1 aspect ratio */
 }
+
 .aspect-ratio-content {
   position: absolute;
   top: 0;
@@ -136,19 +299,218 @@ a {
   height: 100%;
 }
 
-/* Gap fallback for grid and flexbox */
-/* You need to manually add margins to children in IE */
-.gap-2 > * {
-  margin: 0.5rem;
-}
-.gap-4 > * {
-  margin: 1rem;
-}
-.gap-8 > * {
-  margin: 2rem;
-}
-
 /* Width and max-width fallbacks */
 .max-w-content {
   max-width: 1200px; /* Fallback for max-content */
+}
+
+.w-max {
+  width: auto; /* Fallback for width: max-content */
+  max-width: none;
+}
+
+.max-w-max {
+  max-width: none; /* Fallback for max-width: max-content */
+}
+
+/* Text alignment fallbacks */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-justify {
+  text-align: justify;
+}
+
+/* Line clamp fallback for IE */
+.line-clamp-1,
+.line-clamp-2,
+.line-clamp-3,
+.line-clamp-4 {
+  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-clamp-1 {
+  -webkit-line-clamp: 1;
+  max-height: 1.5em; /* Fallback for IE */
+}
+
+.line-clamp-2 {
+  -webkit-line-clamp: 2;
+  max-height: 3em; /* Fallback for IE */
+}
+
+.line-clamp-3 {
+  -webkit-line-clamp: 3;
+  max-height: 4.5em; /* Fallback for IE */
+}
+
+.line-clamp-4 {
+  -webkit-line-clamp: 4;
+  max-height: 6em; /* Fallback for IE */
+}
+
+/* Pointer events fallback */
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.pointer-events-auto {
+  pointer-events: auto;
+}
+
+/* Resize fallback */
+.resize {
+  resize: both;
+}
+
+.resize-none {
+  resize: none;
+}
+
+.resize-y {
+  resize: vertical;
+}
+
+.resize-x {
+  resize: horizontal;
+}
+
+/* Appearance fallback */
+.appearance-none {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* RGBA color fallbacks for IE */
+.bg-opacity-50 {
+  background-color: rgba(0, 0, 0, 0.5);
+  /* IE fallback */
+  background-color: rgb(0, 0, 0);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+}
+
+.text-opacity-50 {
+  color: rgba(0, 0, 0, 0.5);
+  /* IE fallback */
+  color: rgb(0, 0, 0);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+}
+
+/* Fill and stroke for SVG in IE */
+.fill-current {
+  fill: currentColor;
+}
+
+.stroke-current {
+  stroke: currentColor;
+}
+
+/* Font family fallbacks for IE */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* Outline offset fallback */
+.focus-outline {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Grid column and row for specific positions in IE */
+.col-start-1 { -ms-grid-column: 1; grid-column-start: 1; }
+.col-start-2 { -ms-grid-column: 2; grid-column-start: 2; }
+.col-start-3 { -ms-grid-column: 3; grid-column-start: 3; }
+.col-start-4 { -ms-grid-column: 4; grid-column-start: 4; }
+
+.row-start-1 { -ms-grid-row: 1; grid-row-start: 1; }
+.row-start-2 { -ms-grid-row: 2; grid-row-start: 2; }
+.row-start-3 { -ms-grid-row: 3; grid-row-start: 3; }
+.row-start-4 { -ms-grid-row: 4; grid-row-start: 4; }
+
+/* Will-change fallback - simply remove for IE */
+.will-change-transform,
+.will-change-opacity,
+.will-change-scroll,
+.will-change-contents {
+  /* No direct fallback for will-change in IE */
+  zoom: 1; /* Minimal performance hint for IE */
+}
+
+/* Specific fallbacks for IE compatibility mode */
+.is-ie .hidden-ie {
+  display: none !important;
+}
+
+.is-ie .block-ie {
+  display: block !important;
+}
+
+/* IE-specific adjustments for border radius */
+.is-ie .rounded {
+  border-radius: 0.25rem;
+  behavior: url(/assets/PIE.htc); /* Optional: add PIE for IE border-radius */
+}
+
+/* Fix for font-variant-numeric */
+.tabular-nums {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+.ordinal {
+  font-feature-settings: "ordn";
+  font-variant-numeric: ordinal;
+}
+
+/* Fix for text-decoration-line */
+.line-through {
+  text-decoration: line-through;
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+.no-underline {
+  text-decoration: none;
+}
+
+/* Fix for text-underline-offset with plain text-decoration */
+.underline {
+  text-underline-offset: 2px; 
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+/* Added support for nav and ul with dir attribute */
+[dir="rtl"] ul,
+[dir="rtl"] nav {
+  padding-right: 0;
+}
+
+[dir="ltr"] ul,
+[dir="ltr"] nav {
+  padding-left: 0;
+}
+
+/* Tab-size fallback for IE */
+pre {
+  tab-size: 4;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  -ms-tab-size: 4;
 }
