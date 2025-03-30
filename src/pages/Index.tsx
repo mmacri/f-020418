@@ -32,9 +32,9 @@ const Index = () => {
         
         // Get featured products from Supabase
         try {
-          // Use the raw PostgreSQL query approach to avoid TypeScript inference issues
+          // Use the RPC function we created
           const { data, error: featuredError } = await supabase
-            .rpc('get_featured_products') as { data: any[], error: any };
+            .rpc('get_featured_products');
             
           if (featuredError) {
             console.error('Error fetching featured products:', featuredError);
@@ -47,7 +47,7 @@ const Index = () => {
             // Map the raw data to products
             for (let i = 0; i < data.length; i++) {
               try {
-                const rawProduct = data[i] as any;
+                const rawProduct = data[i];
                 const product = mapSupabaseProductToProduct(rawProduct);
                 tempProducts.push(product);
               } catch (err) {

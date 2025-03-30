@@ -353,6 +353,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_featured_products: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          attributes: Json | null
+          availability: boolean | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          in_stock: boolean | null
+          name: string
+          price: number | null
+          rating: number | null
+          sale_price: number | null
+          slug: string
+          specifications: Json | null
+          updated_at: string
+        }[]
+      }
       is_admin:
         | {
             Args: Record<PropertyKey, never>
