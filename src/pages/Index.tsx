@@ -45,11 +45,13 @@ const Index = () => {
         }
         
         if (featuredData && featuredData.length > 0) {
-          // Use a simple array map without complex type assertions
-          const mappedProducts = [];
+          // Use a simple for loop to avoid complex type inference that's causing the deep instantiation
+          const mappedProducts: Product[] = [];
           
-          for (const product of featuredData) {
-            mappedProducts.push(mapSupabaseProductToProduct(product));
+          for (let i = 0; i < featuredData.length; i++) {
+            const supabaseProduct = featuredData[i];
+            // Use type assertion to simplify the type for TypeScript
+            mappedProducts.push(mapSupabaseProductToProduct(supabaseProduct as any));
           }
           
           setFeaturedProducts(mappedProducts);
