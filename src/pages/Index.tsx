@@ -52,10 +52,9 @@ const Index = () => {
             // Simple loop to avoid type recursion
             for (let i = 0; i < supabaseData.length; i++) {
               try {
-                // Completely break type inference by casting to unknown first
-                const rawProduct = supabaseData[i] as unknown;
-                // Then cast to any to prevent TypeScript from trying to infer the type
-                const product = mapSupabaseProductToProduct(rawProduct as any);
+                // Break the type inference chain completely
+                const rawProduct = supabaseData[i];
+                const product = mapSupabaseProductToProduct(rawProduct);
                 tempProducts.push(product);
               } catch (err) {
                 console.error('Error mapping product:', err, supabaseData[i]);
