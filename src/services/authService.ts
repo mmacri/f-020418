@@ -53,13 +53,15 @@ export const login = async (email: string, password: string): Promise<{
         };
       }
       
-      // Convert Supabase user to our User format
+      // Convert Supabase user to our User format with proper type conversion
       const userObject: User = {
-        id: data.user.id,
+        id: parseInt(data.user.id.substring(0, 8), 16) || 1, // Convert UUID to number or use default
         email: data.user.email || email,
         name: profileData?.display_name || email.split('@')[0],
-        role: profileData?.role || 'user',
-        avatar: profileData?.avatar_url || undefined
+        role: (profileData?.role as "admin" | "editor" | "user") || 'user',
+        avatar: profileData?.avatar_url,
+        createdAt: profileData?.created_at || new Date().toISOString(),
+        updatedAt: profileData?.updated_at || new Date().toISOString()
       };
       
       // Store auth token in localStorage for compatibility with existing code
@@ -128,11 +130,13 @@ export const getUser = async (): Promise<User | null> => {
         .single();
       
       return {
-        id: data.user.id,
+        id: parseInt(data.user.id.substring(0, 8), 16) || 1, // Convert UUID to number or use default
         email: data.user.email || '',
         name: profileData?.display_name || data.user.email?.split('@')[0] || '',
-        role: profileData?.role || 'user',
-        avatar: profileData?.avatar_url || undefined
+        role: (profileData?.role as "admin" | "editor" | "user") || 'user',
+        avatar: profileData?.avatar_url,
+        createdAt: profileData?.created_at || new Date().toISOString(),
+        updatedAt: profileData?.updated_at || new Date().toISOString()
       };
     }
     
