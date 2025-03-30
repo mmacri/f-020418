@@ -11,7 +11,8 @@ import NewsletterSection from '@/components/home/NewsletterSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
-import type { Product } from '@/services/products/types';
+import type { Product, SupabaseProduct } from '@/services/products/types';
+import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -45,17 +46,15 @@ const Index = () => {
           }
           
           if (supabaseData && supabaseData.length > 0) {
-            // Import mapper dynamically to avoid circular dependency
-            const { mapSupabaseProductToProduct } = await import('@/services/products/mappers');
-            
-            // Create a temporary array using type assertion to avoid complex inference
+            // Break the deep type inference by using explicit typing
             const tempProducts: Product[] = [];
             
-            // Map products without relying on complex type inference
+            // Use traditional for loop to avoid inference issues
             for (let i = 0; i < supabaseData.length; i++) {
               try {
-                // Use explicit type assertion to break the deep inference chain
-                const product = mapSupabaseProductToProduct(supabaseData[i] as any);
+                // Use explicit type assertion to prevent excessive type inference
+                const rawProduct = supabaseData[i] as SupabaseProduct;
+                const product = mapSupabaseProductToProduct(rawProduct);
                 tempProducts.push(product);
               } catch (err) {
                 console.error('Error mapping product:', err, supabaseData[i]);
