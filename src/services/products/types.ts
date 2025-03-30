@@ -23,6 +23,7 @@ export interface Product {
   affiliateUrl?: string;
   asin?: string;
   brand?: string;
+  title?: string; // For compatibility with components that use title
 }
 
 export interface ProductFormData {

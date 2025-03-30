@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from './types';
 import { getCategoryBySlug } from '@/services/categoryService';
@@ -255,6 +254,55 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
   } catch (error) {
     console.error('Error in deleteProduct:', error);
     return false;
+  }
+};
+
+// Search products
+export const searchProducts = async (query: string): Promise<Product[]> => {
+  try {
+    if (!query.trim()) {
+      return [];
+    }
+    
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+      .order('rating', { ascending: false })
+      .limit(20);
+    
+    if (error) {
+      console.error('Error searching products:', error);
+      return [];
+    }
+    
+    return data.map(product => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      description: product.description || '',
+      shortDescription: product.short_description || '',
+      price: product.price || 0,
+      originalPrice: product.original_price,
+      rating: product.rating || 0,
+      reviewCount: product.review_count || 0,
+      imageUrl: product.image_url,
+      images: product.images || [],
+      inStock: product.in_stock,
+      categoryId: product.category_id,
+      subcategory: product.subcategory_slug,
+      specifications: product.specifications || {},
+      features: product.features || [],
+      pros: product.pros || [],
+      cons: product.cons || [],
+      bestSeller: product.best_seller,
+      affiliateUrl: product.affiliate_url,
+      asin: product.asin,
+      brand: product.brand
+    }));
+  } catch (error) {
+    console.error('Error in searchProducts:', error);
+    return [];
   }
 };
 

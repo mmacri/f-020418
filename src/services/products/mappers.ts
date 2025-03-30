@@ -1,5 +1,5 @@
 
-import { SupabaseProduct, Product } from './types';
+import { Product } from './types';
 
 export const mapSupabaseProductToProduct = (product: any): Product => {
   if (!product) {
@@ -53,25 +53,29 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
       id: productId,
       slug: product.slug || 'unknown',
       name: product.name || 'Unnamed Product',
+      title: product.name || 'Unnamed Product', // Add title for compatibility
       description: product.description || '',
       price: product.price || 0,
-      originalPrice: product.sale_price || undefined,
+      originalPrice: product.original_price || undefined,
       rating: product.rating || 0,
-      reviewCount: attributes.reviewCount || 0,
+      reviewCount: product.review_count || 0,
       imageUrl: product.image_url || '',
-      images: product.image_url ? [product.image_url] : [],
+      images: product.images || [],
+      additionalImages: product.images || [], // For backward compatibility
       inStock: product.in_stock !== false, // Default to true unless explicitly false
       category: attributes.category || '',
       categoryId: product.category_id,
-      subcategory: attributes.subcategory || '',
+      subcategory: product.subcategory_slug || '',
       specifications: specifications,
-      specs: specifications,
-      createdAt: product.created_at,
-      updatedAt: product.updated_at,
-      features: Array.isArray(attributes.features) ? attributes.features : [],
-      bestSeller: !!attributes.bestSeller,
-      brand: attributes.brand || '',
-      pros: Array.isArray(attributes.pros) ? attributes.pros : []
+      features: product.features || [],
+      pros: product.pros || [],
+      cons: product.cons || [],
+      bestSeller: product.best_seller || false,
+      affiliateUrl: product.affiliate_url || '',
+      affiliateLink: product.affiliate_url || '', // For backward compatibility
+      asin: product.asin || '',
+      brand: product.brand || '',
+      comparePrice: product.original_price || undefined // For backward compatibility
     };
   } catch (error) {
     console.error('Error mapping product:', error, product);
@@ -79,6 +83,7 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
       id: product.id || 'error',
       slug: product.slug || 'error',
       name: product.name || 'Error Mapping Product',
+      title: product.name || 'Error Mapping Product',
       description: 'There was an error processing this product data.',
       price: 0,
       rating: 0,
@@ -103,22 +108,24 @@ export const mapProductToSupabaseProduct = (product: Partial<Product>) => {
     slug: product.slug,
     name: product.name,
     description: product.description,
+    short_description: product.shortDescription,
     price: product.price,
-    sale_price: product.originalPrice || product.comparePrice,
+    original_price: product.originalPrice || product.comparePrice,
     rating: product.rating,
+    review_count: product.reviewCount,
     image_url: product.imageUrl || getFirstImageUrl(product.images as any),
+    images: product.images,
     in_stock: product.inStock,
     category_id: product.categoryId?.toString(),
-    specifications: product.specifications || product.specs,
-    attributes: {
-      reviewCount: product.reviewCount,
-      features: product.features,
-      category: product.category,
-      subcategory: product.subcategory,
-      brand: product.brand,
-      bestSeller: product.bestSeller,
-      pros: product.pros
-    }
+    subcategory_slug: product.subcategory,
+    specifications: product.specifications || product.specifications,
+    features: product.features,
+    pros: product.pros,
+    cons: product.cons,
+    best_seller: product.bestSeller,
+    affiliate_url: product.affiliateUrl || product.affiliateLink,
+    asin: product.asin,
+    brand: product.brand
   };
 };
 
