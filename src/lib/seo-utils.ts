@@ -1,242 +1,123 @@
+import { Metadata } from 'next/dist/lib/metadata/api/types';
+import { Product } from '@/services/products/types';
 
-import { Product } from '@/services/productService';
-import { BlogPost } from '@/services/blogService';
-import { extractImageUrl } from '@/lib/images/productImageUtils';
-
-interface MetaTag {
-  name?: string;
-  property?: string;
-  content: string;
-}
-
-/**
- * Generate meta tags for a product
- */
-export const generateProductMetaTags = (product: Product): MetaTag[] => {
-  const metaTags: MetaTag[] = [
-    { name: 'description', content: product.shortDescription || product.description.substring(0, 160) },
-    { property: 'og:title', content: product.name },
-    { property: 'og:description', content: product.shortDescription || product.description.substring(0, 160) },
-    { property: 'og:type', content: 'product' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: product.name },
-    { name: 'twitter:description', content: product.shortDescription || product.description.substring(0, 160) },
-  ];
-  
-  // Add image if available
-  if (product.images && product.images.length > 0) {
-    const imageUrl = extractImageUrl(product.images[0]);
-    metaTags.push({ property: 'og:image', content: imageUrl });
-    metaTags.push({ name: 'twitter:image', content: imageUrl });
-  }
-  
-  // Add price
-  if (product.price) {
-    metaTags.push({ property: 'product:price:amount', content: product.price.toString() });
-    metaTags.push({ property: 'product:price:currency', content: 'USD' });
-  }
-  
-  return metaTags;
-};
-
-/**
- * Generate meta tags for a blog post
- */
-export const generateBlogPostMetaTags = (post: BlogPost): MetaTag[] => {
-  const metaTags: MetaTag[] = [
-    { name: 'description', content: post.seoDescription || post.excerpt.substring(0, 160) },
-    { property: 'og:title', content: post.seoTitle || post.title },
-    { property: 'og:description', content: post.seoDescription || post.excerpt.substring(0, 160) },
-    { property: 'og:type', content: 'article' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: post.seoTitle || post.title },
-    { name: 'twitter:description', content: post.seoDescription || post.excerpt.substring(0, 160) },
-  ];
-  
-  // Add image if available
-  if (post.coverImage) {
-    metaTags.push({ property: 'og:image', content: post.coverImage });
-    metaTags.push({ name: 'twitter:image', content: post.coverImage });
-  } else if (post.image) {
-    metaTags.push({ property: 'og:image', content: post.image });
-    metaTags.push({ name: 'twitter:image', content: post.image });
-  }
-  
-  // Add keywords if available
-  if (post.seoKeywords && post.seoKeywords.length > 0) {
-    metaTags.push({ name: 'keywords', content: post.seoKeywords.join(', ') });
-  } else if (post.tags && post.tags.length > 0) {
-    metaTags.push({ name: 'keywords', content: post.tags.join(', ') });
-  }
-  
-  // Add article specific meta tags
-  metaTags.push({ property: 'article:published_time', content: post.createdAt });
-  metaTags.push({ property: 'article:modified_time', content: post.updatedAt });
-  metaTags.push({ property: 'article:section', content: post.category });
-  
-  if (post.tags) {
-    post.tags.forEach(tag => {
-      metaTags.push({ property: 'article:tag', content: tag });
-    });
-  }
-  
-  return metaTags;
-};
-
-/**
- * Generate JSON-LD structured data for a product
- */
-export const generateProductJsonLd = (product: Product): string => {
-  const structuredData = {
-    '@context': 'https://schema.org/',
-    '@type': 'Product',
-    name: product.name,
-    description: product.shortDescription || product.description,
-    image: product.images && product.images.length > 0 ? extractImageUrl(product.images[0]) : undefined,
-    sku: String(product.id),
-    mpn: product.asin || String(product.id),
-    brand: {
-      '@type': 'Brand',
-      name: product.brand || 'Unknown'
+export const constructMetadata = ({
+  title = 'Recovery Essentials - Your Guide to Recovery Products',
+  description = 'Your go-to resource for unbiased reviews and expert advice on recovery tools and techniques. Find the best products to help you feel, move, and perform better.',
+  image = '/og.png',
+  icons = '/favicon.ico',
+  noIndex = false,
+}: {
+  title?: string;
+  description?: string;
+  image?: string;
+  icons?: string;
+  noIndex?: boolean;
+} = {}): Metadata => {
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [
+        {
+          url: image,
+        },
+      ],
     },
-    offers: {
-      '@type': 'Offer',
-      url: window.location.href,
-      priceCurrency: 'USD',
-      price: product.price,
-      availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      seller: {
-        '@type': 'Organization',
-        name: 'Recovery Essentials'
-      }
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+      creator: '@joshtriedcoding',
     },
-    aggregateRating: product.rating ? {
-      '@type': 'AggregateRating',
-      ratingValue: product.rating,
-      reviewCount: product.reviewCount
-    } : undefined
+    icons,
+    metadataBase: new URL('https://recoveryessentials.org'),
+    ...(noIndex && {
+      robots: {
+        index: false,
+        follow: false,
+      },
+    }),
   };
-  
-  return JSON.stringify(structuredData);
 };
 
-/**
- * Generate JSON-LD structured data for a blog post
- */
-export const generateBlogPostJsonLd = (post: BlogPost): string => {
-  const structuredData = {
-    '@context': 'https://schema.org/',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description: post.excerpt,
-    image: post.coverImage || post.image,
-    datePublished: post.createdAt,
-    dateModified: post.updatedAt,
-    author: {
-      '@type': 'Person',
-      name: post.author || 'Admin'
+export const generateProductStructuredData = (product: Product) => {
+  // If no product or required fields, return null
+  if (!product || !product.name || !product.description || !product.price) {
+    return null;
+  }
+  
+  // Convert the price to a proper string (with 2 decimal places)
+  const priceString = typeof product.price === 'number' 
+    ? product.price.toFixed(2) 
+    : parseFloat(String(product.price)).toFixed(2);
+  
+  // Get product image URL
+  const imageUrl = product.imageUrl || (product.images && product.images.length > 0 
+    ? (typeof product.images[0] === 'string' 
+      ? product.images[0] 
+      : (product.images[0] as any).url) 
+    : null);
+  
+  // Convert ISO date format to proper date if available, otherwise use today's date
+  const datePublished = (product.createdAt && typeof product.createdAt === 'string') 
+    ? new Date(product.createdAt).toISOString()
+    : new Date().toISOString();
+  
+  const dateModified = (product.updatedAt && typeof product.updatedAt === 'string')
+    ? new Date(product.updatedAt).toISOString()
+    : datePublished;
+  
+  // Base structured data object
+  return {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.name,
+    "description": product.description,
+    "image": imageUrl || "",
+    "sku": product.id,
+    "mpn": product.id,
+    "brand": {
+      "@type": "Brand",
+      "name": product.brand || "Recovery Essentials"
     },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Recovery Essentials',
-      logo: {
-        '@type': 'ImageObject',
-        url: `${window.location.origin}/logo.png` // Assuming you have a logo.png
-      }
+    "offers": {
+      "@type": "Offer",
+      "url": `${window.location.origin}/products/${product.slug}`,
+      "priceCurrency": "USD",
+      "price": priceString,
+      "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      "availability": product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
     },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': window.location.href
-    },
-    keywords: post.seoKeywords || post.tags || []
+    "aggregateRating": (product.rating && product.reviewCount) ? {
+      "@type": "AggregateRating",
+      "ratingValue": product.rating.toString(),
+      "reviewCount": product.reviewCount.toString()
+    } : undefined,
+    "datePublished": datePublished,
+    "dateModified": dateModified
   };
-  
-  return JSON.stringify(structuredData);
 };
 
-/**
- * Generate a basic sitemap XML string
- */
-export const generateSitemapXml = async (
-  baseUrl: string,
-  products: Product[]
-): Promise<string> => {
-  const now = new Date().toISOString();
-  
-  let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${baseUrl}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/products</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/categories</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/blog</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>`;
-  
-  // Add product URLs
-  products.forEach(product => {
-    sitemap += `
-  <url>
-    <loc>${baseUrl}/products/${product.slug}</loc>
-    <lastmod>${product.updatedAt}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>`;
-  });
-  
-  sitemap += `
-</urlset>`;
-  
-  return sitemap;
-};
+export const generateCategoryStructuredData = (category: any) => {
+  if (!category || !category.name || !category.description) {
+    return null;
+  }
 
-/**
- * Helper to set metadata tags in document head
- */
-export const setMetaTags = (tags: MetaTag[]): void => {
-  // Remove any existing meta tags
-  document.querySelectorAll('meta[data-dynamic="true"]').forEach(tag => tag.remove());
-  
-  // Add new meta tags
-  tags.forEach(tag => {
-    const meta = document.createElement('meta');
-    meta.dataset.dynamic = 'true';
-    
-    if (tag.name) meta.setAttribute('name', tag.name);
-    if (tag.property) meta.setAttribute('property', tag.property);
-    
-    meta.setAttribute('content', tag.content);
-    document.head.appendChild(meta);
-  });
-};
-
-/**
- * Helper to set JSON-LD structured data in document head
- */
-export const setJsonLd = (jsonLd: string): void => {
-  // Remove any existing JSON-LD scripts
-  document.querySelectorAll('script[type="application/ld+json"]').forEach(script => script.remove());
-  
-  // Add new JSON-LD script
-  const script = document.createElement('script');
-  script.type = 'application/ld+json';
-  script.textContent = jsonLd;
-  document.head.appendChild(script);
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": category.name,
+    "description": category.description,
+    "url": `${window.location.origin}/categories/${category.slug}`,
+    "image": category.imageUrl || "",
+    "keywords": `${category.name}, ${category.name} products, buy ${category.name}`,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${window.location.origin}/categories/${category.slug}`
+    }
+  };
 };

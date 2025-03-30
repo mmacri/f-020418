@@ -4,29 +4,15 @@ import { Link } from 'react-router-dom';
 import { formatPrice, getProductUrl } from '@/lib/product-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star, StarHalf } from 'lucide-react';
-import { Product } from '@/services/productService';
+import { Product } from '@/services/products/types';
+import { extractImageUrl } from '@/services/products/mappers';
 
 type ProductImage = {
   url: string;
 };
 
 interface ProductCardProps {
-  product: Product | {
-    id: string | number;
-    name: string;
-    slug: string;
-    category: string;
-    description: string;
-    price: number;
-    originalPrice?: number;
-    rating: number;
-    reviewCount: number;
-    images?: (ProductImage | string)[] | string[];
-    imageUrl?: string;
-    categoryId?: number | string;
-    createdAt?: string;
-    updatedAt?: string;
-  };
+  product: Product;
   isLoading?: boolean;
   featured?: boolean;
   onClick?: () => void;
@@ -56,28 +42,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
     );
   }
 
-  // Ensure the product has all required fields for getProductUrl
-  const productWithDefaults = {
-    ...product,
-    categoryId: ('categoryId' in product) ? product.categoryId : 0,
-    createdAt: ('createdAt' in product) ? product.createdAt : new Date().toISOString(),
-    updatedAt: ('updatedAt' in product) ? product.updatedAt : new Date().toISOString(),
-  } as Product;
-
   // Get product image - handle different image formats
-  const getProductImageUrl = (product: any): string => {
+  const getProductImageUrl = (product: Product): string => {
     if (product.imageUrl) {
       return product.imageUrl;
     }
     
     if (product.images && product.images.length > 0) {
-      const firstImage = product.images[0];
-      if (typeof firstImage === 'string') {
-        return firstImage;
-      }
-      if (typeof firstImage === 'object' && firstImage.url) {
-        return firstImage.url;
-      }
+      return extractImageUrl(product.images[0]);
     }
     
     return '/placeholder.svg';
@@ -111,7 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="product-card__content p-4 flex-grow flex flex-col">
         <h3 className="product-card__title text-lg font-medium mb-2">
           <Link 
-            to={getProductUrl(productWithDefaults)} 
+            to={getProductUrl(product)} 
             className="text-gray-800 hover:text-indigo-600"
             onClick={handleProductClick}
           >
@@ -139,7 +111,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
         <div className="product-card__actions mt-auto">
           <Link 
-            to={getProductUrl(productWithDefaults)} 
+            to={getProductUrl(product)} 
             className="btn btn-primary w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md inline-block text-center"
             onClick={handleProductClick}
           >

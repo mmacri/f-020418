@@ -25,10 +25,42 @@ export interface Product {
   brand?: string;
   title?: string; // For compatibility with components that use title
   
-  // Backward compatibility fields
+  // Add fields needed for compatibility with various components
   additionalImages?: any[]; // Legacy field for compatibility
   affiliateLink?: string; // Alias for affiliateUrl for backward compatibility
   comparePrice?: number; // Alias for originalPrice for backward compatibility
+  createdAt?: string; // For component compatibility
+  updatedAt?: string; // For component compatibility
+}
+
+// Define the shape of product data as it comes from Supabase
+export interface SupabaseProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  price?: number;
+  sale_price?: number;
+  rating?: number;
+  review_count?: number;
+  image_url?: string;
+  images?: any[];
+  in_stock?: boolean;
+  category_id?: string;
+  subcategory_slug?: string;
+  specifications?: any;
+  features?: string[];
+  pros?: string[];
+  cons?: string[];
+  best_seller?: boolean;
+  affiliate_url?: string;
+  asin?: string;
+  brand?: string;
+  attributes?: any;
+  availability?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  original_price?: number;
 }
 
 export interface ProductFormData {

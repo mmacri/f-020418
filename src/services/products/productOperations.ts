@@ -1,44 +1,33 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Product } from './types';
 import { mapSupabaseProductToProduct, mapProductToSupabaseProduct } from './mappers';
 
-export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product | null> => {
+export const createProduct = async (productData: Partial<Product>): Promise<Product> => {
   try {
-    const supabaseProduct = mapProductToSupabaseProduct(product);
+    const supabaseProduct = mapProductToSupabaseProduct(productData);
     
     const { data, error } = await supabase
       .from('products')
       .insert([supabaseProduct])
       .select()
       .single();
-    
+      
     if (error) {
-      console.error('Error adding product:', error);
-      toast.error('Failed to add product');
-      return null;
+      console.error('Error creating product:', error);
+      throw new Error(`Failed to create product: ${error.message}`);
     }
     
-    toast.success('Product added successfully');
     return mapSupabaseProductToProduct(data);
   } catch (error) {
-    console.error('Error in addProduct:', error);
-    toast.error('An unexpected error occurred');
-    return null;
+    console.error('Error in createProduct:', error);
+    throw error;
   }
 };
 
-export const createProduct = addProduct;
-
-export const updateProduct = async (id: number | string, product: Partial<Product>): Promise<Product | null> => {
+export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
   try {
-    const supabaseProduct = mapProductToSupabaseProduct({
-      ...product,
-      id: id
-    });
-    
-    delete supabaseProduct.id; // Remove id from update payload
+    const supabaseProduct = mapProductToSupabaseProduct(productData);
     
     const { data, error } = await supabase
       .from('products')
@@ -46,40 +35,32 @@ export const updateProduct = async (id: number | string, product: Partial<Produc
       .eq('id', id.toString())
       .select()
       .single();
-    
+      
     if (error) {
       console.error('Error updating product:', error);
-      toast.error('Failed to update product');
-      return null;
+      throw new Error(`Failed to update product: ${error.message}`);
     }
     
-    toast.success('Product updated successfully');
     return mapSupabaseProductToProduct(data);
   } catch (error) {
     console.error('Error in updateProduct:', error);
-    toast.error('An unexpected error occurred');
-    return null;
+    throw error;
   }
 };
 
-export const deleteProduct = async (id: number | string): Promise<boolean> => {
+export const deleteProduct = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from('products')
       .delete()
       .eq('id', id.toString());
-    
+      
     if (error) {
       console.error('Error deleting product:', error);
-      toast.error('Failed to delete product');
-      return false;
+      throw new Error(`Failed to delete product: ${error.message}`);
     }
-    
-    toast.success('Product deleted successfully');
-    return true;
   } catch (error) {
     console.error('Error in deleteProduct:', error);
-    toast.error('An unexpected error occurred');
-    return false;
+    throw error;
   }
 };

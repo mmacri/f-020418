@@ -1,7 +1,7 @@
 
-import { Product } from './types';
+import { Product, SupabaseProduct } from './types';
 
-export const mapSupabaseProductToProduct = (product: any): Product => {
+export const mapSupabaseProductToProduct = (product: SupabaseProduct): Product => {
   if (!product) {
     console.error('Received null or undefined product in mapSupabaseProductToProduct');
     return {
@@ -55,7 +55,7 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
       name: product.name || 'Unnamed Product',
       title: product.name || 'Unnamed Product', // Add title for compatibility
       description: product.description || '',
-      shortDescription: product.short_description || '',
+      shortDescription: attributes.shortDescription || '',
       price: product.price || 0,
       originalPrice: product.original_price || undefined,
       rating: product.rating || 0,
@@ -76,7 +76,9 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
       affiliateLink: product.affiliate_url || '', // For backward compatibility
       asin: product.asin || '',
       brand: product.brand || '',
-      comparePrice: product.original_price || undefined // For backward compatibility
+      comparePrice: product.original_price || undefined, // For backward compatibility
+      createdAt: product.created_at,
+      updatedAt: product.updated_at
     };
     
     return mappedProduct;
@@ -98,7 +100,7 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
   }
 };
 
-export const mapProductToSupabaseProduct = (product: Partial<Product>) => {
+export const mapProductToSupabaseProduct = (product: Partial<Product>): SupabaseProduct => {
   // Get the first image url, handling both string and object types
   const getFirstImageUrl = (images?: (string | { url: string })[]): string => {
     if (!images || images.length === 0) return '';
@@ -111,7 +113,6 @@ export const mapProductToSupabaseProduct = (product: Partial<Product>) => {
     slug: product.slug,
     name: product.name,
     description: product.description,
-    short_description: product.shortDescription,
     price: product.price,
     original_price: product.originalPrice || product.comparePrice,
     rating: product.rating,

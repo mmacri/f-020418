@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Product, SupabaseProduct } from './types';
+import { Product } from './types';
 import { mapSupabaseProductToProduct, mapProductToSupabaseProduct } from './mappers';
 import { generateMockProducts } from './mockData';
 
