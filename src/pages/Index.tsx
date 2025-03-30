@@ -11,7 +11,7 @@ import NewsletterSection from '@/components/home/NewsletterSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
-import type { Product } from '@/services/productService';
+import type { Product } from '@/services/products/types';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 
 const Index = () => {
@@ -52,9 +52,9 @@ const Index = () => {
             // Simple loop to avoid type recursion
             for (let i = 0; i < supabaseData.length; i++) {
               try {
-                // Explicitly cast each product individually to break type inference chains
-                const supabaseProduct = supabaseData[i] as any;
-                const product = mapSupabaseProductToProduct(supabaseProduct);
+                // Use pure any type to completely break the type inference chain
+                const rawProduct = supabaseData[i] as any;
+                const product = mapSupabaseProductToProduct(rawProduct);
                 tempProducts.push(product);
               } catch (err) {
                 console.error('Error mapping product:', err, supabaseData[i]);
