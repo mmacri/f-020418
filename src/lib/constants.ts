@@ -67,15 +67,21 @@ export const DEFAULT_NAVIGATION = [
   { name: 'Compare', href: '/product-comparison' },
   { name: 'Blog', href: '/blog' },
   { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
-  // This fixes the Header.tsx error about mainMenu
-  mainMenu: [
-    { name: 'Home', href: '/' },
-    { name: 'Categories', href: '/categories' },
-    { name: 'Compare', href: '/product-comparison' },
-    { name: 'Blog', href: '/blog' },
-  ]
-};
+  { name: 'Contact', href: '/contact' }
+];
+
+/**
+ * Default main menu items for Header component
+ */
+export const DEFAULT_MAIN_MENU = [
+  { name: 'Home', href: '/' },
+  { name: 'Categories', href: '/categories' },
+  { name: 'Compare', href: '/product-comparison' },
+  { name: 'Blog', href: '/blog' }
+];
+
+// Add mainMenu to DEFAULT_NAVIGATION as a property
+DEFAULT_NAVIGATION.mainMenu = DEFAULT_MAIN_MENU;
 
 /**
  * Site metadata
