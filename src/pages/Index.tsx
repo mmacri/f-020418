@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
-import { getProducts, Product, mapSupabaseProductToProduct } from '@/services/productService';
+import { getProducts, Product } from '@/services/productService';
 import HeroSection from '@/components/home/HeroSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import FeaturedProductsSection from '@/components/home/FeaturedProductsSection';
@@ -13,6 +13,16 @@ import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 
 // Define a more specific type for Supabase product data
+type SupabaseAttributes = {
+  reviewCount?: number;
+  features?: string[];
+  category?: string;
+  subcategory?: string;
+  brand?: string;
+  bestSeller?: boolean;
+  pros?: string[];
+};
+
 type SupabaseProductData = {
   id: string;
   slug: string;
@@ -25,11 +35,14 @@ type SupabaseProductData = {
   in_stock: boolean;
   availability: boolean;
   category_id: string;
-  attributes: any;
-  specifications: any;
+  attributes: SupabaseAttributes | null;
+  specifications: Record<string, string> | null;
   created_at: string;
   updated_at: string;
 };
+
+// Import mapSupabaseProductToProduct function for mapping Supabase data to Product
+import { mapSupabaseProductToProduct } from '@/services/productService';
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -63,7 +76,7 @@ const Index = () => {
         if (featuredData && featuredData.length > 0) {
           // Map Supabase products to our Product interface
           const mappedProducts = featuredData.map(product => 
-            mapSupabaseProductToProduct(product as any)
+            mapSupabaseProductToProduct(product as SupabaseProductData)
           );
           setFeaturedProducts(mappedProducts);
         } else {
