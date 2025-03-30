@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navigate, useParams, useNavigate } from 'react-router-dom';
+import { Navigate, useParams, useNavigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthentication } from '@/hooks/useAuthentication';
 import { 
@@ -15,6 +15,8 @@ import {
 import AdminCategories from '@/components/admin/AdminCategories';
 import { publishScheduledPosts } from '@/services/blogService';
 import { toast } from 'sonner';
+import { Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const AdminPage = () => {
   const { tab } = useParams<{ tab: string }>();
@@ -89,7 +91,15 @@ const AdminPage = () => {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-5">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <Button variant="outline" size="sm" asChild className="flex items-center gap-2">
+          <Link to="/">
+            <Home className="h-4 w-4" />
+            <span>Back to Main Site</span>
+          </Link>
+        </Button>
+      </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-4">
