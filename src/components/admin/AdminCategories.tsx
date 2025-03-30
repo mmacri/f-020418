@@ -44,7 +44,16 @@ const AdminCategories = () => {
     showInNavigation: true,
     navigationOrder: 0
   });
-  const [subcategoryFormData, setSubcategoryFormData] = useState<Subcategory>({
+  
+  // Update subcategoryFormData to match Subcategory interface
+  const [subcategoryFormData, setSubcategoryFormData] = useState<{
+    id: string;
+    name: string;
+    slug: string;
+    description?: string; // Make optional to match Subcategory interface
+    imageUrl?: string;
+    showInNavigation: boolean;
+  }>({
     id: '',
     name: '',
     slug: '',
@@ -52,6 +61,7 @@ const AdminCategories = () => {
     imageUrl: '',
     showInNavigation: true
   });
+  
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url');

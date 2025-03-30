@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ImageWithFallback } from '@/lib/images';
+import { ImageWithFallback } from '@/lib/images/ImageWithFallback';
 import { imageUrls } from '@/lib/constants';
 
 interface SubcategoryHeroProps {
@@ -19,7 +19,7 @@ const SubcategoryHero: React.FC<SubcategoryHeroProps> = ({
   subcategory 
 }) => {
   // Use backgroundImage prop first, then check subcategory data for image, or fall back to parent category's image
-  const imageUrl = backgroundImage || subcategory?.imageUrl || imageUrls.CATEGORY_DEFAULT;
+  const imageUrl = backgroundImage || (subcategory?.imageUrl) || imageUrls.CATEGORY_DEFAULT;
   
   return (
     <section 
@@ -38,8 +38,9 @@ const SubcategoryHero: React.FC<SubcategoryHeroProps> = ({
         <ImageWithFallback
           src={imageUrl}
           alt={`${subcategoryName} subcategory background`}
-          fallbackSrc={imageUrls.PLACEHOLDER}
+          fallbackSrc={imageUrls.CATEGORY_DEFAULT}
           className="w-full h-full object-cover"
+          type="subcategory"
         />
       </div>
       

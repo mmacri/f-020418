@@ -13,27 +13,52 @@ export interface ImageWithFallbackProps {
   loading?: 'lazy' | 'eager';
   disableCacheBusting?: boolean;
   onLoad?: () => void;
+  type?: 'product' | 'category' | 'blog' | 'avatar' | 'subcategory'; // Add type property
 }
 
 export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   src,
   alt,
-  fallbackSrc = imageUrls.PLACEHOLDER,
+  fallbackSrc,
   className = '',
   width,
   height,
   loading = 'lazy',
   disableCacheBusting = false,
   onLoad,
+  type, // Include the type parameter
   ...props
 }) => {
   const [hasError, setHasError] = useState(false);
+
+  // Determine appropriate fallback based on image type
+  const getFallbackSrc = () => {
+    if (fallbackSrc) return fallbackSrc;
+    
+    if (type) {
+      switch (type) {
+        case 'product':
+          return imageUrls.PRODUCT_DEFAULT;
+        case 'category':
+        case 'subcategory':
+          return imageUrls.CATEGORY_DEFAULT;
+        case 'blog':
+          return imageUrls.BLOG_DEFAULT;
+        case 'avatar':
+          return imageUrls.AVATAR_DEFAULT;
+        default:
+          return imageUrls.PLACEHOLDER;
+      }
+    }
+    
+    return imageUrls.PLACEHOLDER;
+  };
 
   // Handle image loading error
   const onError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError) {
       setHasError(true);
-      handleImageError(e, fallbackSrc);
+      handleImageError(e, getFallbackSrc());
     }
   };
 
@@ -49,7 +74,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   return (
     <img
-      src={hasError ? fallbackSrc : getImageUrl(src)}
+      src={hasError ? getFallbackSrc() : getImageUrl(src)}
       alt={alt}
       className={className}
       width={width}

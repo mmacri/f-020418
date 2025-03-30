@@ -1,8 +1,5 @@
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,12 +8,14 @@ import { Label } from '@/components/ui/label';
 import { FileUpload } from '@/components/FileUpload';
 import { Loader2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Subcategory } from '@/services/categoryService';
 
 interface SubcategoryFormProps {
   formData: {
+    id?: string;
     name: string;
     slug: string;
-    description: string;
+    description?: string; // Make description optional to match Subcategory interface
     imageUrl?: string;
     showInNavigation: boolean;
   };
@@ -77,7 +76,7 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
         <Textarea
           id="description"
           name="description"
-          value={formData.description}
+          value={formData.description || ''} // Handle optional description
           onChange={onInputChange}
           placeholder="Briefly describe this subcategory..."
           rows={3}
@@ -109,7 +108,7 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
           <Input
             id="imageUrl"
             name="imageUrl"
-            value={formData.imageUrl}
+            value={formData.imageUrl || ''}
             onChange={onInputChange}
             placeholder="https://example.com/image.jpg"
           />
@@ -119,6 +118,7 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
           <Label>Upload Image</Label>
           <FileUpload
             onFileChange={onFileChange}
+            currentImage={formData.imageUrl}
           />
           <p className="text-xs text-muted-foreground">
             Recommended size: 1200x600 pixels, max 5MB
