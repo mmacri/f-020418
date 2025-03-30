@@ -1,12 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-// Define the interface for JSON data from Supabase
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+import { Json } from '@/integrations/supabase/types';
 
 // Define the interface for Supabase product data
-interface SupabaseProduct {
+export interface SupabaseProduct {
   id: string;
   slug: string;
   name: string;
@@ -60,29 +57,32 @@ export interface Product {
 
 // Convert Supabase product format to our Product interface
 export const mapSupabaseProductToProduct = (product: SupabaseProduct): Product => {
+  // Safely extract attributes from Json
+  const attributes = product.attributes as Record<string, any> || {};
+  
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
-    description: product.description,
-    price: product.price,
+    description: product.description || '',
+    price: product.price || 0,
     originalPrice: product.sale_price || undefined,
     rating: product.rating || 0,
-    reviewCount: (product.attributes as any)?.reviewCount || 0,
+    reviewCount: attributes.reviewCount || 0,
     imageUrl: product.image_url || '',
     images: [product.image_url || ''],
-    inStock: product.in_stock,
-    category: (product.attributes as any)?.category || '',
+    inStock: product.in_stock || false,
+    category: attributes.category || '',
     categoryId: product.category_id,
-    subcategory: (product.attributes as any)?.subcategory || '',
-    specifications: product.specifications as Record<string, string>,
-    specs: product.specifications as Record<string, string>,
+    subcategory: attributes.subcategory || '',
+    specifications: product.specifications as Record<string, string> || {},
+    specs: product.specifications as Record<string, string> || {},
     createdAt: product.created_at,
     updatedAt: product.updated_at,
-    features: (product.attributes as any)?.features || [],
-    bestSeller: (product.attributes as any)?.bestSeller || false,
-    brand: (product.attributes as any)?.brand || '',
-    pros: (product.attributes as any)?.pros || []
+    features: attributes.features || [],
+    bestSeller: attributes.bestSeller || false,
+    brand: attributes.brand || '',
+    pros: attributes.pros || []
   };
 };
 
