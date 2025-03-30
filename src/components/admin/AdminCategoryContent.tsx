@@ -6,27 +6,25 @@ import {
   updateCategoryContent,
   deleteCategoryContent,
   CategoryContent, 
-  CategoryContentSection, 
-  CategoryContentRecommendation, 
-  CategoryContentFAQ 
+  generateDefaultCategoryContent
 } from '@/services/categoryContentService';
 import { getNavigationCategories } from '@/services/categoryService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Save, Trash2, Plus, Copy, FileText, Edit, Eye } from 'lucide-react';
+import { PlusCircle, Save, Trash2, Plus, FileText, Edit, Eye } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const AdminCategoryContent = () => {
   const [content, setContent] = useState<CategoryContent[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [formContent, setFormContent] = useState<Partial<CategoryContent>>({
@@ -83,43 +81,18 @@ const AdminCategoryContent = () => {
     }
   };
 
-  // Get category name by ID
-  const getCategoryNameById = (id: number) => {
-    const category = categories.find(cat => cat.id === id);
-    return category ? category.name : 'Unknown Category';
-  };
-
   // Create empty content for a category
-  const createEmptyContent = (categoryId: number) => {
-    const category = categories.find(cat => cat.id === categoryId);
+  const createEmptyContent = (category: any) => {
     if (!category) return;
 
+    const defaultContent = generateDefaultCategoryContent(category.name, category.slug);
+    
     setFormContent({
-      meta: {
-        title: `${category.name} - Recovery Essentials Guide`,
-        description: `Everything you need to know about ${category.name.toLowerCase()} for recovery and performance.`
-      },
-      categoryId: categoryId,
-      slug: category.slug,
-      headline: `${category.name} Guide: Everything You Need To Know`,
-      introduction: `Welcome to our comprehensive guide on ${category.name.toLowerCase()}. In this article, we'll cover everything you need to know about choosing and using ${category.name.toLowerCase()} for recovery and performance enhancement.`,
-      sections: [
-        {
-          id: `s1-${Date.now()}`,
-          title: 'What to Look For',
-          content: `When shopping for ${category.name.toLowerCase()}, consider these important factors...`
-        }
-      ],
-      recommendations: [],
-      faqs: [
-        {
-          id: `f1-${Date.now()}`,
-          question: `What are the benefits of using ${category.name.toLowerCase()}?`,
-          answer: 'Benefits include...'
-        }
-      ]
+      ...defaultContent,
+      categoryId: category.id
     });
-    setSelectedCategoryId(categoryId);
+    
+    setSelectedCategory(category);
     setIsEditing(true);
   };
 
@@ -131,7 +104,10 @@ const AdminCategoryContent = () => {
         ...contentItem.meta
       }
     });
-    setSelectedCategoryId(contentItem.categoryId || null);
+    
+    // Find the category
+    const category = categories.find(cat => cat.id === contentItem.categoryId);
+    setSelectedCategory(category || null);
     setIsEditing(true);
   };
 
@@ -282,7 +258,7 @@ const AdminCategoryContent = () => {
     setFormContent(prev => ({
       ...prev,
       meta: {
-        ...prev.meta,
+        ...(prev.meta || {}),
         [field]: value
       }
     }));
@@ -299,7 +275,7 @@ const AdminCategoryContent = () => {
   // Save content (create or update)
   const saveContent = async () => {
     try {
-      if (!selectedCategoryId) {
+      if (!selectedCategory) {
         toast({
           title: 'Error',
           description: 'Please select a category',
@@ -310,7 +286,7 @@ const AdminCategoryContent = () => {
 
       const formattedContent = {
         ...formContent,
-        categoryId: selectedCategoryId,
+        categoryId: selectedCategory.id,
         lastUpdated: new Date().toISOString()
       };
 
@@ -372,9 +348,7 @@ const AdminCategoryContent = () => {
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: 'numeric'
       }).format(date);
     } catch (e) {
       return 'Invalid date';
@@ -387,8 +361,13 @@ const AdminCategoryContent = () => {
         <h2 className="text-3xl font-bold">Category Content</h2>
         {!isEditing && (
           <div className="flex gap-2">
-            <Select onValueChange={(value) => setSelectedCategoryId(Number(value))}>
-              <SelectTrigger className="w-[200px]">
+            <Select 
+              onValueChange={(value) => {
+                const category = categories.find(c => c.id.toString() === value);
+                setSelectedCategory(category || null);
+              }}
+            >
+              <SelectTrigger className="w-[200px]" aria-label="Select category">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
@@ -399,7 +378,10 @@ const AdminCategoryContent = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={() => selectedCategoryId && createEmptyContent(selectedCategoryId)}>
+            <Button 
+              onClick={() => selectedCategory && createEmptyContent(selectedCategory)}
+              aria-label="Create content for selected category"
+            >
               <PlusCircle className="mr-2 h-4 w-4" /> Create Content
             </Button>
           </div>
@@ -411,7 +393,7 @@ const AdminCategoryContent = () => {
           <Card>
             <CardHeader>
               <CardTitle>
-                {formContent.id ? 'Edit Content' : 'Create Content'} for {getCategoryNameById(selectedCategoryId)}
+                {formContent.id ? 'Edit Content' : 'Create Content'} for {selectedCategory?.name || 'Unknown Category'}
               </CardTitle>
               <CardDescription>
                 Create rich content for your category pages to improve SEO and user experience.
@@ -466,7 +448,7 @@ const AdminCategoryContent = () => {
                 <TabsContent value="sections" className="space-y-4 pt-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium">Content Sections</h3>
-                    <Button onClick={addSection} variant="outline" size="sm">
+                    <Button onClick={addSection} variant="outline" size="sm" aria-label="Add new section">
                       <Plus className="mr-1 h-4 w-4" /> Add Section
                     </Button>
                   </div>
@@ -483,6 +465,7 @@ const AdminCategoryContent = () => {
                                 size="icon"
                                 onClick={() => removeSection(index)}
                                 className="h-8 w-8 text-red-500 hover:text-red-700"
+                                aria-label={`Remove section ${index + 1}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -508,6 +491,15 @@ const AdminCategoryContent = () => {
                                 className="min-h-[150px]"
                               />
                             </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor={`section-image-${index}`}>Image URL (Optional)</Label>
+                              <Input
+                                id={`section-image-${index}`}
+                                value={section.imageUrl || ''}
+                                onChange={(e) => handleSectionChange(index, 'imageUrl', e.target.value)}
+                                placeholder="https://example.com/image.jpg"
+                              />
+                            </div>
                           </CardContent>
                         </Card>
                       ))
@@ -526,7 +518,7 @@ const AdminCategoryContent = () => {
                 <TabsContent value="recommendations" className="space-y-4 pt-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium">Product Recommendations</h3>
-                    <Button onClick={addRecommendation} variant="outline" size="sm">
+                    <Button onClick={addRecommendation} variant="outline" size="sm" aria-label="Add new recommendation">
                       <Plus className="mr-1 h-4 w-4" /> Add Recommendation
                     </Button>
                   </div>
@@ -543,6 +535,7 @@ const AdminCategoryContent = () => {
                                 size="icon"
                                 onClick={() => removeRecommendation(index)}
                                 className="h-8 w-8 text-red-500 hover:text-red-700"
+                                aria-label={`Remove recommendation ${index + 1}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -559,6 +552,15 @@ const AdminCategoryContent = () => {
                               />
                             </div>
                             <div className="grid gap-2">
+                              <Label htmlFor={`rec-product-${index}`}>Product ID</Label>
+                              <Input
+                                id={`rec-product-${index}`}
+                                value={rec.productId || ''}
+                                onChange={(e) => handleRecommendationChange(index, 'productId', e.target.value)}
+                                placeholder="Product ID"
+                              />
+                            </div>
+                            <div className="grid gap-2">
                               <Label htmlFor={`rec-desc-${index}`}>Description</Label>
                               <Textarea
                                 id={`rec-desc-${index}`}
@@ -571,30 +573,10 @@ const AdminCategoryContent = () => {
                               <Label htmlFor={`rec-img-${index}`}>Image URL</Label>
                               <Input
                                 id={`rec-img-${index}`}
-                                value={rec.imageUrl}
+                                value={rec.imageUrl || ''}
                                 onChange={(e) => handleRecommendationChange(index, 'imageUrl', e.target.value)}
                                 placeholder="https://example.com/image.jpg"
                               />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="grid gap-2">
-                                <Label htmlFor={`rec-btn-text-${index}`}>Button Text</Label>
-                                <Input
-                                  id={`rec-btn-text-${index}`}
-                                  value={rec.buttonText}
-                                  onChange={(e) => handleRecommendationChange(index, 'buttonText', e.target.value)}
-                                  placeholder="View on Amazon"
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor={`rec-btn-url-${index}`}>Button URL</Label>
-                                <Input
-                                  id={`rec-btn-url-${index}`}
-                                  value={rec.buttonUrl}
-                                  onChange={(e) => handleRecommendationChange(index, 'buttonUrl', e.target.value)}
-                                  placeholder="https://amazon.com/..."
-                                />
-                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -614,7 +596,7 @@ const AdminCategoryContent = () => {
                 <TabsContent value="faqs" className="space-y-4 pt-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium">Frequently Asked Questions</h3>
-                    <Button onClick={addFaq} variant="outline" size="sm">
+                    <Button onClick={addFaq} variant="outline" size="sm" aria-label="Add new FAQ">
                       <Plus className="mr-1 h-4 w-4" /> Add FAQ
                     </Button>
                   </div>
@@ -631,6 +613,7 @@ const AdminCategoryContent = () => {
                                 size="icon"
                                 onClick={() => removeFaq(index)}
                                 className="h-8 w-8 text-red-500 hover:text-red-700"
+                                aria-label={`Remove FAQ ${index + 1}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -701,7 +684,7 @@ const AdminCategoryContent = () => {
                     </div>
 
                     <div className="grid gap-2">
-                      <Label htmlFor="meta-canonical">Canonical URL</Label>
+                      <Label htmlFor="meta-canonical">Canonical URL (Optional)</Label>
                       <Input
                         id="meta-canonical"
                         value={formContent.meta?.canonical || ''}
@@ -709,7 +692,7 @@ const AdminCategoryContent = () => {
                         placeholder="https://recovery-essentials.com/categories/..."
                       />
                       <p className="text-xs text-gray-500">
-                        Optional. Use this if this content should be canonicalized to another URL.
+                        Use this if this content should be canonicalized to another URL.
                       </p>
                     </div>
                   </div>
@@ -717,10 +700,10 @@ const AdminCategoryContent = () => {
               </Tabs>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
+              <Button variant="outline" onClick={() => setIsEditing(false)} aria-label="Cancel editing">
                 Cancel
               </Button>
-              <Button onClick={saveContent}>
+              <Button onClick={saveContent} aria-label="Save category content">
                 <Save className="mr-2 h-4 w-4" /> Save Content
               </Button>
             </CardFooter>
@@ -732,8 +715,8 @@ const AdminCategoryContent = () => {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="mb-4">No content found. Create your first category content to get started.</p>
-            {selectedCategoryId ? (
-              <Button onClick={() => createEmptyContent(selectedCategoryId)}>
+            {selectedCategory ? (
+              <Button onClick={() => createEmptyContent(selectedCategory)} aria-label="Create content for selected category">
                 <PlusCircle className="mr-2 h-4 w-4" /> Create Content
               </Button>
             ) : (
@@ -755,6 +738,7 @@ const AdminCategoryContent = () => {
                       variant="ghost" 
                       size="icon" 
                       onClick={() => editContent(item)}
+                      aria-label={`Edit ${item.headline}`}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -762,13 +746,14 @@ const AdminCategoryContent = () => {
                       variant="ghost" 
                       size="icon"
                       onClick={() => handleDeleteContent(item.id)}
+                      aria-label={`Delete ${item.headline}`}
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </div>
                 </div>
                 <CardDescription className="mt-2 line-clamp-2">
-                  {getCategoryNameById(item.categoryId)}
+                  {item.slug}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -789,6 +774,7 @@ const AdminCategoryContent = () => {
                   size="sm" 
                   className="w-full"
                   asChild
+                  aria-label={`View ${item.headline} page`}
                 >
                   <a href={`/categories/${item.slug}`} target="_blank" rel="noopener noreferrer">
                     View Page <Eye className="ml-2 h-4 w-4" />
