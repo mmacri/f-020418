@@ -57,7 +57,7 @@ export interface Product {
 }
 
 // Convert Supabase product format to our Product interface
-export const mapSupabaseProductToProduct = (product: SupabaseProduct): Product => {
+export const mapSupabaseProductToProduct = (product: any): Product => {
   // Safely extract attributes from Json
   const attributes = product.attributes as Record<string, any> || {};
   

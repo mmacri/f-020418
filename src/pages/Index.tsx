@@ -13,7 +13,7 @@ import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 
 // Import mapSupabaseProductToProduct function for mapping Supabase data to Product
-import { mapSupabaseProductToProduct, SupabaseProduct } from '@/services/productService';
+import { mapSupabaseProductToProduct } from '@/services/productService';
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -46,9 +46,9 @@ const Index = () => {
         
         if (featuredData && featuredData.length > 0) {
           // Map Supabase products to our Product interface
-          // Use type assertion to avoid deep type instantiation
-          const mappedProducts: Product[] = featuredData.map(product => 
-            mapSupabaseProductToProduct(product as SupabaseProduct)
+          // Use type assertion to avoid deep type instantiation issues
+          const mappedProducts = featuredData.map(product => 
+            mapSupabaseProductToProduct(product as any)
           );
           setFeaturedProducts(mappedProducts);
         } else {
