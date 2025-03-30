@@ -6,7 +6,7 @@ import SubcategoryHero from '@/components/SubcategoryHero';
 import { getSubcategoryBySlug } from '@/services/categoryService';
 import { getProductsByCategory } from '@/lib/product-utils';
 import { generateCategoryBreadcrumbs } from '@/lib/category-utils';
-import { Breadcrumbs } from '@/components/product';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import ProductCard from '@/components/ProductCard';
 import { Loader2 } from 'lucide-react';
 

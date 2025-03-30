@@ -1,13 +1,14 @@
-
-import React from 'react';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { FileUpload } from '@/components/FileUpload';
 import { Loader2 } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import FileUpload from '@/components/FileUpload';
 
 interface SubcategoryFormProps {
   formData: {

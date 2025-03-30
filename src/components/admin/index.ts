@@ -1,11 +1,17 @@
 
-export { default as AdminAuth } from "./AdminAuth";
-export { default as AdminBlog } from "./AdminBlog";
-export { default as AdminCategories } from "./AdminCategories";
-export { default as AdminCategoryContent } from "./AdminCategoryContent";
-export { default as AdminDashboard } from "./AdminDashboard";
-export { default as AdminProducts } from "./AdminProducts";
-export { default as AdminSettings } from "./AdminSettings";
-export { default as CategoryCard } from "./CategoryCard";
-export { default as CategoryForm } from "./CategoryForm";
-export { default as SubcategoryList } from "./SubcategoryList";
+import AdminDashboard from './AdminDashboard';
+import AdminProducts from './AdminProducts';
+import AdminBlog from './AdminBlog';
+import AdminSettings from './AdminSettings';
+import AdminAuth from './AdminAuth';
+import AdminCategoryContent from './AdminCategoryContent';
+// Remove AdminCategories from exports if it doesn't have a default export
+
+export {
+  AdminDashboard,
+  AdminProducts,
+  AdminBlog,
+  AdminSettings,
+  AdminAuth,
+  AdminCategoryContent
+};
