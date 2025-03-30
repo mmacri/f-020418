@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
@@ -14,37 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Import mapSupabaseProductToProduct function for mapping Supabase data to Product
 import { mapSupabaseProductToProduct } from '@/services/productService';
-import { Json } from '@/integrations/supabase/types';
-
-// Define a more specific type for Supabase product attributes
-interface SupabaseAttributes {
-  reviewCount?: number;
-  features?: string[];
-  category?: string;
-  subcategory?: string;
-  brand?: string;
-  bestSeller?: boolean;
-  pros?: string[];
-}
-
-// Define a concrete type for Supabase product data
-interface SupabaseProductData {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  price: number;
-  sale_price: number | null;
-  rating: number;
-  image_url: string;
-  in_stock: boolean;
-  availability: boolean;
-  category_id: string;
-  attributes: SupabaseAttributes | null;
-  specifications: Record<string, string> | null;
-  created_at: string;
-  updated_at: string;
-}
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
