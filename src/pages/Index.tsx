@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
-import { getProducts, Product, mapSupabaseProductToProduct } from '@/services/productService';
+import { getProducts, Product } from '@/services/productService';
 import HeroSection from '@/components/home/HeroSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import FeaturedProductsSection from '@/components/home/FeaturedProductsSection';
@@ -44,12 +44,13 @@ const Index = () => {
           }
           
           if (supabaseData && supabaseData.length > 0) {
-            // Create products array with proper typing
-            const productsFromSupabase: Product[] = [];
+            // Import the mapper function directly to avoid circular dependency
+            const { mapSupabaseProductToProduct } = await import('@/services/products/mappers');
             
-            // Use standard loop to avoid type recursion
-            for (let i = 0; i < supabaseData.length; i++) {
-              const product = mapSupabaseProductToProduct(supabaseData[i]);
+            // Map products one by one to avoid excessive type instantiation
+            const productsFromSupabase: Product[] = [];
+            for (const item of supabaseData) {
+              const product = mapSupabaseProductToProduct(item);
               productsFromSupabase.push(product);
             }
             
