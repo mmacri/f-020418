@@ -43,6 +43,7 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
           alt={`${categoryName} category background`}
           fallbackSrc={imageUrls.DEFAULT_FALLBACK}
           className="w-full h-full object-cover"
+          type="category"
         />
       </div>
       

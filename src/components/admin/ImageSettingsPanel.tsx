@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { localStorageKeys, imageUrls } from '@/lib/constants';
-import { ImageWithFallback } from '@/lib/image-utils';
+import { ImageWithFallback } from '@/lib/images';
 
 const ImageSettingsPanel: React.FC = () => {
   const [useLocalFallbacks, setUseLocalFallbacks] = useState<boolean>(false);

@@ -15,6 +15,9 @@ const HeroSection: React.FC = () => {
     if (savedImage) {
       setHeroImageUrl(savedImage);
     }
+    
+    // Log for debugging
+    console.log('Hero image loaded:', savedImage || imageUrls.HERO_DEFAULT);
   }, []);
 
   return (

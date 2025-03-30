@@ -10,7 +10,12 @@ export function ThemeToggle() {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9 rounded-md"
+            aria-label="Light mode active"
+          >
             <Sun className="h-[1.2rem] w-[1.2rem] text-amber-500" />
             <span className="sr-only">Light mode active</span>
           </Button>
