@@ -19,8 +19,8 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
   }
   
   try {
-    // Safely parse attributes - don't use recursion or deep type inference
-    let attributes = {};
+    // Safely parse attributes with type safety
+    let attributes: Record<string, any> = {};
     if (product.attributes) {
       if (typeof product.attributes === 'string') {
         try {
@@ -29,12 +29,12 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
           console.error('Error parsing attributes string:', e);
         }
       } else {
-        attributes = product.attributes;
+        attributes = product.attributes as Record<string, any>;
       }
     }
     
-    // Safely parse specifications - don't use recursion or deep type inference
-    let specifications = {};
+    // Safely parse specifications with type safety
+    let specifications: Record<string, any> = {};
     if (product.specifications) {
       if (typeof product.specifications === 'string') {
         try {
@@ -43,7 +43,7 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
           console.error('Error parsing specifications string:', e);
         }
       } else {
-        specifications = product.specifications;
+        specifications = product.specifications as Record<string, any>;
       }
     }
     
@@ -91,16 +91,22 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
 };
 
 export const mapProductToSupabaseProduct = (product: Partial<Product>) => {
+  // Get the first image url, handling both string and object types
+  const getFirstImageUrl = (images?: (string | { url: string })[]): string => {
+    if (!images || images.length === 0) return '';
+    const firstImage = images[0];
+    return typeof firstImage === 'string' ? firstImage : firstImage.url;
+  };
+
   return {
     id: product.id?.toString(),
     slug: product.slug,
     name: product.name,
     description: product.description,
     price: product.price,
-    sale_price: product.originalPrice,
+    sale_price: product.originalPrice || product.comparePrice,
     rating: product.rating,
-    image_url: product.imageUrl || (product.images && product.images.length > 0 ? 
-      typeof product.images[0] === 'string' ? product.images[0] : (product.images[0] as { url: string }).url : ''),
+    image_url: product.imageUrl || getFirstImageUrl(product.images as any),
     in_stock: product.inStock,
     category_id: product.categoryId?.toString(),
     specifications: product.specifications || product.specs,

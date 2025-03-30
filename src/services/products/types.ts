@@ -28,11 +28,12 @@ export interface Product {
   shortDescription?: string;
   price: number;
   originalPrice?: number;
+  comparePrice?: number; // Added for ProductForm
   rating: number;
   reviewCount: number;
   features?: string[];
   imageUrl: string;
-  images?: (string | { url: string })[];
+  images?: string[];
   additionalImages?: string[];
   inStock: boolean;
   category: string;

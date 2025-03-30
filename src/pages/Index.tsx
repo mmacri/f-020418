@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
-import { getProducts, Product } from '@/services/productService';
+import { getProducts, Product, mapSupabaseProductToProduct } from '@/services/productService';
 import HeroSection from '@/components/home/HeroSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import FeaturedProductsSection from '@/components/home/FeaturedProductsSection';
@@ -30,7 +30,7 @@ const Index = () => {
         
         // Get featured products from Supabase
         try {
-          // Use explicit typing to avoid recursive type inference
+          // Use explicit query with proper error handling
           const { data: supabaseData, error: featuredError } = await supabase
             .from('products')
             .select('*')
@@ -44,36 +44,13 @@ const Index = () => {
           }
           
           if (supabaseData && supabaseData.length > 0) {
-            // Use simpler approach to map products
+            // Create products array with proper typing
             const productsFromSupabase: Product[] = [];
             
-            // Use standard for loop to avoid excessive type instantiation
+            // Use standard loop to avoid type recursion
             for (let i = 0; i < supabaseData.length; i++) {
-              try {
-                // Import the mapper function and apply it with explicit typing
-                const rawProduct = supabaseData[i];
-                
-                // Create a simplified product object to avoid deep type recursion
-                const product: Product = {
-                  id: rawProduct.id,
-                  slug: rawProduct.slug || '',
-                  name: rawProduct.name || '',
-                  description: rawProduct.description || '',
-                  price: rawProduct.price || 0,
-                  rating: rawProduct.rating || 0,
-                  imageUrl: rawProduct.image_url || '',
-                  reviewCount: 0,
-                  inStock: rawProduct.in_stock !== false,
-                  category: '',
-                  // Add minimal additional properties needed
-                  images: rawProduct.image_url ? [rawProduct.image_url] : [],
-                  bestSeller: true
-                };
-                
-                productsFromSupabase.push(product);
-              } catch (err) {
-                console.error('Error mapping product:', err, supabaseData[i]);
-              }
+              const product = mapSupabaseProductToProduct(supabaseData[i]);
+              productsFromSupabase.push(product);
             }
             
             setFeaturedProducts(productsFromSupabase);

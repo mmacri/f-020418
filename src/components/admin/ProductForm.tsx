@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Product } from '@/services/productService';
 import { Button } from '@/components/ui/button';
@@ -60,11 +59,11 @@ const ProductForm = ({
         price: editingProduct.price || 0,
         comparePrice: editingProduct.comparePrice || editingProduct.originalPrice || 0,
         category: editingProduct.category || '',
-        categoryId: editingProduct.categoryId || 0,
+        categoryId: editingProduct.categoryId ? Number(editingProduct.categoryId) : 0,
         subcategory: editingProduct.subcategory || '',
         rating: editingProduct.rating || 4.5,
         reviewCount: editingProduct.reviewCount || 0,
-        imageUrl: editingProduct.imageUrl || (editingProduct.images && editingProduct.images.length > 0 ? editingProduct.images[0] : ''),
+        imageUrl: editingProduct.imageUrl || '',
         features: features.length > 0 ? features : ['', '', ''],
         inStock: editingProduct.inStock !== false,
         affiliateLink: editingProduct.affiliateLink || editingProduct.affiliateUrl || '',
