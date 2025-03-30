@@ -7,9 +7,14 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
   try {
     const supabaseProduct = mapProductToSupabaseProduct(productData);
     
+    // Ensure required fields are provided for insert
+    if (!supabaseProduct.name || !supabaseProduct.slug) {
+      throw new Error('Product name and slug are required');
+    }
+    
     const { data, error } = await supabase
       .from('products')
-      .insert([supabaseProduct])
+      .insert(supabaseProduct)
       .select()
       .single();
       

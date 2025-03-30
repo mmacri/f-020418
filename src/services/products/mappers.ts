@@ -51,7 +51,7 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
     updatedAt: product.updated_at,
     
     // Optional fields from attributes
-    subcategoryId: attributes.subcategoryId,
+    subcategory: attributes.subcategory,
     brand: attributes.brand,
     images: attributes.images || [],
     features: attributes.features || [],
@@ -97,6 +97,7 @@ export const mapProductToSupabaseProduct = (product: Partial<Product>): Partial<
   if (product.affiliateUrl) attributes.affiliateUrl = product.affiliateUrl;
   if (product.asin) attributes.asin = product.asin;
   if (product.brand) attributes.brand = product.brand;
+  if (product.subcategory) attributes.subcategory = product.subcategory;
   
   // Return mapped product data
   return {

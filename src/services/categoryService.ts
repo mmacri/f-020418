@@ -210,7 +210,7 @@ export const getNavigationCategories = async () => {
     const { data: categories, error } = await supabase
       .from('categories')
       .select('*')
-      .order('navigation_order', { ascending: true, nullsLast: true });
+      .order('navigation_order', { ascending: true });
     
     if (error) {
       console.error('Error fetching navigation categories:', error);
