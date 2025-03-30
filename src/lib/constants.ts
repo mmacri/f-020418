@@ -1,90 +1,96 @@
 
+/**
+ * Constants used throughout the application
+ */
+
+/**
+ * Local Storage Key constants
+ */
 export const localStorageKeys = {
-  PRODUCTS: "products",
-  CART: "cart",
-  WISHLIST: "wishlist",
-  COMPARE: "compare",
-  USER: "user",
-  AUTH_TOKEN: "authToken",
-  HERO_IMAGE: "heroImage",
-  USE_LOCAL_FALLBACKS: "useLocalFallbacks",
-  WISHLIST_ITEMS: "wishlistItems",
-  COMPARISON_PRODUCTS: "comparisonProducts",
-  AFFILIATE_CLICKS: "affiliateClicks",
-  ANALYTICS_DATA: "analyticsData",
-  USER_ID: "userId",
-  BLOG_POSTS: "blogPosts",
-  CATEGORY_CONTENT: "categoryContent"
+  // User preferences
+  THEME: 'recovery-essentials-theme',
+  USE_LOCAL_FALLBACKS: 'recovery-essentials-use-local-fallbacks',
+  
+  // Content storage
+  HERO_IMAGE: 'recovery-essentials-hero-image',
+  PRODUCTS: 'recovery-essentials-products',
+  CATEGORIES: 'recovery-essentials-categories',
+  SUBCATEGORIES: 'recovery-essentials-subcategories',
+  CATEGORY_CONTENT: 'recovery-essentials-category-content',
+  BLOG_POSTS: 'recovery-essentials-blog-posts',
+  
+  // User data
+  USER_FAVORITES: 'recovery-essentials-favorites',
+  RECENT_VIEWS: 'recovery-essentials-recent-views',
+  COMPARISON_PRODUCTS: 'recovery-essentials-comparison-products',
+  
+  // Admin data
+  ADMIN_SETTINGS: 'recovery-essentials-admin-settings',
 };
 
-export const currency = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-};
-
-export const appName = "Recovery Essentials";
-
-export const defaultMeta = {
-  title: appName + " - Your Source for Recovery",
-  description:
-    "Find the best recovery tools and equipment to help you recover faster and perform better.",
-  keywords:
-    "recovery, tools, equipment, massage, foam roller, compression, ice bath",
-  author: "Recovery Essentials",
-  siteUrl: "https://recovery-essentials.com",
-  twitterHandle: "@RecoveryEsntl",
-  ogImage: "https://recovery-essentials.com/og.png",
-};
-
+/**
+ * Default image URLs
+ */
 export const imageUrls = {
+  // General placeholders
   PLACEHOLDER: '/placeholder.svg',
-  PRODUCT_DEFAULT: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1399&auto=format&fit=crop',
-  CATEGORY_DEFAULT: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1470&auto=format&fit=crop',
-  BLOG_DEFAULT: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1470&auto=format&fit=crop',
-  AVATAR_DEFAULT: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=1631&auto=format&fit=crop',
-  BRAND_LOGO: '/logo.png',
-  HERO_DEFAULT: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1375&auto=format&fit=crop',
-  DEFAULT_FALLBACK: '/placeholder.svg'
+  DEFAULT_FALLBACK: '/placeholder.svg',
+  
+  // Hero images
+  HERO_DEFAULT: 'https://ext.same-assets.com/1001010126/massage-gun-category.jpg',
+  
+  // Category defaults
+  CATEGORY_DEFAULT: 'https://ext.same-assets.com/30303031/foam-roller-category.jpg',
+  
+  // Product defaults
+  PRODUCT_DEFAULT: 'https://ext.same-assets.com/30303030/product-placeholder.jpg',
+  
+  // Blog defaults
+  BLOG_DEFAULT: 'https://ext.same-assets.com/30303034/blog-placeholder.jpg',
+  
+  // User defaults
+  AVATAR_DEFAULT: 'https://ext.same-assets.com/30303035/avatar-placeholder.jpg',
 };
 
-// Default navigation items for the header
-export const DEFAULT_NAVIGATION = {
-  mainMenu: [
-    {
-      id: 1,
-      title: "Home",
-      type: "link",
-      url: "/",
-      showInHeader: true
-    },
-    {
-      id: 2,
-      title: "Products",
-      type: "category-dropdown",
-      showInHeader: true,
-      items: []
-    },
-    {
-      id: 3,
-      title: "Blog",
-      type: "link",
-      url: "/blog",
-      showInHeader: true
-    },
-    {
-      id: 4,
-      title: "About",
-      type: "link",
-      url: "/about",
-      showInHeader: true
-    },
-    {
-      id: 5,
-      title: "Contact",
-      type: "link",
-      url: "/contact",
-      showInHeader: true
-    }
-  ]
+/**
+ * Default navigation items
+ */
+export const DEFAULT_NAVIGATION = [
+  { name: 'Home', href: '/' },
+  { name: 'Categories', href: '/categories' },
+  { name: 'Compare', href: '/product-comparison' },
+  { name: 'Blog', href: '/blog' },
+  { name: 'About', href: '/about' },
+  { name: 'Contact', href: '/contact' },
+];
+
+/**
+ * Site metadata
+ */
+export const siteConfig = {
+  name: 'Recovery Essentials',
+  description: 'Your trusted source for recovery equipment reviews and comparisons',
+  url: 'https://recovery-essentials.com',
+  ogImage: 'https://recovery-essentials.com/og-image.jpg',
+  links: {
+    twitter: 'https://twitter.com/recoveryessentials',
+    github: 'https://github.com/recovery-essentials',
+  },
 };
+
+/**
+ * Currency formatter
+ */
+export const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
+/**
+ * Date formatter
+ */
+export const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});

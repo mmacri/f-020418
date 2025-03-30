@@ -4,22 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { localStorageKeys } from '@/lib/constants';
-
-const DEFAULT_HERO_IMAGE = "https://static.vecteezy.com/system/resources/previews/021/573/353/non_2x/arm-muscle-silhouette-logo-biceps-icon-free-vector.jpg";
-const LOCAL_FALLBACK_IMAGE = "/placeholder.svg";
-
-// Add cache busting to images
-const addCacheBusting = (url: string): string => {
-  if (!url) return url;
-  
-  // Don't add cache busting to local images or data URLs
-  if (url.startsWith('/') || url.startsWith('data:')) return url;
-  
-  // Add timestamp as cache buster
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}t=${Date.now()}`;
-};
+import { localStorageKeys, imageUrls } from '@/lib/constants';
+import { ImageWithFallback } from '@/lib/images';
 
 const HeroImageSettings: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -29,7 +15,7 @@ const HeroImageSettings: React.FC = () => {
 
   useEffect(() => {
     // Load the existing hero image URL from localStorage
-    const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE) || DEFAULT_HERO_IMAGE;
+    const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE) || imageUrls.HERO_DEFAULT;
     setImageUrl(savedImage);
     setPreviewUrl(savedImage);
     
@@ -43,7 +29,7 @@ const HeroImageSettings: React.FC = () => {
       // Save the hero image URL to localStorage
       localStorage.setItem(localStorageKeys.HERO_IMAGE, imageUrl);
       localStorage.setItem(localStorageKeys.USE_LOCAL_FALLBACKS, useLocalFallback.toString());
-      setPreviewUrl(addCacheBusting(imageUrl));
+      setPreviewUrl(imageUrl);
       
       toast({
         title: "Success",
@@ -61,24 +47,12 @@ const HeroImageSettings: React.FC = () => {
   };
 
   const handleReset = () => {
-    setImageUrl(DEFAULT_HERO_IMAGE);
-    setPreviewUrl(DEFAULT_HERO_IMAGE);
-    localStorage.setItem(localStorageKeys.HERO_IMAGE, DEFAULT_HERO_IMAGE);
+    setImageUrl(imageUrls.HERO_DEFAULT);
+    setPreviewUrl(imageUrls.HERO_DEFAULT);
+    localStorage.setItem(localStorageKeys.HERO_IMAGE, imageUrls.HERO_DEFAULT);
     toast({
       title: "Reset Complete",
       description: "Hero image has been reset to default",
-    });
-  };
-
-  const handleImageError = () => {
-    // If the image fails to load, use the fallback
-    const fallbackImage = useLocalFallback ? LOCAL_FALLBACK_IMAGE : DEFAULT_HERO_IMAGE;
-    setPreviewUrl(fallbackImage);
-    
-    toast({
-      title: "Invalid Image",
-      description: "The image URL is invalid. Using fallback image instead.",
-      variant: "destructive",
     });
   };
 
@@ -123,16 +97,12 @@ const HeroImageSettings: React.FC = () => {
         <div className="flex flex-col space-y-2">
           <span className="text-sm font-medium">Preview</span>
           <div className="border rounded-md p-2 bg-gray-50 h-48 flex items-center justify-center overflow-hidden">
-            {previewUrl ? (
-              <img
-                src={previewUrl}
-                alt="Hero Preview"
-                className="max-h-full max-w-full object-contain"
-                onError={handleImageError}
-              />
-            ) : (
-              <div className="text-gray-400">No image preview available</div>
-            )}
+            <ImageWithFallback
+              src={previewUrl}
+              alt="Hero Preview"
+              className="max-h-full max-w-full object-contain"
+              fallbackSrc={useLocalFallback ? imageUrls.PLACEHOLDER : imageUrls.HERO_DEFAULT}
+            />
           </div>
         </div>
 

@@ -34,6 +34,162 @@ export interface Product {
   updatedAt: string;
 }
 
+// Default products to use when none exist
+const DEFAULT_PRODUCTS: Product[] = [
+  {
+    id: 1,
+    name: "TheraGun Pro",
+    slug: "theragun-pro",
+    description: "Professional-grade percussive therapy device with multiple attachments and adjustable arm",
+    shortDescription: "Pro-grade massage gun with adjustable arm",
+    price: 599.99,
+    comparePrice: 649.99,
+    originalPrice: 649.99,
+    images: ["https://ext.same-assets.com/30303030/theragun-pro.jpg"],
+    category: "Massage Guns",
+    categoryId: 1,
+    subcategory: "Professional Grade",
+    rating: 4.8,
+    reviewCount: 458,
+    features: [
+      "5 built-in speeds",
+      "150-minute battery life",
+      "Multiple attachment heads",
+      "Adjustable arm for hard-to-reach areas"
+    ],
+    pros: ["Super quiet operation", "Professional quality", "Ergonomic grip"],
+    cons: ["Expensive", "Heavier than some competitors"],
+    affiliateLink: "https://www.example.com/affiliate/theragun-pro",
+    brand: "Therabody",
+    specifications: {
+      "Motor": "Professional-Grade",
+      "Battery Life": "150 minutes",
+      "Weight": "2.9 lbs",
+      "Speeds": "5 built-in speeds"
+    },
+    availability: "In Stock",
+    inStock: true,
+    bestSeller: true,
+    asin: "B087MH4K3V",
+    createdAt: "2023-01-15T10:30:00Z",
+    updatedAt: "2023-03-20T14:45:00Z"
+  },
+  {
+    id: 2,
+    name: "Hypervolt Go",
+    slug: "hypervolt-go",
+    description: "Compact and lightweight percussive massage device perfect for on-the-go recovery",
+    shortDescription: "Portable massage gun for travel",
+    price: 199.99,
+    comparePrice: 229.99,
+    originalPrice: 229.99,
+    images: ["https://ext.same-assets.com/30303030/hypervolt-go.jpg"],
+    category: "Massage Guns",
+    categoryId: 1,
+    subcategory: "Portable",
+    rating: 4.6,
+    reviewCount: 312,
+    features: [
+      "3 speed settings",
+      "2.5 hour battery life",
+      "Weighs only 1.5 lbs",
+      "2 interchangeable heads"
+    ],
+    pros: ["Ultra portable", "Good battery life", "Quiet operation"],
+    cons: ["Limited attachment options", "Less powerful than full-size models"],
+    affiliateLink: "https://www.example.com/affiliate/hypervolt-go",
+    brand: "Hyperice",
+    specifications: {
+      "Motor": "Portable", 
+      "Battery Life": "2.5 hours",
+      "Weight": "1.5 lbs",
+      "Speeds": "3 speed settings"
+    },
+    availability: "In Stock",
+    inStock: true,
+    bestSeller: false,
+    asin: "B08KFMG5DQ",
+    createdAt: "2023-02-10T11:20:00Z",
+    updatedAt: "2023-04-15T09:30:00Z"
+  },
+  {
+    id: 3,
+    name: "TriggerPoint GRID Foam Roller",
+    slug: "triggerpoint-grid-foam-roller",
+    description: "Dense foam roller with a patented multi-density exterior designed to replicate the feeling of a massage therapist's hands",
+    shortDescription: "Multi-density foam roller for deep tissue massage",
+    price: 34.99,
+    comparePrice: 39.99,
+    originalPrice: 39.99,
+    images: ["https://ext.same-assets.com/30303031/grid-foam-roller.jpg"],
+    category: "Foam Rollers",
+    categoryId: 2,
+    subcategory: "Textured",
+    rating: 4.7,
+    reviewCount: 2156,
+    features: [
+      "Patented multi-density exterior",
+      "Hollow core design",
+      "Supports up to 500 lbs",
+      "13 inches x 5.5 inches"
+    ],
+    pros: ["Durable construction", "Effective pattern design", "Portable size"],
+    cons: ["Firmer than standard foam rollers", "May be too intense for beginners"],
+    affiliateLink: "https://www.example.com/affiliate/triggerpoint-grid",
+    brand: "TriggerPoint",
+    specifications: {
+      "Material": "EVA foam",
+      "Length": "13 inches",
+      "Diameter": "5.5 inches",
+      "Weight Capacity": "500 lbs"
+    },
+    availability: "In Stock",
+    inStock: true,
+    bestSeller: true,
+    asin: "B0040EGNIU",
+    createdAt: "2023-01-05T15:45:00Z",
+    updatedAt: "2023-03-12T10:20:00Z"
+  },
+  {
+    id: 4,
+    name: "NormaTec PULSE 2.0 Leg Recovery System",
+    slug: "normatec-pulse-2-leg-recovery",
+    description: "Dynamic compression system using patented pulse technology to enhance blood flow and speed recovery",
+    shortDescription: "Premium compression recovery system for legs",
+    price: 899.99,
+    comparePrice: 995.00,
+    originalPrice: 995.00,
+    images: ["https://ext.same-assets.com/30303032/normatec-pulse.jpg"],
+    category: "Compression Devices",
+    categoryId: 3,
+    subcategory: "Leg Sleeves",
+    rating: 4.9,
+    reviewCount: 203,
+    features: [
+      "7 intensity levels",
+      "Bluetooth connectivity",
+      "Customizable zones",
+      "Rechargeable battery with 2-hour runtime"
+    ],
+    pros: ["Clinical-grade compression", "Easy to use interface", "Highly effective recovery"],
+    cons: ["Expensive", "Takes time to complete sessions"],
+    affiliateLink: "https://www.example.com/affiliate/normatec-pulse",
+    brand: "NormaTec",
+    specifications: {
+      "Compression Levels": "7",
+      "Battery Life": "2 hours",
+      "Connectivity": "Bluetooth",
+      "Zones": "5 overlapping zones per leg"
+    },
+    availability: "In Stock",
+    inStock: true,
+    bestSeller: false,
+    asin: "B07MQKTZN8",
+    createdAt: "2023-02-20T13:10:00Z",
+    updatedAt: "2023-04-05T11:45:00Z"
+  }
+];
+
 // Compatibility type for creating products with aliased property names
 export type ProductInput = Omit<Product, "id" | "createdAt" | "updatedAt"> | {
   title?: string;
@@ -97,12 +253,29 @@ const normalizeProductInput = (productInput: ProductInput): Omit<Product, "id" |
 export const getProducts = async (): Promise<Product[]> => {
   try {
     const productsData = localStorage.getItem(localStorageKeys.PRODUCTS);
-    const products = productsData ? JSON.parse(productsData) : [];
+    let products: Product[] = [];
+    
+    if (productsData) {
+      const parsedData = JSON.parse(productsData);
+      if (Array.isArray(parsedData) && parsedData.length > 0) {
+        products = parsedData;
+      } else {
+        // No valid products found in localStorage, use defaults
+        products = DEFAULT_PRODUCTS;
+        localStorage.setItem(localStorageKeys.PRODUCTS, JSON.stringify(products));
+      }
+    } else {
+      // No products in localStorage, use defaults
+      products = DEFAULT_PRODUCTS;
+      localStorage.setItem(localStorageKeys.PRODUCTS, JSON.stringify(products));
+    }
+    
     // Add backwards compatibility properties to each product
     return products.map(getProductWithBackwardsCompatibility);
   } catch (error) {
     console.error("Error retrieving products:", error);
-    return [];
+    // Return default products on error
+    return DEFAULT_PRODUCTS.map(getProductWithBackwardsCompatibility);
   }
 };
 
@@ -114,7 +287,8 @@ export const getProductById = async (id: number): Promise<Product | null> => {
     return product;
   } catch (error) {
     console.error(`Error retrieving product with ID ${id}:`, error);
-    return null;
+    // Check default products as fallback
+    return DEFAULT_PRODUCTS.find(product => product.id === id) || null;
   }
 };
 
@@ -125,7 +299,8 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
     return products.find(product => product.slug === slug) || null;
   } catch (error) {
     console.error(`Error retrieving product with slug ${slug}:`, error);
-    return null;
+    // Check default products as fallback
+    return DEFAULT_PRODUCTS.find(product => product.slug === slug) || null;
   }
 };
 
@@ -136,7 +311,8 @@ export const getProductsByCategory = async (categoryId: number): Promise<Product
     return products.filter(product => product.categoryId === categoryId);
   } catch (error) {
     console.error(`Error retrieving products for category ${categoryId}:`, error);
-    return [];
+    // Return filtered default products on error
+    return DEFAULT_PRODUCTS.filter(product => product.categoryId === categoryId);
   }
 };
 
