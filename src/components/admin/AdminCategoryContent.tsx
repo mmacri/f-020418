@@ -253,15 +253,20 @@ const AdminCategoryContent = () => {
     });
   };
 
-  // Handle meta data changes
+  // Handle meta data changes - fixing the type issue here
   const handleMetaChange = (field: string, value: string) => {
-    setFormContent(prev => ({
-      ...prev,
-      meta: {
-        ...(prev.meta || {}),
-        [field]: value
-      }
-    }));
+    setFormContent(prev => {
+      // Ensure we preserve the original meta values and maintain required fields
+      const currentMeta = prev.meta || { title: '', description: '', canonical: '' };
+      
+      return {
+        ...prev,
+        meta: {
+          ...currentMeta,
+          [field]: value
+        }
+      };
+    });
   };
 
   // Handle basic field changes
@@ -284,10 +289,18 @@ const AdminCategoryContent = () => {
         return;
       }
 
+      // Ensure meta properties are never undefined
+      const metaData = {
+        title: formContent.meta?.title || '',
+        description: formContent.meta?.description || '',
+        canonical: formContent.meta?.canonical
+      };
+
       const formattedContent = {
         ...formContent,
         categoryId: selectedCategory.id,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        meta: metaData
       };
 
       if (formContent.id) {
