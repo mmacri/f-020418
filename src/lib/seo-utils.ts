@@ -1,5 +1,6 @@
 
 import { Product } from '@/services/productService';
+import { BlogPost } from '@/services/blogService';
 
 interface MetaTag {
   name?: string;
@@ -37,6 +38,50 @@ export const generateProductMetaTags = (product: Product): MetaTag[] => {
 };
 
 /**
+ * Generate meta tags for a blog post
+ */
+export const generateBlogPostMetaTags = (post: BlogPost): MetaTag[] => {
+  const metaTags: MetaTag[] = [
+    { name: 'description', content: post.seoDescription || post.excerpt.substring(0, 160) },
+    { property: 'og:title', content: post.seoTitle || post.title },
+    { property: 'og:description', content: post.seoDescription || post.excerpt.substring(0, 160) },
+    { property: 'og:type', content: 'article' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: post.seoTitle || post.title },
+    { name: 'twitter:description', content: post.seoDescription || post.excerpt.substring(0, 160) },
+  ];
+  
+  // Add image if available
+  if (post.coverImage) {
+    metaTags.push({ property: 'og:image', content: post.coverImage });
+    metaTags.push({ name: 'twitter:image', content: post.coverImage });
+  } else if (post.image) {
+    metaTags.push({ property: 'og:image', content: post.image });
+    metaTags.push({ name: 'twitter:image', content: post.image });
+  }
+  
+  // Add keywords if available
+  if (post.seoKeywords && post.seoKeywords.length > 0) {
+    metaTags.push({ name: 'keywords', content: post.seoKeywords.join(', ') });
+  } else if (post.tags && post.tags.length > 0) {
+    metaTags.push({ name: 'keywords', content: post.tags.join(', ') });
+  }
+  
+  // Add article specific meta tags
+  metaTags.push({ property: 'article:published_time', content: post.createdAt });
+  metaTags.push({ property: 'article:modified_time', content: post.updatedAt });
+  metaTags.push({ property: 'article:section', content: post.category });
+  
+  if (post.tags) {
+    post.tags.forEach(tag => {
+      metaTags.push({ property: 'article:tag', content: tag });
+    });
+  }
+  
+  return metaTags;
+};
+
+/**
  * Generate JSON-LD structured data for a product
  */
 export const generateProductJsonLd = (product: Product): string => {
@@ -68,6 +113,40 @@ export const generateProductJsonLd = (product: Product): string => {
       ratingValue: product.rating,
       reviewCount: product.reviewCount
     } : undefined
+  };
+  
+  return JSON.stringify(structuredData);
+};
+
+/**
+ * Generate JSON-LD structured data for a blog post
+ */
+export const generateBlogPostJsonLd = (post: BlogPost): string => {
+  const structuredData = {
+    '@context': 'https://schema.org/',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    image: post.coverImage || post.image,
+    datePublished: post.createdAt,
+    dateModified: post.updatedAt,
+    author: {
+      '@type': 'Person',
+      name: post.author || 'Admin'
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Recovery Essentials',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${window.location.origin}/logo.png` // Assuming you have a logo.png
+      }
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': window.location.href
+    },
+    keywords: post.seoKeywords || post.tags || []
   };
   
   return JSON.stringify(structuredData);

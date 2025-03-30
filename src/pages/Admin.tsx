@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthentication } from '@/hooks/useAuthentication';
 import { 
@@ -11,13 +11,29 @@ import {
   AdminAuth,
   AdminCategoryContent
 } from '@/components/admin';
+import { publishScheduledPosts } from '@/services/blogService';
+import { toast } from 'sonner';
 
 const AdminPage = () => {
   const { tab } = useParams<{ tab: string }>();
+  const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuthentication();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [activeTab, setActiveTab] = useState(tab || "dashboard");
 
   useEffect(() => {
+    // Check for scheduled posts and publish them
+    const checkScheduledPosts = async () => {
+      try {
+        const publishedCount = await publishScheduledPosts();
+        if (publishedCount > 0) {
+          toast.success(`${publishedCount} scheduled ${publishedCount === 1 ? 'post' : 'posts'} published`);
+        }
+      } catch (error) {
+        console.error("Error checking scheduled posts:", error);
+      }
+    };
+
     // Simulate admin check (replace with actual logic)
     const checkAdminStatus = async () => {
       // In a real application, you would check the user's role or permissions
@@ -25,12 +41,25 @@ const AdminPage = () => {
       // For this example, we'll just set isAdmin to true after a short delay.
       await new Promise(resolve => setTimeout(resolve, 500));
       setIsAdmin(true);
+      
+      // Check for scheduled posts
+      await checkScheduledPosts();
     };
 
     if (isAuthenticated) {
       checkAdminStatus();
     }
-  }, [isAuthenticated]);
+    
+    // Set active tab from URL parameter
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [isAuthenticated, tab]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/admin/${value}`);
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -60,8 +89,8 @@ const AdminPage = () => {
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
 
-      <Tabs defaultValue={tab || "dashboard"} className="w-full">
-        <TabsList>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="mb-4">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>

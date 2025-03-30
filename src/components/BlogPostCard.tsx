@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BlogPostCardProps {
   post: {
@@ -17,9 +18,11 @@ interface BlogPostCardProps {
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md transition transform hover:shadow-xl h-full flex flex-col">
-      <div className="h-48 bg-gray-200 relative overflow-hidden">
+      <div className={`${isMobile ? 'h-36' : 'h-48'} bg-gray-200 relative overflow-hidden`}>
         <img 
           src={post.image} 
           alt={post.title} 
@@ -29,20 +32,20 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           {post.category}
         </span>
       </div>
-      <div className="p-6 flex flex-col flex-grow">
-        <h3 className="font-bold text-xl mb-2">
+      <div className="p-4 md:p-6 flex flex-col flex-grow">
+        <h3 className="font-bold text-lg md:text-xl mb-2">
           <Link to={`/blog/${post.slug}`} className="text-gray-900 hover:text-indigo-600 transition-colors">
             {post.title}
           </Link>
         </h3>
-        <p className="text-gray-600 mb-4 flex-grow">
-          {post.excerpt}
+        <p className="text-gray-600 mb-4 flex-grow text-sm md:text-base">
+          {isMobile ? post.excerpt.substring(0, 100) + (post.excerpt.length > 100 ? '...' : '') : post.excerpt}
         </p>
-        <div className="flex justify-between items-center mt-auto">
-          <div className="text-sm">
+        <div className="flex justify-between items-center mt-auto text-xs md:text-sm">
+          <div>
             {post.author && <p className="text-gray-900 font-medium">{post.author}</p>}
           </div>
-          <div className="flex text-gray-500 text-sm justify-between w-full">
+          <div className="flex text-gray-500 justify-between w-full">
             {post.author && <span></span>}
             <span>{post.date}</span>
             <span>{post.readTime}</span>

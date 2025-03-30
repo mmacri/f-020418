@@ -1,3 +1,4 @@
+
 import { getCategoryBySlug, getNavigationCategories, getSubcategoryBySlug } from "@/services/categoryService";
 
 /**
@@ -35,14 +36,14 @@ export const getCategoryInfoForProduct = async (product: any) => {
   try {
     if (!product || !product.categoryId) return { category: null, subcategory: null };
     
-    const category = await getCategoryById(product.categoryId);
+    const category = await getCategoryById(String(product.categoryId));
     if (!category) return { category: null, subcategory: null };
     
     // Try to find matching subcategory either by ID or name
     let subcategory = null;
     
     if (product.subcategoryId) {
-      subcategory = category.subcategories.find(sub => sub.id === product.subcategoryId);
+      subcategory = category.subcategories.find(sub => String(sub.id) === String(product.subcategoryId));
     } else if (product.subcategory) {
       subcategory = category.subcategories.find(
         sub => sub.name.toLowerCase() === product.subcategory.toLowerCase() ||
