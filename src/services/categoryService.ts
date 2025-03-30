@@ -1,3 +1,4 @@
+
 // Add this function to the existing categoryService.ts file
 export const getCategoriesWithSubcategories = async () => {
   // This is a mock implementation - in a real app, you would fetch from an API
@@ -106,4 +107,68 @@ export const deleteSubcategory = async (categoryId, subcategoryId) => {
   // Mock implementation
   console.log(`Deleting subcategory ${subcategoryId} from category ${categoryId}`);
   return true;
+};
+
+// Add these missing functions that are being imported throughout the app
+
+// Type definitions to fix TypeScript errors
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  showInNavigation?: boolean;
+  navigationOrder?: number;
+  subcategories?: Subcategory[];
+}
+
+export interface Subcategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  showInNavigation?: boolean;
+}
+
+export interface CategoryInput {
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  showInNavigation?: boolean;
+  navigationOrder?: number;
+}
+
+// Function to get categories that should be shown in navigation
+export const getNavigationCategories = async (): Promise<Category[]> => {
+  const allCategories = await getCategoriesWithSubcategories();
+  // You could filter these based on showInNavigation property, but for now just return all
+  return allCategories;
+};
+
+// Get a category by its slug
+export const getCategoryBySlug = async (slug: string): Promise<Category | null> => {
+  const allCategories = await getCategoriesWithSubcategories();
+  return allCategories.find(cat => cat.slug === slug) || null;
+};
+
+// Get a subcategory by its slug within a category
+export const getSubcategoryBySlug = async (categorySlug: string, subcategorySlug: string): Promise<Subcategory | null> => {
+  const category = await getCategoryBySlug(categorySlug);
+  if (!category || !category.subcategories) return null;
+  
+  return category.subcategories.find(sub => sub.slug === subcategorySlug) || null;
+};
+
+// Get all categories and their subcategories
+export const getAllCategories = async (): Promise<Category[]> => {
+  return getCategoriesWithSubcategories();
+};
+
+// Get a category by its ID
+export const getCategoryById = async (id: string): Promise<Category | null> => {
+  const allCategories = await getCategoriesWithSubcategories();
+  return allCategories.find(cat => cat.id === id) || null;
 };
