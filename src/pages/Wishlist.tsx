@@ -1,4 +1,3 @@
-
 import React from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { ImageWithFallback } from '@/lib/images';
 import { formatPrice } from '@/lib/product-utils';
 import { handleAffiliateClick } from '@/lib/affiliate-utils';
-import { extractImageUrl } from '@/services/products';
+import { extractImageUrl } from '@/services/products/mappers';
 
 const Wishlist = () => {
   const { wishlistItems, removeFromWishlist, clearWishlist, isPending, isLoading } = useWishlist();

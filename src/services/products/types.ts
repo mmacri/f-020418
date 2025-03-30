@@ -24,6 +24,11 @@ export interface Product {
   asin?: string;
   brand?: string;
   title?: string; // For compatibility with components that use title
+  
+  // Backward compatibility fields
+  additionalImages?: any[]; // Legacy field for compatibility
+  affiliateLink?: string; // Alias for affiliateUrl for backward compatibility
+  comparePrice?: number; // Alias for originalPrice for backward compatibility
 }
 
 export interface ProductFormData {

@@ -49,12 +49,13 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
     
     const productId = product.id ? product.id : 'unknown';
     
-    return {
+    const mappedProduct: Product = {
       id: productId,
       slug: product.slug || 'unknown',
       name: product.name || 'Unnamed Product',
       title: product.name || 'Unnamed Product', // Add title for compatibility
       description: product.description || '',
+      shortDescription: product.short_description || '',
       price: product.price || 0,
       originalPrice: product.original_price || undefined,
       rating: product.rating || 0,
@@ -77,6 +78,8 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
       brand: product.brand || '',
       comparePrice: product.original_price || undefined // For backward compatibility
     };
+    
+    return mappedProduct;
   } catch (error) {
     console.error('Error mapping product:', error, product);
     return {
@@ -118,7 +121,7 @@ export const mapProductToSupabaseProduct = (product: Partial<Product>) => {
     in_stock: product.inStock,
     category_id: product.categoryId?.toString(),
     subcategory_slug: product.subcategory,
-    specifications: product.specifications || product.specifications,
+    specifications: product.specifications,
     features: product.features,
     pros: product.pros,
     cons: product.cons,

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Product } from '@/services/productService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { localStorageKeys } from '@/lib/constants';
+import { extractImageUrl } from '@/services/products/mappers';
 
 interface ProductImagesProps {
   product: Product;
@@ -37,9 +38,11 @@ const ProductImages: React.FC<ProductImagesProps> = ({ product, isLoading = fals
       
       const initialLoadState: {[key: string]: boolean} = { [product.imageUrl]: false };
       
-      if (product.additionalImages) {
-        product.additionalImages.forEach(img => {
-          initialLoadState[img] = false;
+      // Check if product has images array
+      if (product.images && product.images.length > 0) {
+        product.images.forEach(img => {
+          const imgUrl = extractImageUrl(img);
+          initialLoadState[imgUrl] = false;
         });
       }
       
@@ -91,6 +94,11 @@ const ProductImages: React.FC<ProductImagesProps> = ({ product, isLoading = fals
     );
   }
 
+  // Get all images for the product
+  const allImages = product.images && product.images.length > 0 ? 
+    product.images.map(img => extractImageUrl(img)) : 
+    (product.imageUrl ? [product.imageUrl] : []);
+
   return (
     <div className="md:w-1/2">
       <div className="aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden mb-4 relative">
@@ -110,37 +118,9 @@ const ProductImages: React.FC<ProductImagesProps> = ({ product, isLoading = fals
       </div>
       
       {/* Thumbnail gallery */}
-      {product.additionalImages && product.additionalImages.length > 0 && (
+      {allImages.length > 1 && (
         <div className="flex space-x-4 mt-4" role="region" aria-label="Product image gallery">
-          <button 
-            className={`cursor-pointer border-2 rounded-md overflow-hidden ${
-              selectedImage === product.imageUrl ? 'border-indigo-500' : 'border-transparent'
-            }`}
-            onClick={() => setSelectedImage(product.imageUrl)}
-            aria-label="View main product image"
-            aria-pressed={selectedImage === product.imageUrl}
-            title="View main product image"
-            type="button"
-          >
-            <div className="relative w-16 h-16">
-              {!imagesLoaded[product.imageUrl] && !imageErrors[product.imageUrl] && (
-                <Skeleton className="absolute inset-0" aria-hidden="true" />
-              )}
-              <img 
-                src={getImageSrc(product.imageUrl)} 
-                alt=""
-                aria-hidden="true"
-                className={`w-16 h-16 object-cover transition-opacity duration-300 ${
-                  imagesLoaded[product.imageUrl] || imageErrors[product.imageUrl] ? 'opacity-100' : 'opacity-0'
-                }`}
-                loading="lazy"
-                onLoad={() => handleImageLoad(product.imageUrl)}
-                onError={() => handleImageError(product.imageUrl)}
-              />
-            </div>
-          </button>
-          
-          {product.additionalImages.map((image, index) => (
+          {allImages.map((image, index) => (
             <button 
               key={index}
               className={`cursor-pointer border-2 rounded-md overflow-hidden ${

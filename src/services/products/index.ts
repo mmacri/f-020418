@@ -1,6 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from './types';
 import { getCategoryBySlug } from '@/services/categoryService';
+import { mapSupabaseProductToProduct } from './mappers';
 
 // Get all products
 export const getProducts = async (): Promise<Product[]> => {
@@ -15,30 +17,7 @@ export const getProducts = async (): Promise<Product[]> => {
       return [];
     }
     
-    return data.map(product => ({
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      description: product.description || '',
-      shortDescription: product.short_description || '',
-      price: product.price || 0,
-      originalPrice: product.original_price,
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      imageUrl: product.image_url,
-      images: product.images || [],
-      inStock: product.in_stock,
-      categoryId: product.category_id,
-      subcategory: product.subcategory_slug,
-      specifications: product.specifications || {},
-      features: product.features || [],
-      pros: product.pros || [],
-      cons: product.cons || [],
-      bestSeller: product.best_seller,
-      affiliateUrl: product.affiliate_url,
-      asin: product.asin,
-      brand: product.brand
-    }));
+    return data.map(product => mapSupabaseProductToProduct(product));
   } catch (error) {
     console.error('Error in getProducts:', error);
     return [];
@@ -73,31 +52,10 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
       }
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      description: data.description || '',
-      shortDescription: data.short_description || '',
-      price: data.price || 0,
-      originalPrice: data.original_price,
-      rating: data.rating || 0,
-      reviewCount: data.review_count || 0,
-      imageUrl: data.image_url,
-      images: data.images || [],
-      inStock: data.in_stock,
-      categoryId: data.category_id,
-      category: categoryName,
-      subcategory: data.subcategory_slug,
-      specifications: data.specifications || {},
-      features: data.features || [],
-      pros: data.pros || [],
-      cons: data.cons || [],
-      bestSeller: data.best_seller,
-      affiliateUrl: data.affiliate_url,
-      asin: data.asin,
-      brand: data.brand
-    };
+    const product = mapSupabaseProductToProduct(data);
+    product.category = categoryName;
+    
+    return product;
   } catch (error) {
     console.error('Error in getProductBySlug:', error);
     return null;
@@ -140,30 +98,7 @@ export const createProduct = async (productData: Omit<Product, 'id'>): Promise<P
       return null;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      description: data.description || '',
-      shortDescription: data.short_description || '',
-      price: data.price || 0,
-      originalPrice: data.original_price,
-      rating: data.rating || 0,
-      reviewCount: data.review_count || 0,
-      imageUrl: data.image_url,
-      images: data.images || [],
-      inStock: data.in_stock,
-      categoryId: data.category_id,
-      subcategory: data.subcategory_slug,
-      specifications: data.specifications || {},
-      features: data.features || [],
-      pros: data.pros || [],
-      cons: data.cons || [],
-      bestSeller: data.best_seller,
-      affiliateUrl: data.affiliate_url,
-      asin: data.asin,
-      brand: data.brand
-    };
+    return mapSupabaseProductToProduct(data);
   } catch (error) {
     console.error('Error in createProduct:', error);
     return null;
@@ -207,30 +142,7 @@ export const updateProduct = async (id: string, productData: Partial<Product>): 
       return null;
     }
     
-    return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      description: data.description || '',
-      shortDescription: data.short_description || '',
-      price: data.price || 0,
-      originalPrice: data.original_price,
-      rating: data.rating || 0,
-      reviewCount: data.review_count || 0,
-      imageUrl: data.image_url,
-      images: data.images || [],
-      inStock: data.in_stock,
-      categoryId: data.category_id,
-      subcategory: data.subcategory_slug,
-      specifications: data.specifications || {},
-      features: data.features || [],
-      pros: data.pros || [],
-      cons: data.cons || [],
-      bestSeller: data.best_seller,
-      affiliateUrl: data.affiliate_url,
-      asin: data.asin,
-      brand: data.brand
-    };
+    return mapSupabaseProductToProduct(data);
   } catch (error) {
     console.error('Error in updateProduct:', error);
     return null;
@@ -276,34 +188,13 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
       return [];
     }
     
-    return data.map(product => ({
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      description: product.description || '',
-      shortDescription: product.short_description || '',
-      price: product.price || 0,
-      originalPrice: product.original_price,
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      imageUrl: product.image_url,
-      images: product.images || [],
-      inStock: product.in_stock,
-      categoryId: product.category_id,
-      subcategory: product.subcategory_slug,
-      specifications: product.specifications || {},
-      features: product.features || [],
-      pros: product.pros || [],
-      cons: product.cons || [],
-      bestSeller: product.best_seller,
-      affiliateUrl: product.affiliate_url,
-      asin: product.asin,
-      brand: product.brand
-    }));
+    return data.map(product => mapSupabaseProductToProduct(product));
   } catch (error) {
     console.error('Error in searchProducts:', error);
     return [];
   }
 };
 
+// Export types
 export * from './types';
+export { mapSupabaseProductToProduct, mapProductToSupabaseProduct } from './mappers';
