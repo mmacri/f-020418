@@ -28,6 +28,8 @@ export const isAdmin = async (): Promise<boolean> => {
     // Check Supabase user first
     const { data } = await supabase.auth.getUser();
     if (data.user) {
+      console.log("Checking admin status for user:", data.user.id);
+      
       // Get user profile data to check role
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -37,9 +39,12 @@ export const isAdmin = async (): Promise<boolean> => {
       
       if (profileError) {
         console.error("Error checking admin status:", profileError);
+        return false;
       }
       
-      return profileData?.role === 'admin';
+      const isAdminUser = profileData?.role === 'admin';
+      console.log("Admin check result from Supabase:", isAdminUser, "Role:", profileData?.role);
+      return isAdminUser;
     }
     
     // Fall back to existing admin check

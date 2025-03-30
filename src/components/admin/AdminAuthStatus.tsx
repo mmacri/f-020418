@@ -1,135 +1,163 @@
+
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuthentication } from '@/hooks/useAuthentication';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { isAdmin, isAuthenticated } from '@/services/auth';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle, LogOut, Settings, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { ClipboardCheck, ClipboardX, Database, Key, RefreshCw, ShieldCheck, User } from 'lucide-react';
 
 const AdminAuthStatus = () => {
-  const { user, logout } = useAuthentication();
-  const [lastLogin, setLastLogin] = useState<string | null>(null);
-  const [sessionExpiry, setSessionExpiry] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const { user, isAuthenticated: authHookStatus } = useAuthentication();
+  const [adminStatus, setAdminStatus] = useState<boolean | null>(null);
+  const [authStatus, setAuthStatus] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [supabaseUser, setSupabaseUser] = useState<any>(null);
+  const [profileData, setProfileData] = useState<any>(null);
 
-  useEffect(() => {
-    const fetchAuthDetails = async () => {
-      // Get current session
-      const { data } = await supabase.auth.getSession();
+  const checkStatus = async () => {
+    setLoading(true);
+    try {
+      // Check authentication status
+      const isUserAuthenticated = await isAuthenticated();
+      setAuthStatus(isUserAuthenticated);
       
-      if (data.session) {
-        // Last login time (from session created_at)
-        // Access with caution since the property might not be available
-        const sessionCreatedAt = (data.session as any).created_at;
-        if (sessionCreatedAt) {
-          const loginDate = new Date(sessionCreatedAt);
-          setLastLogin(loginDate.toLocaleString());
-        }
-        
-        // Session expiry (if available)
-        if (data.session.expires_at) {
-          const expiryDate = new Date(data.session.expires_at * 1000);
-          setSessionExpiry(expiryDate.toLocaleString());
+      // Check admin status
+      const isUserAdmin = await isAdmin();
+      setAdminStatus(isUserAdmin);
+      
+      // Get Supabase user data
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setSupabaseUser(currentUser);
+      
+      // If user exists, get profile data
+      if (currentUser) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching profile data:', error);
+        } else {
+          setProfileData(profile);
         }
       }
-    };
+    } catch (error) {
+      console.error('Error checking status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchAuthDetails();
+  useEffect(() => {
+    checkStatus();
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <User className="h-5 w-5 text-gray-500" />
-          <span>Authentication Status</span>
-        </CardTitle>
-        <CardDescription>Current authentication information</CardDescription>
-      </CardHeader>
+    <div className="space-y-6">
+      <Alert className={authHookStatus ? "border-green-500" : "border-orange-500"}>
+        <User className={`h-4 w-4 ${authHookStatus ? "text-green-500" : "text-orange-500"}`} />
+        <AlertTitle>Authentication Hook Status</AlertTitle>
+        <AlertDescription>
+          {authHookStatus 
+            ? "You are authenticated according to the authentication hook." 
+            : "You are not authenticated according to the authentication hook."}
+        </AlertDescription>
+      </Alert>
       
-      <CardContent className="flex flex-col space-y-4">
-        {user ? (
-          <>
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={user.avatar || ''} alt={user.name} />
-                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-              </Avatar>
-              
-              <div>
-                <p className="font-medium">{user.name}</p>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <div className="rounded-md bg-gray-50 p-3">
-                <p className="text-xs font-medium text-gray-500">ROLE</p>
-                <div className="mt-1 flex items-center">
-                  <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
-                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="rounded-md bg-gray-50 p-3">
-                <p className="text-xs font-medium text-gray-500">STATUS</p>
-                <div className="mt-1 flex items-center">
-                  <CheckCircle className="mr-1.5 h-4 w-4 text-green-500" />
-                  <span className="text-sm">Authenticated</span>
-                </div>
-              </div>
-            </div>
-            
-            {lastLogin && (
-              <div className="rounded-md bg-gray-50 p-3">
-                <p className="text-xs font-medium text-gray-500">LAST LOGIN</p>
-                <p className="mt-1 text-sm">{lastLogin}</p>
-              </div>
+      <Alert className={authStatus ? "border-green-500" : "border-orange-500"}>
+        <Key className={`h-4 w-4 ${authStatus ? "text-green-500" : "text-orange-500"}`} />
+        <AlertTitle>Authentication Service Status</AlertTitle>
+        <AlertDescription>
+          {authStatus === null 
+            ? "Checking authentication status..." 
+            : authStatus 
+              ? "You are authenticated according to the authentication service." 
+              : "You are not authenticated according to the authentication service."}
+        </AlertDescription>
+      </Alert>
+      
+      <Alert className={adminStatus ? "border-green-500" : "border-red-500"}>
+        <ShieldCheck className={`h-4 w-4 ${adminStatus ? "text-green-500" : "text-red-500"}`} />
+        <AlertTitle>Admin Status</AlertTitle>
+        <AlertDescription>
+          {adminStatus === null 
+            ? "Checking admin status..." 
+            : adminStatus 
+              ? "You have admin privileges." 
+              : "You do not have admin privileges."}
+        </AlertDescription>
+      </Alert>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" /> Supabase Data
+          </CardTitle>
+          <CardDescription>
+            Current Supabase authentication and profile data
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Supabase User:</h3>
+            {supabaseUser ? (
+              <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-40">
+                {JSON.stringify(supabaseUser, null, 2)}
+              </pre>
+            ) : (
+              <p className="text-sm text-muted-foreground">No Supabase user data available</p>
             )}
-            
-            {sessionExpiry && (
-              <div className="rounded-md bg-gray-50 p-3">
-                <p className="text-xs font-medium text-gray-500">SESSION EXPIRES</p>
-                <p className="mt-1 text-sm">{sessionExpiry}</p>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex items-center justify-center space-x-2 py-6">
-            <AlertCircle className="h-5 w-5 text-amber-500" />
-            <span>Not authenticated</span>
           </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" size="sm" onClick={() => navigate('/profile')}>
-          <Settings className="mr-2 h-4 w-4" />
-          Profile Settings
-        </Button>
-        
-        <Button variant="destructive" size="sm" onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
-      </CardFooter>
-    </Card>
+          
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Profile Data:</h3>
+            {profileData ? (
+              <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-40">
+                {JSON.stringify(profileData, null, 2)}
+              </pre>
+            ) : (
+              <p className="text-sm text-muted-foreground">No profile data available</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Authentication Hook User:</h3>
+            {user ? (
+              <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-40">
+                {JSON.stringify(user, null, 2)}
+              </pre>
+            ) : (
+              <p className="text-sm text-muted-foreground">No user data available from hook</p>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            onClick={checkStatus} 
+            disabled={loading} 
+            variant="outline" 
+            className="w-full"
+            size="sm"
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Checking Status...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh Status
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 
