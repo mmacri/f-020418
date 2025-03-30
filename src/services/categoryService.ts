@@ -191,6 +191,20 @@ export const getNavigationCategories = async (): Promise<Category[]> => {
   return CATEGORIES;
 };
 
+// Get all categories with subcategories
+export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
+  // Simulate API request delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  // Load latest from localStorage
+  const storedCategories = localStorage.getItem('categories');
+  if (storedCategories) {
+    CATEGORIES = JSON.parse(storedCategories);
+  }
+  
+  return CATEGORIES;
+};
+
 // Get category by slug
 export const getCategoryBySlug = async (slug: string): Promise<Category | null> => {
   // Simulate API request delay

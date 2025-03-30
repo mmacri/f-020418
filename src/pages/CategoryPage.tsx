@@ -80,7 +80,7 @@ const CategoryPage = () => {
       
       {/* Category Hero */}
       <CategoryHero 
-        name={categoryData.name}
+        categorySlug={categorySlug}
         description={categoryData.description}
         backgroundImage={categoryData.imageUrl}
         subcategories={categoryData.subcategories || []}

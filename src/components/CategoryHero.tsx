@@ -4,20 +4,24 @@ import { getCategoryName } from '@/lib/product-utils';
 import { ImageWithFallback } from '@/lib/images';
 import { imageUrls } from '@/lib/constants';
 
-interface CategoryHeroProps {
-  categorySlug: string;
+export interface CategoryHeroProps {
+  categorySlug?: string;
   description?: string;
   backgroundImage?: string;
   category?: any;
+  name?: string;
+  subcategories?: any[];
 }
 
 const CategoryHero: React.FC<CategoryHeroProps> = ({ 
   categorySlug, 
   description, 
   backgroundImage,
-  category
+  category,
+  name,
+  subcategories
 }) => {
-  const categoryName = category?.name || getCategoryName(categorySlug);
+  const categoryName = name || (category?.name) || (categorySlug ? getCategoryName(categorySlug) : '');
   const imageUrl = backgroundImage || category?.imageUrl || imageUrls.CATEGORY_DEFAULT;
   
   return (

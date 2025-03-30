@@ -26,7 +26,7 @@ interface SubcategoryFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   isLoading: boolean;
-  imageMethod?: 'url' | 'upload';
+  imageMethod: 'url' | 'upload';
   onImageMethodChange?: (value: 'url' | 'upload') => void;
   onFileChange?: (file: File | null) => void;
 }
@@ -89,7 +89,7 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
         <Label>Subcategory Image</Label>
         <RadioGroup 
           value={imageMethod} 
-          onValueChange={onImageMethodChange as any}
+          onValueChange={(value: 'url' | 'upload') => onImageMethodChange && onImageMethodChange(value)}
           className="flex flex-col space-y-1"
         >
           <div className="flex items-center space-x-2">
