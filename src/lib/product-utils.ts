@@ -1,5 +1,6 @@
 import { getCategoryBySlug } from '@/services/categoryService';
 import { getProducts, getProductById, getProductBySlug } from '@/services/productService';
+import { currencyFormatter } from './constants';
 
 /**
  * Get category name from slug
@@ -68,14 +69,16 @@ export const getProductsByCategory = async (categorySlug: string, subcategorySlu
 };
 
 /**
- * Format currency
+ * Format currency - Keeping for backward compatibility
  */
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
+  return currencyFormatter.format(amount);
 };
+
+/**
+ * Format price - Alias for formatCurrency for better semantics
+ */
+export const formatPrice = formatCurrency;
 
 /**
  * Calculate discount percentage
@@ -171,6 +174,11 @@ export const getProductLink = (product: any): string => {
   // If no slug, use ID
   return `/products/${product.id}`;
 };
+
+/**
+ * Generate product URL - Alias for getProductLink for better semantics
+ */
+export const getProductUrl = getProductLink;
 
 /**
  * Get first product image or fallback

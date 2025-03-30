@@ -23,6 +23,12 @@ export const localStorageKeys = {
   USER_FAVORITES: 'recovery-essentials-favorites',
   RECENT_VIEWS: 'recovery-essentials-recent-views',
   COMPARISON_PRODUCTS: 'recovery-essentials-comparison-products',
+  WISHLIST_ITEMS: 'recovery-essentials-wishlist-items',
+  
+  // Analytics and tracking
+  AFFILIATE_CLICKS: 'recovery-essentials-affiliate-clicks',
+  ANALYTICS_DATA: 'recovery-essentials-analytics-data',
+  USER_ID: 'recovery-essentials-user-id',
   
   // Admin data
   ADMIN_SETTINGS: 'recovery-essentials-admin-settings',
@@ -62,7 +68,14 @@ export const DEFAULT_NAVIGATION = [
   { name: 'Blog', href: '/blog' },
   { name: 'About', href: '/about' },
   { name: 'Contact', href: '/contact' },
-];
+  // This fixes the Header.tsx error about mainMenu
+  mainMenu: [
+    { name: 'Home', href: '/' },
+    { name: 'Categories', href: '/categories' },
+    { name: 'Compare', href: '/product-comparison' },
+    { name: 'Blog', href: '/blog' },
+  ]
+};
 
 /**
  * Site metadata
