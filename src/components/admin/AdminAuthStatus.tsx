@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthentication } from '@/hooks/useAuthentication';
@@ -22,8 +21,12 @@ const AdminAuthStatus = () => {
       
       if (data.session) {
         // Last login time (from session created_at)
-        const loginDate = new Date(data.session.created_at);
-        setLastLogin(loginDate.toLocaleString());
+        // Access with caution since the property might not be available
+        const sessionCreatedAt = (data.session as any).created_at;
+        if (sessionCreatedAt) {
+          const loginDate = new Date(sessionCreatedAt);
+          setLastLogin(loginDate.toLocaleString());
+        }
         
         // Session expiry (if available)
         if (data.session.expires_at) {

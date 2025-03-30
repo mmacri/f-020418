@@ -32,7 +32,7 @@ const Index = () => {
         const { data: featuredData, error: featuredError } = await supabase
           .from('products')
           .select('*')
-          .eq('bestSeller', true)
+          .eq('attributes->bestSeller', true)
           .order('rating', { ascending: false })
           .limit(6);
           
@@ -42,8 +42,32 @@ const Index = () => {
         }
         
         if (featuredData && featuredData.length > 0) {
-          // Directly use featured products from Supabase
-          setFeaturedProducts(featuredData as Product[]);
+          // Map Supabase products to our Product interface
+          const mappedProducts = featuredData.map(product => ({
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            originalPrice: product.sale_price || undefined,
+            rating: product.rating || 0,
+            reviewCount: (product.attributes as any)?.reviewCount || 0,
+            imageUrl: product.image_url || '',
+            images: [product.image_url || ''],
+            inStock: product.in_stock,
+            category: (product.attributes as any)?.category || '',
+            categoryId: product.category_id,
+            subcategory: (product.attributes as any)?.subcategory || '',
+            specifications: product.specifications as Record<string, string>,
+            specs: product.specifications as Record<string, string>,
+            createdAt: product.created_at,
+            updatedAt: product.updated_at,
+            features: (product.attributes as any)?.features || [],
+            bestSeller: (product.attributes as any)?.bestSeller || false,
+            brand: (product.attributes as any)?.brand || '',
+            pros: (product.attributes as any)?.pros || []
+          }));
+          setFeaturedProducts(mappedProducts);
         } else {
           // Fall back to regular product fetching
           // Get all products
