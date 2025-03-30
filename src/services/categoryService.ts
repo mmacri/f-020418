@@ -1,4 +1,3 @@
-
 // Add this function to the existing categoryService.ts file
 export const getCategoriesWithSubcategories = async () => {
   // This is a mock implementation - in a real app, you would fetch from an API
@@ -155,11 +154,14 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
 };
 
 // Get a subcategory by its slug within a category
-export const getSubcategoryBySlug = async (categorySlug: string, subcategorySlug: string): Promise<Subcategory | null> => {
+export const getSubcategoryBySlug = async (categorySlug: string, subcategorySlug: string): Promise<{ category: Category, subcategory: Subcategory } | null> => {
   const category = await getCategoryBySlug(categorySlug);
   if (!category || !category.subcategories) return null;
   
-  return category.subcategories.find(sub => sub.slug === subcategorySlug) || null;
+  const subcategory = category.subcategories.find(sub => sub.slug === subcategorySlug);
+  if (!subcategory) return null;
+  
+  return { category, subcategory };
 };
 
 // Get all categories and their subcategories

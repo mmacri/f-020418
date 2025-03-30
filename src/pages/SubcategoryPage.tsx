@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
@@ -27,7 +26,7 @@ const SubcategoryPage = () => {
         const data = await getSubcategoryBySlug(categorySlug, subcategorySlug);
         setSubcategoryData(data);
         
-        if (data) {
+        if (data && data.category && data.subcategory) {
           // Generate breadcrumbs
           const crumbs = generateCategoryBreadcrumbs(data.category, data.subcategory);
           setBreadcrumbs(crumbs);
@@ -57,7 +56,7 @@ const SubcategoryPage = () => {
     );
   }
 
-  if (!subcategoryData) {
+  if (!subcategoryData || !subcategoryData.category || !subcategoryData.subcategory) {
     return (
       <MainLayout>
         <div className="min-h-screen flex flex-col items-center justify-center">

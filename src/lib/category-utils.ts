@@ -1,9 +1,10 @@
+
 import { getCategoryBySlug, getNavigationCategories, getSubcategoryBySlug } from "@/services/categoryService";
 
 /**
  * Get a category by ID
  */
-export const getCategoryById = async (categoryId: number) => {
+export const getCategoryById = async (categoryId: string) => {
   try {
     const categories = await getNavigationCategories();
     return categories.find(cat => cat.id === categoryId) || null;
@@ -16,7 +17,7 @@ export const getCategoryById = async (categoryId: number) => {
 /**
  * Get subcategory by ID within a category
  */
-export const getSubcategoryById = async (categoryId: number, subcategoryId: number) => {
+export const getSubcategoryById = async (categoryId: string, subcategoryId: string) => {
   try {
     const category = await getCategoryById(categoryId);
     if (!category) return null;

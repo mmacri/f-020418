@@ -14,8 +14,8 @@ export const getProductsByCategory = async (categorySlug: string, subcategorySlu
     const category = await getCategoryBySlug(categorySlug);
     if (!category) return [];
     
-    // Filter products by category ID
-    let filteredProducts = products.filter(product => product.categoryId === category.id);
+    // Filter products by category ID - convert the category.id to a number for comparison
+    let filteredProducts = products.filter(product => product.categoryId === parseInt(category.id));
     
     // Further filter by subcategory if provided
     if (subcategorySlug && filteredProducts.length > 0) {
