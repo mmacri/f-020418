@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
@@ -11,7 +12,7 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 
-// Define a more specific type for Supabase product data, using a concrete type instead of recursive references
+// Define a more specific type for Supabase product attributes
 type SupabaseAttributes = {
   reviewCount?: number;
   features?: string[];
@@ -22,6 +23,7 @@ type SupabaseAttributes = {
   pros?: string[];
 };
 
+// Define a concrete type for Supabase product data
 type SupabaseProductData = {
   id: string;
   slug: string;
