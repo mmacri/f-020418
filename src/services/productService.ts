@@ -17,6 +17,7 @@ export interface Product {
   category: string;
   categoryId: number;
   subcategory?: string; // Add subcategory property
+  subcategoryId?: number; // Add subcategoryId property
   rating: number;
   reviewCount: number;
   features?: string[];
@@ -198,6 +199,7 @@ export type ProductInput = Omit<Product, "id" | "createdAt" | "updatedAt"> | {
   originalPrice?: number;
   affiliateUrl?: string;
   inStock?: boolean;
+  subcategoryId?: number; // Add subcategoryId to ProductInput
   [key: string]: any;
 };
 
