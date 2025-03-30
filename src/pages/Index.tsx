@@ -30,18 +30,11 @@ const Index = () => {
         const categoriesData = await getNavigationCategories();
         setCategories(categoriesData.filter(cat => cat.showInNavigation !== false));
         
-        // Get featured products from Supabase with explicit any typing
+        // Get featured products from Supabase
         try {
-          // First, query using just the .select method without chaining to simplify type inference
-          const productsQuery = supabase.from('products').select('*');
-          
-          // Then apply filters as separate steps with explicit any typing
-          const filteredQuery = productsQuery.eq('attributes->bestSeller', true);
-          const orderedQuery = filteredQuery.order('rating', { ascending: false });
-          const limitedQuery = orderedQuery.limit(6);
-          
-          // Execute the query
-          const { data, error: featuredError } = await limitedQuery;
+          // Use the raw PostgreSQL query approach to avoid TypeScript inference issues
+          const { data, error: featuredError } = await supabase
+            .rpc('get_featured_products') as { data: any[], error: any };
             
           if (featuredError) {
             console.error('Error fetching featured products:', featuredError);
@@ -49,15 +42,13 @@ const Index = () => {
           }
           
           if (data && data.length > 0) {
-            // Use simple array to hold products
             const tempProducts: Product[] = [];
             
-            // Map data using index-based loop to avoid type issues
+            // Map the raw data to products
             for (let i = 0; i < data.length; i++) {
               try {
-                // Cast each item to any to break type inference
-                const item: any = data[i];
-                const product = mapSupabaseProductToProduct(item);
+                const rawProduct = data[i] as any;
+                const product = mapSupabaseProductToProduct(rawProduct);
                 tempProducts.push(product);
               } catch (err) {
                 console.error('Error mapping product:', err);
