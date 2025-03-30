@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
@@ -12,7 +11,7 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 
-// Define a more specific type for Supabase product data
+// Define a more specific type for Supabase product data, using a concrete type instead of recursive references
 type SupabaseAttributes = {
   reviewCount?: number;
   features?: string[];
@@ -80,7 +79,6 @@ const Index = () => {
           );
           setFeaturedProducts(mappedProducts);
         } else {
-          // Fall back to regular product fetching
           // Get all products
           const products = await getProducts();
           

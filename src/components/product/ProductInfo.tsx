@@ -42,7 +42,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onShare, onBuyNow })
     if (affiliateUrl) {
       handleAffiliateClick(
         affiliateUrl, 
-        String(product.id), 
+        String(product.id), // Ensure ID is converted to string
         product.title || product.name, 
         product.asin
       );
