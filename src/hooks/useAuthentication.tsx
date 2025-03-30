@@ -59,7 +59,7 @@ export const useAuthentication = (): UseAuthenticationResult => {
         }
         
         // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        const { data } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log('Auth state changed:', event, !!session);
             
@@ -80,7 +80,7 @@ export const useAuthentication = (): UseAuthenticationResult => {
         
         // Clean up subscription
         return () => {
-          subscription.unsubscribe();
+          data.subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Auth check error:', error);

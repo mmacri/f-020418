@@ -17,7 +17,6 @@ import { publishScheduledPosts } from '@/services/blogService';
 import { toast } from 'sonner';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { isAdmin as checkIsAdmin } from '@/services/authService';
 
 const AdminPage = () => {
@@ -45,8 +44,8 @@ const AdminPage = () => {
     const checkAdminStatus = async () => {
       setCheckingAdmin(true);
       try {
-        if (!isAuthenticated) {
-          console.log("User not authenticated for admin check");
+        if (!isAuthenticated || isLoading) {
+          console.log("User not authenticated for admin check or still loading auth");
           setIsAdmin(false);
           return;
         }
