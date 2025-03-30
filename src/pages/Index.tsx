@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
-import { getProducts, Product } from '@/services/productService';
+import { getProducts } from '@/services/productService';
 import HeroSection from '@/components/home/HeroSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import FeaturedProductsSection from '@/components/home/FeaturedProductsSection';
@@ -11,6 +11,7 @@ import NewsletterSection from '@/components/home/NewsletterSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
+import type { Product } from '@/services/products/types';
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -45,20 +46,21 @@ const Index = () => {
           
           if (supabaseData && supabaseData.length > 0) {
             // Import mapper dynamically to avoid circular dependency
-            const mapperModule = await import('@/services/products/mappers');
+            const { mapSupabaseProductToProduct } = await import('@/services/products/mappers');
             
-            // Create a temporary array to hold the mapped products
+            // Create a temporary array using type assertion to avoid complex inference
             const tempProducts: Product[] = [];
             
-            // Process each product separately to avoid complex type instantiation
-            supabaseData.forEach((item) => {
+            // Map products without relying on complex type inference
+            for (let i = 0; i < supabaseData.length; i++) {
               try {
-                const mappedProduct = mapperModule.mapSupabaseProductToProduct(item);
-                tempProducts.push(mappedProduct);
+                // Use explicit type assertion to break the deep inference chain
+                const product = mapSupabaseProductToProduct(supabaseData[i] as any);
+                tempProducts.push(product);
               } catch (err) {
-                console.error('Error mapping product:', err);
+                console.error('Error mapping product:', err, supabaseData[i]);
               }
-            });
+            }
             
             setFeaturedProducts(tempProducts);
           } else {
