@@ -10,6 +10,7 @@ import Breadcrumbs from '@/components/Breadcrumbs';
 import ProductCard from '@/components/ProductCard';
 import { Loader2 } from 'lucide-react';
 import { trackAffiliateClick } from '@/lib/analytics-utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const SubcategoryPage = () => {
   const { categorySlug, subcategorySlug } = useParams<{ categorySlug: string; subcategorySlug: string }>();

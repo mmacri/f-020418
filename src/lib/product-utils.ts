@@ -29,6 +29,15 @@ export const getProductUrl = (product: Product): string => {
   return `/products/${product.id}`;
 };
 
+// Get category name from slug
+export const getCategoryName = (categorySlug: string): string => {
+  // Capitalize each word and replace hyphens with spaces
+  return categorySlug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 // Get products by category slug
 export const getProductsByCategory = async (categorySlug: string): Promise<Product[]> => {
   try {
@@ -122,8 +131,8 @@ export const getRelatedProducts = async (productId: string | number, categoryId:
     const { data: relatedData, error: relatedError } = await supabase
       .from('products')
       .select('*')
-      .eq('category_id', categoryId)
-      .neq('id', productId)
+      .eq('category_id', categoryId.toString())
+      .neq('id', productId.toString())
       .order('rating', { ascending: false })
       .limit(limit);
     
