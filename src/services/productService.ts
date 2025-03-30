@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
@@ -7,16 +8,16 @@ export interface SupabaseProduct {
   id: string;
   slug: string;
   name: string;
-  description: string;
-  price: number;
+  description: string | null;
+  price: number | null;
   sale_price: number | null;
-  rating: number;
-  image_url: string;
-  in_stock: boolean;
-  availability: boolean;
-  category_id: string;
-  attributes: Json;
-  specifications: Json;
+  rating: number | null;
+  image_url: string | null;
+  in_stock: boolean | null;
+  availability: boolean | null;
+  category_id: string | null;
+  attributes: Json | null;
+  specifications: Json | null;
   created_at: string;
   updated_at: string;
 }

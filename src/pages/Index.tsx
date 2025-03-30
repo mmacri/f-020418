@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
@@ -12,7 +13,7 @@ import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 
 // Import mapSupabaseProductToProduct function for mapping Supabase data to Product
-import { mapSupabaseProductToProduct } from '@/services/productService';
+import { mapSupabaseProductToProduct, SupabaseProduct } from '@/services/productService';
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -45,10 +46,9 @@ const Index = () => {
         
         if (featuredData && featuredData.length > 0) {
           // Map Supabase products to our Product interface
+          // Use type assertion to avoid deep type instantiation
           const mappedProducts: Product[] = featuredData.map(product => 
-            // Cast the product to any to avoid TypeScript errors
-            // This is acceptable here since we know the structure matches
-            mapSupabaseProductToProduct(product as any)
+            mapSupabaseProductToProduct(product as SupabaseProduct)
           );
           setFeaturedProducts(mappedProducts);
         } else {
