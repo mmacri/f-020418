@@ -18,6 +18,7 @@ export const localStorageKeys = {
   SUBCATEGORIES: 'recovery-essentials-subcategories',
   CATEGORY_CONTENT: 'recovery-essentials-category-content',
   BLOG_POSTS: 'recovery-essentials-blog-posts',
+  BLOG_CATEGORIES: 'recovery-essentials-blog-categories',
   
   // User data
   USER_FAVORITES: 'recovery-essentials-favorites',

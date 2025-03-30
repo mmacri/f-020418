@@ -4,7 +4,7 @@ import { formatPrice } from '@/lib/product-utils';
 import { Product } from '@/services/productService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, ExternalLink } from 'lucide-react';
 import { handleAffiliateClick } from '@/lib/affiliate-utils';
 import { Link } from 'react-router-dom';
 
@@ -13,13 +13,15 @@ interface QuickCompareProps {
   title?: string;
   showViewFullComparison?: boolean;
   comparisonUrl?: string;
+  buttonText?: string;
 }
 
 const QuickCompare: React.FC<QuickCompareProps> = ({ 
   products, 
   title = "Quick Comparison", 
   showViewFullComparison = true,
-  comparisonUrl = "/product-comparison"
+  comparisonUrl = "/product-comparison",
+  buttonText = "View on Amazon"
 }) => {
   if (products.length < 2) return null;
 
@@ -41,6 +43,13 @@ const QuickCompare: React.FC<QuickCompareProps> = ({
     }
     
     return product.imageUrl || '/placeholder.svg';
+  };
+
+  // Helper to get the affiliate URL for a product
+  const getAffiliateUrl = (product: Product): string => {
+    // Try different possible property names for affiliate links
+    return product.affiliateLink || product.affiliateUrl || 
+      (product.asin ? `https://www.amazon.com/dp/${product.asin}?tag=recoveryessentials-20` : '#');
   };
 
   return (
@@ -72,7 +81,7 @@ const QuickCompare: React.FC<QuickCompareProps> = ({
               <div className="mb-3 text-sm">
                 <div className="flex items-center text-gray-700 mb-1">
                   <Check className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="line-clamp-1">{product.specifications?.['Best For'] || 'Great all-around'}</span>
+                  <span className="line-clamp-1">{product.specifications?.['Best For'] || product.shortDescription || 'Great all-around'}</span>
                 </div>
                 {product.rating && (
                   <div className="flex items-center text-gray-700">
@@ -81,18 +90,23 @@ const QuickCompare: React.FC<QuickCompareProps> = ({
                   </div>
                 )}
               </div>
-              <Button
-                onClick={() => {
-                  const url = product.affiliateLink || product.affiliateUrl || 
-                    (product.asin ? `https://www.amazon.com/dp/${product.asin}?tag=recoveryessentials-20` : '#');
-                  handleAffiliateClick(url, product.id, product.name, product.asin);
-                }}
-                className="w-full"
-                variant="outline"
-                size="sm"
-              >
-                View on Amazon
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={() => {
+                    const url = getAffiliateUrl(product);
+                    handleAffiliateClick(url, product.id, product.name, product.asin);
+                  }}
+                  className="w-full"
+                  variant="outline"
+                  size="sm"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                  {buttonText}
+                </Button>
+                <Link to={`/products/${product.slug || product.id}`} className="text-xs text-center text-gray-500 hover:text-gray-700">
+                  View details
+                </Link>
+              </div>
             </CardContent>
           </Card>
         ))}

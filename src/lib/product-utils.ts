@@ -14,7 +14,7 @@ export const getCategoryName = (categorySlug: string): string => {
 };
 
 /**
- * Get products by category slug
+ * Get products by category slug with enhanced subcategory support
  */
 export const getProductsByCategory = async (categorySlug: string, subcategorySlug?: string): Promise<any[]> => {
   try {
@@ -53,6 +53,11 @@ export const getProductsByCategory = async (categorySlug: string, subcategorySlu
           if (product.subcategory && 
               (product.subcategory.toLowerCase() === subcategory.name.toLowerCase() || 
                product.subcategory.toLowerCase().replace(/\s+/g, '-') === subcategorySlug)) {
+            return true;
+          }
+          
+          // Match by subcategoryId if available
+          if (product.subcategoryId && String(product.subcategoryId) === String(subcategory.id)) {
             return true;
           }
           
@@ -117,7 +122,8 @@ export const getProductFeatureSummary = (product: any, maxFeatures: number = 3):
 };
 
 /**
- * Get related products (similar products in the same category)
+ * Get related products (similar products in the same category or subcategory)
+ * Enhanced to better support subcategories
  */
 export const getRelatedProducts = async (productId: number, limit: number = 4): Promise<any[]> => {
   try {
@@ -134,15 +140,19 @@ export const getRelatedProducts = async (productId: number, limit: number = 4): 
     // Prioritize products in the same subcategory if available
     let sortedProducts = [...categoryProducts];
     
-    if (product.subcategory) {
+    if (product.subcategory || product.subcategoryId) {
       sortedProducts.sort((a, b) => {
-        // Sort by subcategory match (same subcategory first)
-        if (a.subcategory === product.subcategory && b.subcategory !== product.subcategory) {
-          return -1;
-        }
-        if (a.subcategory !== product.subcategory && b.subcategory === product.subcategory) {
-          return 1;
-        }
+        // Sort by subcategory match
+        const aMatches = (a.subcategory === product.subcategory) || 
+                         (a.subcategoryId && product.subcategoryId && 
+                          String(a.subcategoryId) === String(product.subcategoryId));
+        
+        const bMatches = (b.subcategory === product.subcategory) || 
+                         (b.subcategoryId && product.subcategoryId && 
+                          String(b.subcategoryId) === String(product.subcategoryId));
+        
+        if (aMatches && !bMatches) return -1;
+        if (!aMatches && bMatches) return 1;
         
         // Then by rating (highest first)
         return b.rating - a.rating;
@@ -263,4 +273,97 @@ export const createProductImageUrl = (url: string, addCacheBusting: boolean = fa
   // Add timestamp as cache buster
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}t=${Date.now()}`;
+};
+
+/**
+ * Get product subcategory information
+ */
+export const getProductSubcategory = async (product: any) => {
+  if (!product || (!product.subcategory && !product.subcategoryId)) {
+    return null;
+  }
+  
+  try {
+    // If we have a category, find the subcategory within it
+    if (product.categoryId) {
+      const category = await getCategoryBySlug(product.category?.toLowerCase().replace(/\s+/g, '-'));
+      
+      if (category && category.subcategories) {
+        // Try to match by ID first
+        if (product.subcategoryId) {
+          const subById = category.subcategories.find(
+            s => String(s.id) === String(product.subcategoryId)
+          );
+          if (subById) return subById;
+        }
+        
+        // Then try to match by name
+        if (product.subcategory) {
+          const subByName = category.subcategories.find(
+            s => s.name.toLowerCase() === product.subcategory.toLowerCase() ||
+                 s.slug === product.subcategory.toLowerCase().replace(/\s+/g, '-')
+          );
+          if (subByName) return subByName;
+        }
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting product subcategory:', error);
+    return null;
+  }
+};
+
+/**
+ * Generate product breadcrumbs including subcategory
+ */
+export const getProductBreadcrumbs = async (product: any) => {
+  const breadcrumbs = [
+    { name: 'Home', href: '/' }
+  ];
+  
+  try {
+    if (product.categoryId || product.category) {
+      let categorySlug = '';
+      let categoryName = '';
+      
+      if (product.category) {
+        categorySlug = product.category.toLowerCase().replace(/\s+/g, '-');
+        categoryName = product.category;
+      }
+      
+      // Add category breadcrumb
+      breadcrumbs.push({
+        name: categoryName,
+        href: `/categories/${categorySlug}`
+      });
+      
+      // Add subcategory breadcrumb if exists
+      const subcategory = await getProductSubcategory(product);
+      if (subcategory) {
+        breadcrumbs.push({
+          name: subcategory.name,
+          href: `/categories/${categorySlug}/${subcategory.slug}`
+        });
+      }
+    }
+    
+    // Add product breadcrumb
+    breadcrumbs.push({
+      name: product.name,
+      href: `/products/${product.slug || product.id}`
+    });
+    
+    return breadcrumbs;
+  } catch (error) {
+    console.error('Error generating product breadcrumbs:', error);
+    
+    // Fallback simple breadcrumbs
+    return [
+      { name: 'Home', href: '/' },
+      { name: 'Products', href: '/products' },
+      { name: product.name, href: `/products/${product.slug || product.id}` }
+    ];
+  }
 };
