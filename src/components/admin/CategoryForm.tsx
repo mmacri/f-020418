@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import { CategoryInput } from '@/services/categoryService';
+import FileUploadWithPreview from '@/components/FileUploadWithPreview';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface CategoryFormProps {
   formData: CategoryInput & { showInNavigation?: boolean };
@@ -16,6 +18,9 @@ interface CategoryFormProps {
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  imageMethod?: 'url' | 'upload';
+  onImageMethodChange?: (value: 'url' | 'upload') => void;
+  onImageChange?: (url: string) => void;
 }
 
 const CategoryForm: React.FC<CategoryFormProps> = ({
@@ -25,8 +30,30 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   onNameChange,
   onSubmit,
   onCancel,
-  isLoading = false
+  isLoading = false,
+  imageMethod = 'url',
+  onImageMethodChange,
+  onImageChange
 }) => {
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange(e);
+  };
+
+  const handleImageUpload = (url: string) => {
+    if (onImageChange) {
+      onImageChange(url);
+    } else {
+      // Fallback to using a simulated input change event
+      const event = {
+        target: {
+          name: 'imageUrl',
+          value: url
+        }
+      } as React.ChangeEvent<HTMLInputElement>;
+      onInputChange(event);
+    }
+  };
+
   return (
     <form onSubmit={onSubmit} className="space-y-4 mt-4">
       <div className="space-y-2">
@@ -68,19 +95,55 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         />
       </div>
 
+      {/* Image Selection */}
       <div className="space-y-2">
-        <Label htmlFor="categoryImageUrl">Image URL</Label>
-        <Input
-          id="categoryImageUrl"
-          name="imageUrl"
-          value={formData.imageUrl || ''}
-          onChange={onInputChange}
-          placeholder="https://example.com/image.jpg"
-        />
-        <p className="text-xs text-muted-foreground">
-          URL to an image representing this category
-        </p>
+        <Label>Category Image</Label>
+        <RadioGroup 
+          value={imageMethod} 
+          onValueChange={(value: 'url' | 'upload') => onImageMethodChange && onImageMethodChange(value)}
+          className="flex flex-col space-y-1"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="url" id="categoryImageUrl" />
+            <Label htmlFor="categoryImageUrl" className="cursor-pointer">Image URL</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="upload" id="categoryImageUpload" />
+            <Label htmlFor="categoryImageUpload" className="cursor-pointer">Upload Image</Label>
+          </div>
+        </RadioGroup>
       </div>
+
+      {imageMethod === 'url' ? (
+        <div className="space-y-2">
+          <Label htmlFor="imageUrlInput">Image URL</Label>
+          <Input
+            id="imageUrlInput"
+            name="imageUrl"
+            value={formData.imageUrl || ''}
+            onChange={handleImageUrlChange}
+            placeholder="https://example.com/image.jpg"
+          />
+          <p className="text-xs text-muted-foreground">
+            URL to an image representing this category
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <Label>Upload Image</Label>
+          <FileUploadWithPreview
+            onFileChange={handleImageUpload}
+            currentImage={formData.imageUrl}
+            bucket="category-images"
+            folder="categories"
+            maxSize={5}
+            aspectRatio="landscape"
+          />
+          <p className="text-xs text-muted-foreground">
+            Recommended size: 1200x600 pixels, max 5MB
+          </p>
+        </div>
+      )}
 
       <div className="flex items-center space-x-2 mt-4">
         <Checkbox

@@ -2,12 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { 
   Dialog, 
   DialogContent, 
   DialogDescription, 
-  DialogFooter, 
   DialogHeader, 
   DialogTitle 
 } from '@/components/ui/dialog';
@@ -45,12 +43,11 @@ const AdminCategories = () => {
     navigationOrder: 0
   });
   
-  // Update subcategoryFormData to match Subcategory interface
   const [subcategoryFormData, setSubcategoryFormData] = useState<{
     id: string;
     name: string;
     slug: string;
-    description?: string; // Make optional to match Subcategory interface
+    description?: string;
     imageUrl?: string;
     showInNavigation: boolean;
   }>({
@@ -63,7 +60,6 @@ const AdminCategories = () => {
   });
   
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url');
 
   useEffect(() => {
@@ -127,6 +123,14 @@ const AdminCategories = () => {
     setSubcategoryFormData(prev => ({ ...prev, name, slug }));
   };
 
+  const handleImageChange = (url: string) => {
+    setFormData(prev => ({ ...prev, imageUrl: url }));
+  };
+
+  const handleSubcategoryImageChange = (url: string) => {
+    setSubcategoryFormData(prev => ({ ...prev, imageUrl: url }));
+  };
+
   const openNewCategoryForm = () => {
     setFormData({
       name: '',
@@ -138,6 +142,7 @@ const AdminCategories = () => {
     });
     setIsEditing(false);
     setIsFormOpen(true);
+    setImageMethod('url');
   };
 
   const openEditCategoryForm = (category: Category) => {
@@ -152,6 +157,7 @@ const AdminCategories = () => {
     setIsEditing(true);
     setIsFormOpen(true);
     setSelectedCategory(category);
+    setImageMethod('url');
   };
 
   const openNewSubcategoryForm = (category: Category) => {
@@ -167,7 +173,6 @@ const AdminCategories = () => {
     setIsSubcategoryFormOpen(true);
     setSelectedCategory(category);
     setImageMethod('url');
-    setSelectedFile(null);
   };
 
   const openEditSubcategoryForm = (subcategory: Subcategory) => {
@@ -192,7 +197,6 @@ const AdminCategories = () => {
     setIsEditing(true);
     setIsSubcategoryFormOpen(true);
     setImageMethod('url');
-    setSelectedFile(null);
   };
 
   const handleCategorySubmit = async (e: React.FormEvent) => {
@@ -249,18 +253,8 @@ const AdminCategories = () => {
     setIsSaving(true);
     
     try {
-      // Handle file upload if needed
-      let imageUrl = subcategoryFormData.imageUrl;
-      if (imageMethod === 'upload' && selectedFile) {
-        // In a real application, you would upload the file to your server or a service like S3
-        // For this example, we'll create a mock URL
-        imageUrl = URL.createObjectURL(selectedFile);
-        // This is just for demo purposes - in production you'd use a proper upload API
-      }
-      
       const dataToSave = {
         ...subcategoryFormData,
-        imageUrl
       };
       
       if (isEditing) {
@@ -318,10 +312,6 @@ const AdminCategories = () => {
       console.error('Error deleting subcategory:', error);
       toast.error('Failed to delete subcategory');
     }
-  };
-
-  const handleFileChange = (file: File | null) => {
-    setSelectedFile(file);
   };
 
   return (
@@ -382,6 +372,9 @@ const AdminCategories = () => {
             onSubmit={handleCategorySubmit}
             onCancel={() => setIsFormOpen(false)}
             isLoading={isSaving}
+            imageMethod={imageMethod}
+            onImageMethodChange={setImageMethod}
+            onImageChange={handleImageChange}
           />
         </DialogContent>
       </Dialog>
@@ -410,7 +403,7 @@ const AdminCategories = () => {
             isLoading={isSaving}
             imageMethod={imageMethod}
             onImageMethodChange={setImageMethod}
-            onFileChange={handleFileChange}
+            onImageChange={handleSubcategoryImageChange}
           />
         </DialogContent>
       </Dialog>

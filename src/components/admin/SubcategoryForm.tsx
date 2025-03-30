@@ -5,17 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { FileUpload } from '@/components/FileUpload';
 import { Loader2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Subcategory } from '@/services/categoryService';
+import FileUploadWithPreview from '@/components/FileUploadWithPreview';
 
 interface SubcategoryFormProps {
   formData: {
     id?: string;
     name: string;
     slug: string;
-    description?: string; // Make description optional to match Subcategory interface
+    description?: string;
     imageUrl?: string;
     showInNavigation: boolean;
   };
@@ -27,7 +27,7 @@ interface SubcategoryFormProps {
   isLoading: boolean;
   imageMethod: 'url' | 'upload';
   onImageMethodChange?: (value: 'url' | 'upload') => void;
-  onFileChange?: (file: File | null) => void;
+  onImageChange?: (url: string) => void;
 }
 
 const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
@@ -40,8 +40,27 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
   isLoading,
   imageMethod = 'url',
   onImageMethodChange,
-  onFileChange
+  onImageChange
 }) => {
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange(e);
+  };
+
+  const handleImageUpload = (url: string) => {
+    if (onImageChange) {
+      onImageChange(url);
+    } else {
+      // Fallback to using a simulated input change event
+      const event = {
+        target: {
+          name: 'imageUrl',
+          value: url
+        }
+      } as React.ChangeEvent<HTMLInputElement>;
+      onInputChange(event);
+    }
+  };
+
   return (
     <form onSubmit={onSubmit} className="space-y-4 pt-4">
       <div className="space-y-2">
@@ -76,7 +95,7 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
         <Textarea
           id="description"
           name="description"
-          value={formData.description || ''} // Handle optional description
+          value={formData.description || ''}
           onChange={onInputChange}
           placeholder="Briefly describe this subcategory..."
           rows={3}
@@ -109,20 +128,21 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
             id="imageUrl"
             name="imageUrl"
             value={formData.imageUrl || ''}
-            onChange={onInputChange}
+            onChange={handleImageUrlChange}
             placeholder="https://example.com/image.jpg"
           />
         </div>
       ) : (
         <div className="space-y-2">
           <Label>Upload Image</Label>
-          <FileUpload
-            onFileChange={onFileChange}
+          <FileUploadWithPreview
+            onFileChange={handleImageUpload}
             currentImage={formData.imageUrl}
+            bucket="category-images"
+            folder="subcategories"
+            maxSize={5}
+            aspectRatio="landscape"
           />
-          <p className="text-xs text-muted-foreground">
-            Recommended size: 1200x600 pixels, max 5MB
-          </p>
         </div>
       )}
       

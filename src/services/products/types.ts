@@ -1,55 +1,61 @@
 
-import { Json } from '@/integrations/supabase/types';
-
-// Simple, explicit definition for Supabase product data
-export interface SupabaseProduct {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  price: number | null;
-  sale_price: number | null;
-  rating: number | null;
-  image_url: string | null;
-  in_stock: boolean | null;
-  availability: boolean | null;
-  category_id: string | null;
-  attributes: Json | null;
-  specifications: Json | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Product {
-  id: number | string;
-  slug: string;
-  title?: string;
+  id: string;
   name: string;
+  slug: string;
   description: string;
   shortDescription?: string;
   price: number;
   originalPrice?: number;
-  comparePrice?: number; // Added for ProductForm
   rating: number;
   reviewCount: number;
-  features?: string[];
-  imageUrl: string;
-  images?: string[];
-  additionalImages?: string[];
-  inStock: boolean;
-  category: string;
-  categoryId?: string | number;
+  imageUrl?: string;
+  images?: any[];
+  inStock?: boolean;
+  categoryId?: string;
+  category?: string;
   subcategory?: string;
-  subcategoryId?: string | number;
-  specifications?: Record<string, string>;
-  specs?: Record<string, string>;
-  createdAt?: string;
-  updatedAt?: string;
+  specifications?: Record<string, any>;
+  features?: string[];
+  pros?: string[];
+  cons?: string[];
   bestSeller?: boolean;
-  comparisonStats?: Record<string, any>;
   affiliateUrl?: string;
-  affiliateLink?: string;
   asin?: string;
   brand?: string;
-  pros?: string[];
+}
+
+export interface ProductFormData {
+  name: string;
+  slug: string;
+  description: string;
+  shortDescription: string;
+  price: number | string;
+  originalPrice?: number | string;
+  rating: number | string;
+  reviewCount: number | string;
+  imageUrl: string;
+  images: string[];
+  inStock: boolean;
+  categoryId: string;
+  subcategory: string;
+  specifications: Record<string, any>;
+  features: string[];
+  pros: string[];
+  cons: string[];
+  bestSeller: boolean;
+  affiliateUrl: string;
+  asin: string;
+  brand: string;
+}
+
+export interface ProductFilterOptions {
+  category?: string;
+  subcategory?: string;
+  priceRange?: [number, number];
+  ratings?: number[];
+  brands?: string[];
+  inStock?: boolean;
+  bestSeller?: boolean;
+  sortBy?: 'price-asc' | 'price-desc' | 'rating-desc' | 'newest';
 }

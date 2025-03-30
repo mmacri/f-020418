@@ -46,7 +46,8 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
       .from('categories')
       .select('id')
       .eq('slug', categorySlug)
-      .single();
+      .is('parent_id', null)
+      .maybeSingle();
     
     if (categoryError || !categoryData) {
       console.error('Error fetching category by slug:', categoryError || 'Category not found');
@@ -67,7 +68,29 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
     }
     
     // Map the Supabase products to our Product type
-    return productsData.map(product => mapSupabaseProductToProduct(product));
+    return productsData.map(product => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      category: categorySlug,
+      subcategory: product.subcategory_slug,
+      description: product.description || '',
+      price: product.price || 0,
+      originalPrice: product.original_price,
+      rating: product.rating || 0,
+      reviewCount: product.review_count || 0,
+      imageUrl: product.image_url,
+      images: product.images || [],
+      categoryId: product.category_id,
+      specifications: product.specifications || {},
+      features: product.features || [],
+      pros: product.pros || [],
+      cons: product.cons || [],
+      bestSeller: product.best_seller,
+      affiliateUrl: product.affiliate_url,
+      asin: product.asin,
+      brand: product.brand
+    }));
   } catch (error) {
     console.error('Error in getProductsByCategory:', error);
     return [];
@@ -77,16 +100,55 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
 // Get products by subcategory
 export const getProductsBySubcategory = async (categorySlug: string, subcategorySlug: string): Promise<Product[]> => {
   try {
-    // First, get all products from this category
-    const categoryProducts = await getProductsByCategory(categorySlug);
+    // First, get the category ID
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', categorySlug)
+      .is('parent_id', null)
+      .maybeSingle();
     
-    // Filter the products that match the subcategory slug
-    // In our database structure, we store subcategory as a string in the product data
-    return categoryProducts.filter(product => {
-      // Get the subcategory slug from the product
-      const productSubcategorySlug = product.subcategory?.toLowerCase().replace(/\s+/g, '-');
-      return productSubcategorySlug === subcategorySlug;
-    });
+    if (categoryError || !categoryData) {
+      console.error('Error fetching category by slug:', categoryError || 'Category not found');
+      return [];
+    }
+    
+    // Get products that match both the category ID and subcategory slug
+    const { data: productsData, error: productsError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('category_id', categoryData.id)
+      .eq('subcategory_slug', subcategorySlug);
+    
+    if (productsError) {
+      console.error('Error fetching products by subcategory:', productsError);
+      return [];
+    }
+    
+    // Map the Supabase products to our Product type
+    return productsData.map(product => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      category: categorySlug,
+      subcategory: product.subcategory_slug,
+      description: product.description || '',
+      price: product.price || 0,
+      originalPrice: product.original_price,
+      rating: product.rating || 0,
+      reviewCount: product.review_count || 0,
+      imageUrl: product.image_url,
+      images: product.images || [],
+      categoryId: product.category_id,
+      specifications: product.specifications || {},
+      features: product.features || [],
+      pros: product.pros || [],
+      cons: product.cons || [],
+      bestSeller: product.best_seller,
+      affiliateUrl: product.affiliate_url,
+      asin: product.asin,
+      brand: product.brand
+    }));
   } catch (error) {
     console.error('Error in getProductsBySubcategory:', error);
     return [];
@@ -98,26 +160,59 @@ export const getFeaturedProducts = async (limit: number = 6): Promise<Product[]>
   try {
     // First try to get products marked as bestSeller
     const { data: featuredData, error: featuredError } = await supabase
-      .rpc('get_featured_products');
+      .from('products')
+      .select('*')
+      .eq('best_seller', true)
+      .order('rating', { ascending: false })
+      .limit(limit);
     
     if (featuredError) {
       console.error('Error fetching featured products:', featuredError);
-      // Fallback to regular query
-      const { data: productsData, error: productsError } = await supabase
+      return [];
+    }
+    
+    // If not enough featured products, fill with highest rated products
+    if (featuredData.length < limit) {
+      const { data: topRatedData, error: topRatedError } = await supabase
         .from('products')
         .select('*')
         .order('rating', { ascending: false })
-        .limit(limit);
+        .limit(limit - featuredData.length);
       
-      if (productsError) {
-        console.error('Error with fallback products query:', productsError);
-        return [];
+      if (!topRatedError && topRatedData) {
+        // Filter out products that are already in featuredData
+        const newProducts = topRatedData.filter(
+          topRated => !featuredData.some(featured => featured.id === topRated.id)
+        );
+        
+        featuredData.push(...newProducts);
       }
-      
-      return productsData.map(product => mapSupabaseProductToProduct(product));
     }
     
-    return featuredData.map(product => mapSupabaseProductToProduct(product));
+    // Map the Supabase products to our Product type
+    return featuredData.map(product => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      category: '',
+      subcategory: product.subcategory_slug,
+      description: product.description || '',
+      price: product.price || 0,
+      originalPrice: product.original_price,
+      rating: product.rating || 0,
+      reviewCount: product.review_count || 0,
+      imageUrl: product.image_url,
+      images: product.images || [],
+      categoryId: product.category_id,
+      specifications: product.specifications || {},
+      features: product.features || [],
+      pros: product.pros || [],
+      cons: product.cons || [],
+      bestSeller: product.best_seller,
+      affiliateUrl: product.affiliate_url,
+      asin: product.asin,
+      brand: product.brand
+    }));
   } catch (error) {
     console.error('Error in getFeaturedProducts:', error);
     return [];
@@ -141,7 +236,30 @@ export const getRelatedProducts = async (productId: string | number, categoryId:
       return [];
     }
     
-    return relatedData.map(product => mapSupabaseProductToProduct(product));
+    // Map the Supabase products to our Product type
+    return relatedData.map(product => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      category: '',
+      subcategory: product.subcategory_slug,
+      description: product.description || '',
+      price: product.price || 0,
+      originalPrice: product.original_price,
+      rating: product.rating || 0,
+      reviewCount: product.review_count || 0,
+      imageUrl: product.image_url,
+      images: product.images || [],
+      categoryId: product.category_id,
+      specifications: product.specifications || {},
+      features: product.features || [],
+      pros: product.pros || [],
+      cons: product.cons || [],
+      bestSeller: product.best_seller,
+      affiliateUrl: product.affiliate_url,
+      asin: product.asin,
+      brand: product.brand
+    }));
   } catch (error) {
     console.error('Error in getRelatedProducts:', error);
     return [];
@@ -164,7 +282,30 @@ export const getProductsForComparison = async (productIds: string[]): Promise<Pr
       return [];
     }
     
-    return productsData.map(product => mapSupabaseProductToProduct(product));
+    // Map the Supabase products to our Product type
+    return productsData.map(product => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      category: '',
+      subcategory: product.subcategory_slug,
+      description: product.description || '',
+      price: product.price || 0,
+      originalPrice: product.original_price,
+      rating: product.rating || 0,
+      reviewCount: product.review_count || 0,
+      imageUrl: product.image_url,
+      images: product.images || [],
+      categoryId: product.category_id,
+      specifications: product.specifications || {},
+      features: product.features || [],
+      pros: product.pros || [],
+      cons: product.cons || [],
+      bestSeller: product.best_seller,
+      affiliateUrl: product.affiliate_url,
+      asin: product.asin,
+      brand: product.brand
+    }));
   } catch (error) {
     console.error('Error in getProductsForComparison:', error);
     return [];

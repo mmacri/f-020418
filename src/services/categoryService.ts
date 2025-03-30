@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { localStorageKeys } from '@/lib/constants';
 
@@ -123,34 +122,22 @@ const DEFAULT_CATEGORIES: Category[] = [
  */
 export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
   try {
-    // Try to get categories from Supabase
+    // Try to get parent categories from Supabase
     const { data: categories, error } = await supabase
       .from('categories')
       .select('*')
-      .order('name');
+      .is('parent_id', null)
+      .order('navigation_order', { ascending: true });
     
     if (error) {
       console.error("Error getting categories from Supabase:", error);
-      // Fall back to localStorage
-      const cachedData = localStorage.getItem(localStorageKeys.CATEGORIES);
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        // If data exists and is an array, return it
-        if (Array.isArray(parsedData) && parsedData.length > 0) {
-          return parsedData;
-        }
-      }
-      
-      // If no valid data was found in storage or Supabase, store the default categories and return them
-      localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
       return DEFAULT_CATEGORIES;
     }
     
     // Process categories to get subcategories
     const categoriesWithSubcategories = await Promise.all(
       categories.map(async (category) => {
-        // For now, we're using parent_id to identify subcategories
-        // A future improvement would be to create a separate subcategories table
+        // Get subcategories for this category
         const { data: subcategories, error: subError } = await supabase
           .from('categories')
           .select('*')
@@ -160,7 +147,13 @@ export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
         if (subError) {
           console.error(`Error getting subcategories for ${category.name}:`, subError);
           return {
-            ...category,
+            id: category.id,
+            name: category.name,
+            slug: category.slug,
+            description: category.description,
+            imageUrl: category.image_url,
+            showInNavigation: category.show_in_navigation,
+            navigationOrder: category.navigation_order,
             subcategories: []
           };
         }
@@ -172,7 +165,7 @@ export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
           slug: sub.slug,
           description: sub.description,
           imageUrl: sub.image_url,
-          showInNavigation: true // Default to true
+          showInNavigation: sub.show_in_navigation
         }));
         
         return {
@@ -181,19 +174,16 @@ export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
           slug: category.slug,
           description: category.description,
           imageUrl: category.image_url,
-          showInNavigation: true, // Default to true
-          navigationOrder: 0, // Default order
+          showInNavigation: category.show_in_navigation, 
+          navigationOrder: category.navigation_order,
           subcategories: mappedSubcategories
         };
       })
     );
     
-    // Cache in localStorage for future use
-    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(categoriesWithSubcategories));
     return categoriesWithSubcategories;
   } catch (error) {
     console.error("Error getting categories:", error);
-    // In case of error, still return default categories
     return DEFAULT_CATEGORIES;
   }
 };
@@ -207,7 +197,6 @@ export const getNavigationCategories = async (): Promise<Category[]> => {
     return categories.filter(cat => cat.showInNavigation !== false);
   } catch (error) {
     console.error("Error getting navigation categories:", error);
-    // Return filtered default categories on error
     return DEFAULT_CATEGORIES.filter(cat => cat.showInNavigation !== false);
   }
 };
@@ -222,7 +211,7 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
       .from('categories')
       .select('*')
       .eq('slug', slug)
-      .eq('parent_id', null) // Ensure it's a parent category, not a subcategory
+      .is('parent_id', null) // Ensure it's a parent category, not a subcategory
       .single();
     
     if (error) {
@@ -258,7 +247,7 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
       slug: sub.slug,
       description: sub.description,
       imageUrl: sub.image_url,
-      showInNavigation: true // Default to true
+      showInNavigation: sub.show_in_navigation
     }));
     
     return {
@@ -267,6 +256,8 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
       slug: category.slug,
       description: category.description,
       imageUrl: category.image_url,
+      showInNavigation: category.show_in_navigation,
+      navigationOrder: category.navigation_order,
       subcategories: mappedSubcategories
     };
   } catch (error) {
@@ -301,18 +292,34 @@ export const getSubcategoryBySlug = async (categorySlug: string, subcategorySlug
  */
 export const createCategory = async (categoryData: CategoryInput): Promise<Category> => {
   try {
-    const categories = await getCategoriesWithSubcategories();
+    const { data, error } = await supabase
+      .from('categories')
+      .insert({
+        name: categoryData.name,
+        slug: categoryData.slug,
+        description: categoryData.description,
+        image_url: categoryData.imageUrl,
+        show_in_navigation: categoryData.showInNavigation,
+        navigation_order: categoryData.navigationOrder
+      })
+      .select()
+      .single();
     
-    const newCategory: Category = {
-      id: Date.now().toString(),
-      ...categoryData,
+    if (error) {
+      console.error("Error creating category:", error);
+      throw new Error("Failed to create category");
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      imageUrl: data.image_url,
+      showInNavigation: data.show_in_navigation,
+      navigationOrder: data.navigation_order,
       subcategories: []
     };
-    
-    const updatedCategories = [...categories, newCategory];
-    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(updatedCategories));
-    
-    return newCategory;
   } catch (error) {
     console.error("Error creating category:", error);
     throw new Error("Failed to create category");
@@ -324,22 +331,54 @@ export const createCategory = async (categoryData: CategoryInput): Promise<Categ
  */
 export const updateCategory = async (categoryId: string, categoryData: Partial<CategoryInput>): Promise<Category> => {
   try {
-    const categories = await getCategoriesWithSubcategories();
-    const categoryIndex = categories.findIndex(cat => cat.id === categoryId);
+    const { data, error } = await supabase
+      .from('categories')
+      .update({
+        name: categoryData.name,
+        slug: categoryData.slug,
+        description: categoryData.description,
+        image_url: categoryData.imageUrl,
+        show_in_navigation: categoryData.showInNavigation,
+        navigation_order: categoryData.navigationOrder
+      })
+      .eq('id', categoryId)
+      .select()
+      .single();
     
-    if (categoryIndex === -1) {
-      throw new Error("Category not found");
+    if (error) {
+      console.error(`Error updating category with ID ${categoryId}:`, error);
+      throw new Error("Failed to update category");
     }
     
-    const updatedCategory = {
-      ...categories[categoryIndex],
-      ...categoryData
+    // Get subcategories for this category
+    const { data: subcategories, error: subError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('parent_id', categoryId);
+    
+    let mappedSubcategories: Subcategory[] = [];
+    
+    if (!subError && subcategories) {
+      mappedSubcategories = subcategories.map(sub => ({
+        id: sub.id,
+        name: sub.name,
+        slug: sub.slug,
+        description: sub.description,
+        imageUrl: sub.image_url,
+        showInNavigation: sub.show_in_navigation
+      }));
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      imageUrl: data.image_url,
+      showInNavigation: data.show_in_navigation,
+      navigationOrder: data.navigation_order,
+      subcategories: mappedSubcategories
     };
-    
-    categories[categoryIndex] = updatedCategory;
-    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(categories));
-    
-    return updatedCategory;
   } catch (error) {
     console.error(`Error updating category with ID ${categoryId}:`, error);
     throw new Error("Failed to update category");
@@ -351,14 +390,28 @@ export const updateCategory = async (categoryId: string, categoryData: Partial<C
  */
 export const deleteCategory = async (categoryId: string): Promise<boolean> => {
   try {
-    const categories = await getCategoriesWithSubcategories();
-    const filteredCategories = categories.filter(cat => cat.id !== categoryId);
+    // First delete all subcategories
+    const { error: subDeleteError } = await supabase
+      .from('categories')
+      .delete()
+      .eq('parent_id', categoryId);
     
-    if (filteredCategories.length === categories.length) {
-      return false; // No category was removed
+    if (subDeleteError) {
+      console.error(`Error deleting subcategories for category ${categoryId}:`, subDeleteError);
+      throw new Error("Failed to delete subcategories");
     }
     
-    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(filteredCategories));
+    // Then delete the category
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', categoryId);
+    
+    if (error) {
+      console.error(`Error deleting category with ID ${categoryId}:`, error);
+      return false;
+    }
+    
     return true;
   } catch (error) {
     console.error(`Error deleting category with ID ${categoryId}:`, error);
@@ -371,26 +424,32 @@ export const deleteCategory = async (categoryId: string): Promise<boolean> => {
  */
 export const createSubcategory = async (categoryId: string, subcategoryData: Omit<Subcategory, 'id'>): Promise<Subcategory> => {
   try {
-    const categories = await getCategoriesWithSubcategories();
-    const categoryIndex = categories.findIndex(cat => cat.id === categoryId);
+    const { data, error } = await supabase
+      .from('categories')
+      .insert({
+        name: subcategoryData.name,
+        slug: subcategoryData.slug,
+        description: subcategoryData.description,
+        image_url: subcategoryData.imageUrl,
+        show_in_navigation: subcategoryData.showInNavigation,
+        parent_id: categoryId
+      })
+      .select()
+      .single();
     
-    if (categoryIndex === -1) {
-      throw new Error("Category not found");
+    if (error) {
+      console.error(`Error creating subcategory for category ${categoryId}:`, error);
+      throw new Error("Failed to create subcategory");
     }
     
-    const newSubcategory: Subcategory = {
-      id: `${categoryId}-${Date.now()}`,
-      ...subcategoryData
+    return {
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      imageUrl: data.image_url,
+      showInNavigation: data.show_in_navigation
     };
-    
-    if (!categories[categoryIndex].subcategories) {
-      categories[categoryIndex].subcategories = [];
-    }
-    
-    categories[categoryIndex].subcategories!.push(newSubcategory);
-    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(categories));
-    
-    return newSubcategory;
   } catch (error) {
     console.error(`Error creating subcategory for category ${categoryId}:`, error);
     throw new Error("Failed to create subcategory");
@@ -402,28 +461,33 @@ export const createSubcategory = async (categoryId: string, subcategoryData: Omi
  */
 export const updateSubcategory = async (categoryId: string, subcategoryId: string, subcategoryData: Partial<Omit<Subcategory, 'id'>>): Promise<Subcategory> => {
   try {
-    const categories = await getCategoriesWithSubcategories();
-    const categoryIndex = categories.findIndex(cat => cat.id === categoryId);
+    const { data, error } = await supabase
+      .from('categories')
+      .update({
+        name: subcategoryData.name,
+        slug: subcategoryData.slug,
+        description: subcategoryData.description,
+        image_url: subcategoryData.imageUrl,
+        show_in_navigation: subcategoryData.showInNavigation
+      })
+      .eq('id', subcategoryId)
+      .eq('parent_id', categoryId)
+      .select()
+      .single();
     
-    if (categoryIndex === -1 || !categories[categoryIndex].subcategories) {
-      throw new Error("Category or subcategories not found");
+    if (error) {
+      console.error(`Error updating subcategory with ID ${subcategoryId}:`, error);
+      throw new Error("Failed to update subcategory");
     }
     
-    const subcategoryIndex = categories[categoryIndex].subcategories!.findIndex(sub => sub.id === subcategoryId);
-    
-    if (subcategoryIndex === -1) {
-      throw new Error("Subcategory not found");
-    }
-    
-    const updatedSubcategory = {
-      ...categories[categoryIndex].subcategories![subcategoryIndex],
-      ...subcategoryData
+    return {
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      imageUrl: data.image_url,
+      showInNavigation: data.show_in_navigation
     };
-    
-    categories[categoryIndex].subcategories![subcategoryIndex] = updatedSubcategory;
-    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(categories));
-    
-    return updatedSubcategory;
   } catch (error) {
     console.error(`Error updating subcategory with ID ${subcategoryId}:`, error);
     throw new Error("Failed to update subcategory");
@@ -435,21 +499,17 @@ export const updateSubcategory = async (categoryId: string, subcategoryId: strin
  */
 export const deleteSubcategory = async (categoryId: string, subcategoryId: string): Promise<boolean> => {
   try {
-    const categories = await getCategoriesWithSubcategories();
-    const categoryIndex = categories.findIndex(cat => cat.id === categoryId);
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', subcategoryId)
+      .eq('parent_id', categoryId);
     
-    if (categoryIndex === -1 || !categories[categoryIndex].subcategories) {
+    if (error) {
+      console.error(`Error deleting subcategory with ID ${subcategoryId}:`, error);
       return false;
     }
     
-    const originalLength = categories[categoryIndex].subcategories!.length;
-    categories[categoryIndex].subcategories = categories[categoryIndex].subcategories!.filter(sub => sub.id !== subcategoryId);
-    
-    if (categories[categoryIndex].subcategories!.length === originalLength) {
-      return false; // No subcategory was removed
-    }
-    
-    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(categories));
     return true;
   } catch (error) {
     console.error(`Error deleting subcategory with ID ${subcategoryId}:`, error);
