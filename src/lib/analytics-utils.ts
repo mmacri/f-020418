@@ -1,5 +1,5 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthentication } from '@/hooks/useAuthentication';
 
 export interface ClickEvent {
   productId: string | number;
@@ -11,6 +11,11 @@ export interface ClickEvent {
   userId?: string; // anonymous or logged in user id
   convertedStatus?: 'confirmed' | 'estimated' | 'unknown';
 }
+
+// Constants for localStorage keys
+const localStorage = {
+  ANALYTICS_DATA: 'analyticsData'
+};
 
 /**
  * Track affiliate link click with Supabase integration
@@ -68,8 +73,8 @@ const saveAnalyticsToLocalStorage = (
   userId?: string
 ): void => {
   try {
-    const localStorageKey = 'analyticsData';
-    const existingData = localStorage.getItem(localStorageKey);
+    const localStorageKey = localStorage.ANALYTICS_DATA;
+    const existingData = window.localStorage.getItem(localStorageKey);
     const analyticsData = existingData 
       ? JSON.parse(existingData) 
       : { clicks: [], lastSync: 0 };
@@ -84,15 +89,20 @@ const saveAnalyticsToLocalStorage = (
       userId: userId || 'anonymous'
     });
     
-    localStorage.setItem(localStorageKey, JSON.stringify(analyticsData));
+    window.localStorage.setItem(localStorageKey, JSON.stringify(analyticsData));
     console.log(`Affiliate link click fallback to localStorage: ${productName} from ${source}`);
   } catch (error) {
     console.error('Error in localStorage fallback for analytics:', error);
   }
 };
 
+interface AnalyticsData {
+  clicks: ClickEvent[];
+  lastSync: number;
+}
+
 /**
- * Get analytics data summary for dashboard with server-side processing
+ * Get analytics data summary for dashboard
  */
 export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
   try {
@@ -149,19 +159,30 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
     
     // Extract unique products
     const productIds = new Set();
-    const productCounts = {};
-    const sourceCounts = {};
-    const clicksByDay = {};
+    const productCounts: Record<string, number> = {};
+    const sourceCounts: Record<string, number> = {};
+    const clicksByDay: Record<string, number> = {};
     
     data.forEach(event => {
-      const productId = event.data.productId;
-      productIds.add(productId);
+      // Handle possible null or non-object data
+      if (!event.data || typeof event.data !== 'object') {
+        console.warn('Invalid event data found:', event);
+        return;
+      }
       
-      // Count by product
-      productCounts[productId] = (productCounts[productId] || 0) + 1;
+      const eventData = event.data as any;
+      const productId = eventData.productId;
+      
+      if (productId) {
+        productIds.add(productId.toString());
+        
+        // Count by product
+        const prodIdStr = productId.toString();
+        productCounts[prodIdStr] = (productCounts[prodIdStr] || 0) + 1;
+      }
       
       // Count by source
-      const source = event.data.source || 'unknown';
+      const source = eventData.source || 'unknown';
       sourceCounts[source] = (sourceCounts[source] || 0) + 1;
       
       // Group by day
@@ -173,16 +194,22 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
     const topProducts = Object.entries(productCounts)
       .map(([productId, count]) => {
         // Find a sample event with this product to get the name
-        const sampleEvent = data.find(event => event.data.productId.toString() === productId);
+        const sampleEvent = data.find(event => {
+          const eventData = event.data as any;
+          return eventData.productId && eventData.productId.toString() === productId;
+        });
+        
+        const eventData = (sampleEvent?.data as any) || {};
+        
         return {
           productId,
-          productName: sampleEvent?.data?.productName || 'Unknown Product',
+          productName: eventData.productName || 'Unknown Product',
           count,
           conversionRate: 0.029, // Default conversion rate
-          estimatedConversions: Math.round((count as number) * 0.029 * 10) / 10
+          estimatedConversions: Math.round(count * 0.029 * 10) / 10
         };
       })
-      .sort((a, b) => (b.count as number) - (a.count as number))
+      .sort((a, b) => b.count - a.count)
       .slice(0, 10);
     
     // Estimate conversions
@@ -219,14 +246,14 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
  */
 export const markClickAsConverted = (clickId: number): boolean => {
   try {
-    const existingData = localStorage.getItem(localStorageKeys.ANALYTICS_DATA);
+    const existingData = localStorage.getItem(localStorage.ANALYTICS_DATA);
     if (!existingData) return false;
     
     const analyticsData: AnalyticsData = JSON.parse(existingData);
     
     if (clickId >= 0 && clickId < analyticsData.clicks.length) {
       analyticsData.clicks[clickId].convertedStatus = 'confirmed';
-      localStorage.setItem(localStorageKeys.ANALYTICS_DATA, JSON.stringify(analyticsData));
+      localStorage.setItem(localStorage.ANALYTICS_DATA, JSON.stringify(analyticsData));
       return true;
     }
     
@@ -242,7 +269,7 @@ export const markClickAsConverted = (clickId: number): boolean => {
  */
 export const clearAnalyticsData = (): void => {
   try {
-    localStorage.removeItem(localStorageKeys.ANALYTICS_DATA);
+    localStorage.removeItem(localStorage.ANALYTICS_DATA);
     console.log('Analytics data cleared');
   } catch (error) {
     console.error('Error clearing analytics data:', error);

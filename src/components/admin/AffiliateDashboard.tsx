@@ -70,7 +70,7 @@ const AffiliateDashboard: React.FC = () => {
     loadAnalyticsData();
   }, [period, dateRange, chartView]);
   
-  const loadAnalyticsData = () => {
+  const loadAnalyticsData = async () => {
     let startDate: Date | undefined;
     let endDate: Date | undefined;
     
@@ -89,8 +89,17 @@ const AffiliateDashboard: React.FC = () => {
       // For 'all', we don't set dates to get all data
     }
     
-    const data = getAnalyticsSummary(startDate, endDate);
-    setAnalyticsData(data);
+    try {
+      const data = await getAnalyticsSummary(startDate, endDate);
+      setAnalyticsData(data);
+    } catch (error) {
+      console.error("Error loading analytics data:", error);
+      toast({
+        title: "Failed to load analytics data",
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleClearData = () => {
@@ -161,7 +170,7 @@ const AffiliateDashboard: React.FC = () => {
   const prepareChartData = () => {
     if (!analyticsData) return [];
     
-    const clicksByDay = analyticsData.clicksByDay;
+    const clicksByDay = analyticsData.clicksByDay || {};
     const now = new Date();
     const days = period === '7d' ? 7 : period === '30d' ? 30 : 365;
     
@@ -220,7 +229,7 @@ const AffiliateDashboard: React.FC = () => {
   };
   
   const prepareSourceData = () => {
-    if (!analyticsData) return [];
+    if (!analyticsData || !analyticsData.clicksBySource) return [];
     
     const { clicksBySource } = analyticsData;
     return Object.entries(clicksBySource).map(([source, count]) => ({
