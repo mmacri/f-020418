@@ -6,7 +6,7 @@ import ProductComparisonRow from './ProductComparisonRow';
 
 interface ProductRatingRowProps {
   products: Product[];
-  bestProductId: number | null;
+  bestProductId: string | number | null;
 }
 
 const ProductRatingRow: React.FC<ProductRatingRowProps> = ({ products, bestProductId }) => {

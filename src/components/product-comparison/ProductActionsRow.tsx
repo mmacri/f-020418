@@ -8,7 +8,7 @@ import { handleAffiliateClick } from '@/lib/affiliate-utils';
 
 interface ProductActionsRowProps {
   products: Product[];
-  bestProductId: number | null;
+  bestProductId: string | number | null;
   showReviewLink?: boolean;
 }
 
@@ -21,14 +21,17 @@ const ProductActionsRow: React.FC<ProductActionsRowProps> = ({
     <TableRow>
       <TableCell className="font-medium">Actions</TableCell>
       {products.map(product => (
-        <TableCell key={product.id} className={`text-center ${product.id === bestProductId ? 'bg-amber-50' : ''}`}>
+        <TableCell 
+          key={String(product.id)} 
+          className={`text-center ${String(product.id) === String(bestProductId) ? 'bg-amber-50' : ''}`}
+        >
           <div className="flex flex-col space-y-2">
             <Button
               size="sm"
               onClick={() => {
                 const url = product.affiliateLink || product.affiliateUrl || 
                   (product.asin ? `https://www.amazon.com/dp/${product.asin}?tag=recoveryessentials-20` : '#');
-                handleAffiliateClick(url, product.id, product.name, product.asin);
+                handleAffiliateClick(url, String(product.id), product.name, product.asin);
               }}
               className="w-full"
             >

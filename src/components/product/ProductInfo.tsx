@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowUpRight, Heart, Check, ShoppingCart, Share2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -131,7 +130,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onShare, onBuyNow })
         </Button>
         
         <SaveForLater 
-          productId={product.id} 
+          productId={String(product.id)} 
           productName={product.title || product.name}
         />
         

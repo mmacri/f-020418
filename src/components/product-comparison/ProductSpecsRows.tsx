@@ -7,7 +7,7 @@ import ProductComparisonRow from './ProductComparisonRow';
 interface ProductSpecsRowsProps {
   products: Product[];
   visibleSpecKeys: string[];
-  bestProductId: number | null;
+  bestProductId: string | number | null;
 }
 
 const ProductSpecsRows: React.FC<ProductSpecsRowsProps> = ({ 

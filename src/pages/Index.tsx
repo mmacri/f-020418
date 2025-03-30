@@ -12,6 +12,25 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define a more specific type for Supabase product data
+type SupabaseProductData = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  price: number;
+  sale_price: number | null;
+  rating: number;
+  image_url: string;
+  in_stock: boolean;
+  availability: boolean;
+  category_id: string;
+  attributes: any;
+  specifications: any;
+  created_at: string;
+  updated_at: string;
+};
+
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);

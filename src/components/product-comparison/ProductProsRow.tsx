@@ -6,7 +6,7 @@ import { Product } from '@/services/productService';
 
 interface ProductProsRowProps {
   products: Product[];
-  bestProductId: number | null;
+  bestProductId: string | number | null;
 }
 
 const ProductProsRow: React.FC<ProductProsRowProps> = ({ products, bestProductId }) => {
@@ -14,7 +14,10 @@ const ProductProsRow: React.FC<ProductProsRowProps> = ({ products, bestProductId
     <TableRow>
       <TableCell className="font-medium">Pros</TableCell>
       {products.map(product => (
-        <TableCell key={product.id} className={product.id === bestProductId ? 'bg-amber-50' : ''}>
+        <TableCell 
+          key={String(product.id)} 
+          className={String(product.id) === String(bestProductId) ? 'bg-amber-50' : ''}
+        >
           {product.pros && product.pros.length > 0 ? (
             <ul className="space-y-1 text-sm">
               {product.pros.slice(0, 3).map((pro, i) => (
