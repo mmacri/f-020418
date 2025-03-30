@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { User, login as authLogin, logout as authLogout, getCurrentUser, isAuthenticated as checkIsAuthenticated } from '@/services/authService';
+import { login as authLogin, logout as authLogout, getCurrentUser, isAuthenticated as checkIsAuthenticated } from '@/services/authService';
+import { User } from '@/services/userService';
 
 interface UseAuthenticationResult {
   isAuthenticated: boolean;
