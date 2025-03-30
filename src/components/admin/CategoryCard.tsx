@@ -19,9 +19,19 @@ interface CategoryCardProps {
   category: any;
   onEdit: (category: any) => void;
   onDelete: (category: any) => void;
+  onAddSubcategory?: (category: any) => void;
+  onEditSubcategory?: (subcategory: any) => void;
+  onDeleteSubcategory?: (subcategory: any) => void;
 }
 
-const CategoryCard = ({ category, onEdit, onDelete }: CategoryCardProps) => {
+const CategoryCard = ({ 
+  category, 
+  onEdit, 
+  onDelete, 
+  onAddSubcategory, 
+  onEditSubcategory, 
+  onDeleteSubcategory 
+}: CategoryCardProps) => {
   return (
     <Card className="border border-border shadow-md hover:shadow-lg transition-shadow bg-card overflow-hidden">
       <CardHeader className="pb-2 bg-muted/30">
@@ -101,6 +111,8 @@ const CategoryCard = ({ category, onEdit, onDelete }: CategoryCardProps) => {
           <SubcategoryList 
             subcategories={category.subcategories} 
             className="mt-4"
+            onEdit={onEditSubcategory}
+            onDelete={onDeleteSubcategory}
           />
         )}
       </CardContent>
