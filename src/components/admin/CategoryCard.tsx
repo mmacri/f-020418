@@ -10,7 +10,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Edit, Trash2, ArrowUpRight, Layers } from 'lucide-react';
+import { Edit, Trash2, ArrowUpRight, Layers, Plus } from 'lucide-react';
 import { ImageWithFallback } from '@/lib/image-utils';
 import { imageUrls } from '@/lib/constants';
 import { SubcategoryList } from '@/components/admin';
@@ -92,9 +92,22 @@ const CategoryCard = ({
               <Layers className="h-3.5 w-3.5 mr-1.5 text-primary" /> 
               Subcategories:
             </span> 
-            <Badge variant="secondary" className="text-xs">
-              {category.subcategories?.length || 0}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">
+                {category.subcategories?.length || 0}
+              </Badge>
+              {onAddSubcategory && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6 rounded-full"
+                  onClick={() => onAddSubcategory(category)}
+                  aria-label={`Add subcategory to ${category.name}`}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
           </div>
           
           {category.navigationOrder !== undefined && (
