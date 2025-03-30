@@ -45,13 +45,14 @@ const Index = () => {
         }
         
         if (data && data.length > 0) {
-          // Fix: Use explicit array creation with proper typing and a for loop instead of map
+          // Create an array to hold our mapped products
           const mappedProducts: Product[] = [];
           
-          // Using for...of loop to simplify iteration and avoid deep type instantiation issues
-          for (const item of data) {
-            // Explicitly passing as any to avoid complex type checking
-            mappedProducts.push(mapSupabaseProductToProduct(item as any));
+          // Use for loop to avoid TypeScript deep instantiation issues
+          for (let i = 0; i < data.length; i++) {
+            // Use type assertion to any to bypass TypeScript's deep type checking
+            const productData = data[i] as any;
+            mappedProducts.push(mapSupabaseProductToProduct(productData));
           }
           
           setFeaturedProducts(mappedProducts);

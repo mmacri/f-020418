@@ -1,5 +1,5 @@
 
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { 
   User, 
   getCurrentUser as getUserFromService, 
@@ -67,6 +67,8 @@ export const login = async (email: string, password: string): Promise<{
       // Store auth token in localStorage for compatibility with existing code
       localStorage.setItem('authToken', data.session?.access_token || '');
       
+      toast.success(`Welcome back, ${userObject.name}!`);
+      
       return {
         success: true,
         user: userObject
@@ -94,26 +96,31 @@ export const logout = async (): Promise<void> => {
     // Also run the existing logout for compatibility
     await userServiceLogout();
     
+    toast.success("You have been successfully logged out.");
+    
     // Redirect to home page after logout
-    window.location.href = '/';
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 500);
   } catch (error) {
     console.error("Logout error:", error);
-    toast({
-      title: "Error",
-      description: "Failed to log out. Please try again.",
-      variant: "destructive"
-    });
+    toast.error("Failed to log out. Please try again.");
   }
 };
 
 // Check if user is authenticated
 export const isAuthenticated = async (): Promise<boolean> => {
-  // Check Supabase session first
-  const { data } = await supabase.auth.getSession();
-  if (data.session) return true;
-  
-  // Fall back to existing auth check for compatibility
-  return localStorage.getItem('authToken') !== null;
+  try {
+    // Check Supabase session first
+    const { data } = await supabase.auth.getSession();
+    if (data.session) return true;
+    
+    // Fall back to existing auth check for compatibility
+    return localStorage.getItem('authToken') !== null;
+  } catch (error) {
+    console.error("Authentication check error:", error);
+    return false;
+  }
 };
 
 // Get current user with Supabase enhancement
@@ -129,15 +136,17 @@ export const getUser = async (): Promise<User | null> => {
         .eq('id', data.user.id)
         .single();
       
-      return {
-        id: parseInt(data.user.id.substring(0, 8), 16) || 1, // Convert UUID to number or use default
-        email: data.user.email || '',
-        name: profileData?.display_name || data.user.email?.split('@')[0] || '',
-        role: (profileData?.role as "admin" | "editor" | "user") || 'user',
-        avatar: profileData?.avatar_url,
-        createdAt: profileData?.created_at || new Date().toISOString(),
-        updatedAt: profileData?.updated_at || new Date().toISOString()
-      };
+      if (profileData) {
+        return {
+          id: parseInt(data.user.id.substring(0, 8), 16) || 1, // Convert UUID to number or use default
+          email: data.user.email || '',
+          name: profileData.display_name || data.user.email?.split('@')[0] || '',
+          role: (profileData.role as "admin" | "editor" | "user") || 'user',
+          avatar: profileData.avatar_url,
+          createdAt: profileData.created_at || new Date().toISOString(),
+          updatedAt: profileData.updated_at || new Date().toISOString()
+        };
+      }
     }
     
     // Fall back to existing user service

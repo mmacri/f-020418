@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   login as authLogin, 
   logout as authLogout, 
@@ -22,6 +22,21 @@ export const useAuthentication = (): UseAuthenticationResult => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
 
+  // Function to get current user data
+  const fetchUser = useCallback(async () => {
+    try {
+      const currentUser = await getUser();
+      if (currentUser) {
+        setUser(currentUser);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     // Function to check auth status
     const checkAuth = async () => {
@@ -29,15 +44,10 @@ export const useAuthentication = (): UseAuthenticationResult => {
         // First set up auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
+            console.log('Auth state changed:', event, !!session);
             if (session) {
-              const currentUser = await getUser();
-              if (currentUser) {
-                setUser(currentUser);
-                setIsAuthenticated(true);
-              } else {
-                setUser(null);
-                setIsAuthenticated(false);
-              }
+              const success = await fetchUser();
+              setIsAuthenticated(success);
             } else {
               setUser(null);
               setIsAuthenticated(false);
@@ -49,11 +59,8 @@ export const useAuthentication = (): UseAuthenticationResult => {
         // Then check current session
         const isUserAuthenticated = await checkIsAuthenticated();
         if (isUserAuthenticated) {
-          const currentUser = await getUser();
-          if (currentUser) {
-            setUser(currentUser);
-            setIsAuthenticated(true);
-          }
+          await fetchUser();
+          setIsAuthenticated(true);
         }
         
         setIsLoading(false);
@@ -69,7 +76,7 @@ export const useAuthentication = (): UseAuthenticationResult => {
     };
 
     checkAuth();
-  }, []);
+  }, [fetchUser]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);

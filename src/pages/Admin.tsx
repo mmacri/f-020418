@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navigate, useParams, useNavigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,9 +22,10 @@ import { supabase } from '@/integrations/supabase/client';
 const AdminPage = () => {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading } = useAuthentication();
+  const { isAuthenticated, isLoading, user } = useAuthentication();
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState(tab || "dashboard");
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
 
   useEffect(() => {
     // Check for scheduled posts and publish them
@@ -40,6 +42,7 @@ const AdminPage = () => {
 
     // Check admin status via Supabase
     const checkAdminStatus = async () => {
+      setCheckingAdmin(true);
       try {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser();
@@ -58,10 +61,11 @@ const AdminPage = () => {
             return;
           }
           
-          setIsAdmin(data?.role === 'admin');
+          const hasAdminRole = data?.role === 'admin';
+          setIsAdmin(hasAdminRole);
           
           // Check for scheduled posts if user is admin
-          if (data?.role === 'admin') {
+          if (hasAdminRole) {
             await checkScheduledPosts();
           }
         } else {
@@ -70,26 +74,37 @@ const AdminPage = () => {
       } catch (error) {
         console.error("Error in admin check:", error);
         setIsAdmin(false);
+      } finally {
+        setCheckingAdmin(false);
       }
     };
 
     if (isAuthenticated) {
       checkAdminStatus();
+    } else {
+      setCheckingAdmin(false);
     }
     
     // Set active tab from URL parameter
     if (tab) {
       setActiveTab(tab);
     }
-  }, [isAuthenticated, tab]);
+  }, [isAuthenticated, tab, user]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     navigate(`/admin/${value}`);
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isLoading || checkingAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -102,6 +117,9 @@ const AdminPage = () => {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Unauthorized</h1>
           <p className="text-gray-600">You do not have permission to access this page.</p>
+          <Button variant="outline" className="mt-4" asChild>
+            <Link to="/">Return to Home</Link>
+          </Button>
         </div>
       </div>
     );
