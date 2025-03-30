@@ -63,7 +63,7 @@ const AdminProducts = () => {
   useEffect(() => {
     if (formData.categoryId) {
       // Convert categoryId to string for comparison since IDs in the categories array are strings
-      const category = categories.find(cat => cat.id === String(formData.categoryId));
+      const category = categories.find(cat => String(cat.id) === String(formData.categoryId));
       if (category) {
         setSubcategories(category.subcategories || []);
         

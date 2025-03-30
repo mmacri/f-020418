@@ -1,9 +1,8 @@
-
 // Define the API client with proper TypeScript types
 import { Product } from '@/services/productService';
 
 // Mock function to fetch products (used by other functions)
-const fetchProducts = async (): Promise<Product[]> => {
+export const fetchProducts = async (): Promise<Product[]> => {
   try {
     // In a real app, this would be an API call
     const productsData = localStorage.getItem('products');
