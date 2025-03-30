@@ -91,7 +91,7 @@ const AdminProducts = () => {
       
       // If we have a selected category, set the subcategories
       if (formData.categoryId) {
-        const category = categoriesData.find(cat => cat.id === formData.categoryId);
+        const category = categoriesData.find(cat => String(cat.id) === String(formData.categoryId));
         if (category) {
           setSubcategories(category.subcategories || []);
         }
@@ -118,8 +118,10 @@ const AdminProducts = () => {
   };
 
   const handleCategoryChange = (value) => {
+    // Parse to integer if it's a string, but store as number
     const categoryId = parseInt(value, 10);
-    const category = categories.find(cat => cat.id === categoryId);
+    // Find category to get its name
+    const category = categories.find(cat => String(cat.id) === String(categoryId));
     
     setFormData(prev => ({
       ...prev,

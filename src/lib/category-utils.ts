@@ -1,4 +1,3 @@
-
 import { getCategoryBySlug, getNavigationCategories, getSubcategoryBySlug } from "@/services/categoryService";
 
 /**
