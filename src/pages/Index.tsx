@@ -11,7 +11,7 @@ import NewsletterSection from '@/components/home/NewsletterSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
-import type { Product, SupabaseProduct } from '@/services/products/types';
+import type { Product } from '@/services/products/types';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 
 const Index = () => {
@@ -49,12 +49,11 @@ const Index = () => {
             // Create a typed array to hold products
             const tempProducts: Product[] = [];
             
-            // Use a simple for loop with explicit type casting to avoid deep type inference
+            // Break the type recursion by using a simple loop without complex inference
             for (let i = 0; i < supabaseData.length; i++) {
               try {
-                // Manually cast to any to break TypeScript's deep type inference
-                const data = supabaseData[i] as any;
-                const product = mapSupabaseProductToProduct(data);
+                // Use a direct object casting to avoid TypeScript trying to deeply infer types
+                const product = mapSupabaseProductToProduct(supabaseData[i]);
                 tempProducts.push(product);
               } catch (err) {
                 console.error('Error mapping product:', err, supabaseData[i]);
