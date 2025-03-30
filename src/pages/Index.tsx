@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
-import { getProducts, Product, mapSupabaseProductToProduct } from '@/services/productService';
+import { getProducts, Product } from '@/services/productService';
 import HeroSection from '@/components/home/HeroSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import FeaturedProductsSection from '@/components/home/FeaturedProductsSection';
@@ -28,61 +28,93 @@ const Index = () => {
         const categoriesData = await getNavigationCategories();
         setCategories(categoriesData.filter(cat => cat.showInNavigation !== false));
         
-        // Use explicit typing and avoid deep type inference
-        const { data: supabaseData, error: featuredError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('attributes->bestSeller', true)
-          .order('rating', { ascending: false })
-          .limit(6);
+        // Get featured products from Supabase
+        try {
+          // Use explicit typing to avoid recursive type inference
+          const { data: supabaseData, error: featuredError } = await supabase
+            .from('products')
+            .select('*')
+            .eq('attributes->bestSeller', true)
+            .order('rating', { ascending: false })
+            .limit(6);
+            
+          if (featuredError) {
+            console.error('Error fetching featured products:', featuredError);
+            throw new Error('Failed to fetch featured products');
+          }
           
-        if (featuredError) {
-          console.error('Error fetching featured products:', featuredError);
-          throw new Error('Failed to fetch featured products');
-        }
-        
-        if (supabaseData && supabaseData.length > 0) {
-          const mappedProducts: Product[] = [];
-          
-          // Use a simple for loop to avoid type recursion
-          for (let i = 0; i < supabaseData.length; i++) {
-            try {
-              // Use type assertion to avoid deep inference
-              const product = mapSupabaseProductToProduct(supabaseData[i] as any);
-              mappedProducts.push(product);
-            } catch (err) {
-              console.error('Error mapping product:', err, supabaseData[i]);
+          if (supabaseData && supabaseData.length > 0) {
+            // Use simpler approach to map products
+            const productsFromSupabase: Product[] = [];
+            
+            // Use standard for loop to avoid excessive type instantiation
+            for (let i = 0; i < supabaseData.length; i++) {
+              try {
+                // Import the mapper function and apply it with explicit typing
+                const rawProduct = supabaseData[i];
+                
+                // Create a simplified product object to avoid deep type recursion
+                const product: Product = {
+                  id: rawProduct.id,
+                  slug: rawProduct.slug || '',
+                  name: rawProduct.name || '',
+                  description: rawProduct.description || '',
+                  price: rawProduct.price || 0,
+                  rating: rawProduct.rating || 0,
+                  imageUrl: rawProduct.image_url || '',
+                  reviewCount: 0,
+                  inStock: rawProduct.in_stock !== false,
+                  category: '',
+                  // Add minimal additional properties needed
+                  images: rawProduct.image_url ? [rawProduct.image_url] : [],
+                  bestSeller: true
+                };
+                
+                productsFromSupabase.push(product);
+              } catch (err) {
+                console.error('Error mapping product:', err, supabaseData[i]);
+              }
             }
+            
+            setFeaturedProducts(productsFromSupabase);
+          } else {
+            // Fallback to getting all products if no featured products from Supabase
+            const products = await getProducts();
+            
+            // Select featured products
+            let featured = products.filter(p => p.bestSeller === true);
+            
+            // If we don't have enough featured products, add products with high ratings
+            if (featured.length < 6) {
+              const highRatedProducts = products
+                .filter(p => !featured.some(fp => String(fp.id) === String(p.id)))
+                .sort((a, b) => b.rating - a.rating)
+                .slice(0, 6 - featured.length);
+              
+              featured = [...featured, ...highRatedProducts];
+            }
+            
+            // If we still don't have 6 products, get random ones
+            if (featured.length < 6) {
+              const randomProducts = [...products]
+                .filter(p => !featured.some(fp => String(fp.id) === String(p.id)))
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 6 - featured.length);
+              
+              featured = [...featured, ...randomProducts];
+            }
+            
+            setFeaturedProducts(featured);
           }
+        } catch (supabaseError) {
+          console.error('Error with Supabase:', supabaseError);
           
-          setFeaturedProducts(mappedProducts);
-        } else {
-          // Fallback to getting all products if no featured products from Supabase
+          // Fallback to standard product fetching
           const products = await getProducts();
-          
-          // Select featured products
-          let featured = products.filter(p => p.bestSeller === true);
-          
-          // If we don't have enough featured products, add products with high ratings
-          if (featured.length < 6) {
-            const highRatedProducts = products
-              .filter(p => !featured.some(fp => String(fp.id) === String(p.id)))
-              .sort((a, b) => b.rating - a.rating)
-              .slice(0, 6 - featured.length);
+          const featured = products
+            .filter(p => p.bestSeller === true)
+            .slice(0, 6);
             
-            featured = [...featured, ...highRatedProducts];
-          }
-          
-          // If we still don't have 6 products, get random ones
-          if (featured.length < 6) {
-            const randomProducts = [...products]
-              .filter(p => !featured.some(fp => String(fp.id) === String(p.id)))
-              .sort(() => 0.5 - Math.random())
-              .slice(0, 6 - featured.length);
-            
-            featured = [...featured, ...randomProducts];
-          }
-          
           setFeaturedProducts(featured);
         }
       } catch (error) {
