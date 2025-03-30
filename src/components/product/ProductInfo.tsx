@@ -42,7 +42,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onShare, onBuyNow })
     if (affiliateUrl) {
       handleAffiliateClick(
         affiliateUrl, 
-        product.id, 
+        String(product.id), 
         product.title || product.name, 
         product.asin
       );

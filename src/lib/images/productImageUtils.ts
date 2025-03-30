@@ -3,6 +3,23 @@ import { parseImageUrl } from './imageUtils';
 import { imageUrls } from '@/lib/constants';
 
 /**
+ * Extract string URL from possibly complex image object
+ */
+export const extractImageUrl = (imageObj: string | { url: string } | undefined): string => {
+  if (!imageObj) return imageUrls.PRODUCT_DEFAULT;
+  
+  if (typeof imageObj === 'string') {
+    return imageObj;
+  }
+  
+  if (typeof imageObj === 'object' && 'url' in imageObj) {
+    return imageObj.url;
+  }
+  
+  return imageUrls.PRODUCT_DEFAULT;
+};
+
+/**
  * Get a properly formatted product image URL with enhanced error handling
  */
 export const getProductImageUrl = (product: any, index: number = 0): string => {
@@ -11,7 +28,8 @@ export const getProductImageUrl = (product: any, index: number = 0): string => {
   try {
     // Check if product has images array
     if (product?.images && Array.isArray(product.images) && product.images.length > index) {
-      const imageUrl = parseImageUrl(product.images[index]);
+      const imageObj = product.images[index];
+      const imageUrl = parseImageUrl(extractImageUrl(imageObj));
       return imageUrl || imageUrls.PRODUCT_DEFAULT;
     }
     
@@ -25,7 +43,8 @@ export const getProductImageUrl = (product: any, index: number = 0): string => {
     if (index > 0 && product?.additionalImages && Array.isArray(product.additionalImages)) {
       const additionalIndex = index - 1;
       if (additionalIndex < product.additionalImages.length) {
-        const imageUrl = parseImageUrl(product.additionalImages[additionalIndex]);
+        const imageObj = product.additionalImages[additionalIndex];
+        const imageUrl = parseImageUrl(extractImageUrl(imageObj));
         return imageUrl || imageUrls.PRODUCT_DEFAULT;
       }
     }
@@ -54,8 +73,9 @@ export const getProductImages = (product: any): string[] => {
     
     // Then add images from the images array if available
     if (product.images && Array.isArray(product.images)) {
-      product.images.forEach((img: string) => {
-        const parsedImg = parseImageUrl(img);
+      product.images.forEach((img: string | { url: string }) => {
+        const imgUrl = extractImageUrl(img);
+        const parsedImg = parseImageUrl(imgUrl);
         if (parsedImg && !images.includes(parsedImg)) {
           images.push(parsedImg);
         }
@@ -63,8 +83,9 @@ export const getProductImages = (product: any): string[] => {
     } 
     // Fall back to additionalImages for legacy support
     else if (product.additionalImages && Array.isArray(product.additionalImages)) {
-      product.additionalImages.forEach((img: string) => {
-        const parsedImg = parseImageUrl(img);
+      product.additionalImages.forEach((img: string | { url: string }) => {
+        const imgUrl = extractImageUrl(img);
+        const parsedImg = parseImageUrl(imgUrl);
         if (parsedImg && !images.includes(parsedImg)) {
           images.push(parsedImg);
         }

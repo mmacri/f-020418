@@ -7,7 +7,7 @@ import { getProductImageUrl } from '@/lib/images';
 
 interface ProductTableHeaderProps {
   products: Product[];
-  bestProductId: number | null;
+  bestProductId: string | number | null;
 }
 
 const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({ products, bestProductId }) => {
@@ -16,11 +16,11 @@ const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({ products, bestP
       <TableHead className="w-48">Product</TableHead>
       {products.map(product => (
         <TableHead 
-          key={product.id} 
-          className={`w-48 text-center ${product.id === bestProductId ? 'bg-amber-50' : ''}`}
+          key={String(product.id)} 
+          className={`w-48 text-center ${String(product.id) === String(bestProductId) ? 'bg-amber-50' : ''}`}
         >
           <div className="flex flex-col items-center space-y-2 p-2">
-            {product.id === bestProductId && (
+            {String(product.id) === String(bestProductId) && (
               <div className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full mb-1">
                 Top Rated
               </div>

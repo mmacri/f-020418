@@ -1,6 +1,7 @@
 
 import { Product } from '@/services/productService';
 import { BlogPost } from '@/services/blogService';
+import { extractImageUrl } from '@/lib/images/productImageUtils';
 
 interface MetaTag {
   name?: string;
@@ -24,8 +25,9 @@ export const generateProductMetaTags = (product: Product): MetaTag[] => {
   
   // Add image if available
   if (product.images && product.images.length > 0) {
-    metaTags.push({ property: 'og:image', content: product.images[0] });
-    metaTags.push({ name: 'twitter:image', content: product.images[0] });
+    const imageUrl = extractImageUrl(product.images[0]);
+    metaTags.push({ property: 'og:image', content: imageUrl });
+    metaTags.push({ name: 'twitter:image', content: imageUrl });
   }
   
   // Add price
@@ -90,9 +92,9 @@ export const generateProductJsonLd = (product: Product): string => {
     '@type': 'Product',
     name: product.name,
     description: product.shortDescription || product.description,
-    image: product.images && product.images.length > 0 ? product.images[0] : undefined,
-    sku: product.id.toString(),
-    mpn: product.asin || product.id.toString(),
+    image: product.images && product.images.length > 0 ? extractImageUrl(product.images[0]) : undefined,
+    sku: String(product.id),
+    mpn: product.asin || String(product.id),
     brand: {
       '@type': 'Brand',
       name: product.brand || 'Unknown'

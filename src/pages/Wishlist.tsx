@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { ImageWithFallback } from '@/lib/images';
 import { formatPrice } from '@/lib/product-utils';
 import { handleAffiliateClick } from '@/lib/affiliate-utils';
+import { extractImageUrl } from '@/lib/images/productImageUtils';
 
 const Wishlist = () => {
   const { wishlistItems, removeFromWishlist, clearWishlist, isPending } = useWishlist();
@@ -55,7 +56,7 @@ const Wishlist = () => {
                       <div className="w-full sm:w-1/4 p-4">
                         <Link to={`/products/${product.slug}`}>
                           <ImageWithFallback
-                            src={product.images?.[0] || ''}
+                            src={product.images?.[0] ? extractImageUrl(product.images[0]) : ''}
                             alt={product.name}
                             className="w-full h-40 object-contain"
                             type="product"

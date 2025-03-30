@@ -68,9 +68,10 @@ const ProductComparisonTable: React.FC<ProductComparisonTableProps> = ({
   
   const visibleSpecKeys = allSpecKeys.filter(key => visibleSpecs[key]);
   
-  // Find the best product (highest rating)
+  // Find the best product (highest rating) and ensure ID is treated as a string for comparison
   const bestProductId = highlightBestProduct ? 
-    [...products].sort((a, b) => b.rating - a.rating)[0]?.id : null;
+    [...products]
+      .sort((a, b) => b.rating - a.rating)[0]?.id : null;
 
   return (
     <div className="space-y-4">

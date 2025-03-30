@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
-import { getProducts, Product } from '@/services/productService';
+import { getProducts, Product, mapSupabaseProductToProduct } from '@/services/productService';
 import HeroSection from '@/components/home/HeroSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import FeaturedProductsSection from '@/components/home/FeaturedProductsSection';
@@ -43,30 +43,7 @@ const Index = () => {
         
         if (featuredData && featuredData.length > 0) {
           // Map Supabase products to our Product interface
-          const mappedProducts = featuredData.map(product => ({
-            id: product.id,
-            slug: product.slug,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            originalPrice: product.sale_price || undefined,
-            rating: product.rating || 0,
-            reviewCount: (product.attributes as any)?.reviewCount || 0,
-            imageUrl: product.image_url || '',
-            images: [product.image_url || ''],
-            inStock: product.in_stock,
-            category: (product.attributes as any)?.category || '',
-            categoryId: product.category_id,
-            subcategory: (product.attributes as any)?.subcategory || '',
-            specifications: product.specifications as Record<string, string>,
-            specs: product.specifications as Record<string, string>,
-            createdAt: product.created_at,
-            updatedAt: product.updated_at,
-            features: (product.attributes as any)?.features || [],
-            bestSeller: (product.attributes as any)?.bestSeller || false,
-            brand: (product.attributes as any)?.brand || '',
-            pros: (product.attributes as any)?.pros || []
-          }));
+          const mappedProducts = featuredData.map(product => mapSupabaseProductToProduct(product));
           setFeaturedProducts(mappedProducts);
         } else {
           // Fall back to regular product fetching
@@ -80,7 +57,7 @@ const Index = () => {
           // If we don't have enough featured products, add products with high ratings
           if (featured.length < 6) {
             const highRatedProducts = products
-              .filter(p => !featured.some(fp => fp.id === p.id)) // Exclude already featured products
+              .filter(p => !featured.some(fp => String(fp.id) === String(p.id))) // Exclude already featured products
               .sort((a, b) => b.rating - a.rating) // Sort by rating (high to low)
               .slice(0, 6 - featured.length); // Get enough to fill up to 6 slots
             
@@ -90,7 +67,7 @@ const Index = () => {
           // If we still don't have 6 products, get random ones
           if (featured.length < 6) {
             const randomProducts = [...products]
-              .filter(p => !featured.some(fp => fp.id === p.id)) // Exclude already featured products
+              .filter(p => !featured.some(fp => String(fp.id) === String(p.id))) // Exclude already featured products
               .sort(() => 0.5 - Math.random()) // Randomize
               .slice(0, 6 - featured.length); // Get enough to fill up to 6 slots
             

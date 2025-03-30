@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/accordion';
 import ProductCard from '@/components/ProductCard';
 import { handleAffiliateClick } from '@/lib/affiliate-utils';
+import { extractImageUrl } from '@/lib/images/productImageUtils';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -32,19 +33,19 @@ const ProductDetail = () => {
           setProduct(productData);
           
           if (productData) {
-            setSelectedImage(productData.images[0] || '');
+            setSelectedImage(productData.images && productData.images.length > 0 
+              ? extractImageUrl(productData.images[0]) 
+              : '');
             
-            // Get category information
             if (productData.category) {
               const categorySlug = productData.category.toLowerCase().replace(/\s+/g, '-');
               const categoryData = await getCategoryBySlug(categorySlug);
               setCategory(categoryData);
             }
             
-            // Fetch 3 related products from the same category
             if (productData.categoryId) {
-              const allProducts = await getProductByCategory(productData.categoryId);
-              const filtered = allProducts.filter(p => p.id !== productData.id).slice(0, 3);
+              const allProducts = await getProductByCategory(String(productData.categoryId));
+              const filtered = allProducts.filter(p => String(p.id) !== String(productData.id)).slice(0, 3);
               setRelatedProducts(filtered);
             }
           }
@@ -59,11 +60,9 @@ const ProductDetail = () => {
     fetchData();
   }, [slug]);
 
-  const getProductByCategory = async (categoryId: number) => {
-    // This function would be part of your productService.ts
-    // For now, implementing simplified logic here
+  const getProductByCategory = async (categoryId: string) => {
     const allProducts = await fetch('/api/products').then(res => res.json());
-    return allProducts.filter((p: any) => p.categoryId === categoryId);
+    return allProducts.filter((p: any) => String(p.categoryId) === categoryId);
   };
 
   const handleBuyNow = () => {
@@ -97,7 +96,6 @@ const ProductDetail = () => {
     );
   }
 
-  // Create breadcrumb data
   const breadcrumbs = [
     { name: 'Home', url: '/' },
   ];
@@ -108,7 +106,6 @@ const ProductDetail = () => {
       url: `/categories/${category.slug}`
     });
     
-    // Add subcategory if present
     if (product.subcategory) {
       const subcategoryData = category.subcategories.find(
         (sub: any) => sub.name.toLowerCase() === product.subcategory.toLowerCase()
@@ -123,7 +120,6 @@ const ProductDetail = () => {
     }
   }
   
-  // Add product name as last breadcrumb
   breadcrumbs.push({
     name: product.name,
     url: `/products/${product.slug}`
@@ -131,7 +127,6 @@ const ProductDetail = () => {
 
   return (
     <MainLayout>
-      {/* Breadcrumbs */}
       <div className="bg-gray-50 py-2">
         <div className="container mx-auto px-4">
           <nav className="text-sm text-gray-600">
@@ -151,7 +146,6 @@ const ProductDetail = () => {
       
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Product Images */}
           <div className="md:w-1/2">
             <div className="mb-4 overflow-hidden rounded-lg">
               <img 
@@ -173,11 +167,9 @@ const ProductDetail = () => {
             </div>
           </div>
           
-          {/* Product Info */}
           <div className="md:w-1/2">
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
             
-            {/* Ratings */}
             <div className="flex items-center mb-3">
               <div className="flex items-center mr-2">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -196,7 +188,6 @@ const ProductDetail = () => {
               </span>
             </div>
             
-            {/* Price */}
             <div className="mb-4">
               <div className="text-3xl font-bold text-gray-900">${product.price.toFixed(2)}</div>
               {product.comparePrice && (
@@ -212,12 +203,10 @@ const ProductDetail = () => {
               )}
             </div>
             
-            {/* Short Description */}
             <div className="mb-6">
               <p className="text-gray-700">{product.shortDescription || product.description.substring(0, 200) + '...'}</p>
             </div>
             
-            {/* Key Features */}
             {product.features && product.features.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Key Features</h3>
@@ -232,7 +221,6 @@ const ProductDetail = () => {
               </div>
             )}
             
-            {/* Availability */}
             <div className="mb-6">
               <div className="flex items-center">
                 <span className="text-gray-700 mr-2">Availability:</span>
@@ -251,7 +239,6 @@ const ProductDetail = () => {
               )}
             </div>
             
-            {/* Action Buttons */}
             <div className="flex flex-col space-y-3">
               <Button 
                 onClick={handleBuyNow} 
@@ -276,7 +263,6 @@ const ProductDetail = () => {
           </div>
         </div>
         
-        {/* Product Tabs */}
         <div className="mt-12 border-t pt-8">
           <Tabs defaultValue="description">
             <TabsList className="mb-6">
@@ -294,7 +280,6 @@ const ProductDetail = () => {
                 ))}
               </div>
               
-              {/* How to Use Section */}
               <div className="bg-gray-50 p-6 rounded-lg mb-8">
                 <h3 className="text-xl font-bold mb-3">How to Use</h3>
                 <ol className="list-decimal pl-5 space-y-2">
@@ -306,7 +291,6 @@ const ProductDetail = () => {
                 </ol>
               </div>
               
-              {/* Benefits Section */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold mb-3">Benefits</h3>
                 <ul className="space-y-2">
@@ -413,7 +397,6 @@ const ProductDetail = () => {
                 
                 <div className="md:w-2/3">
                   <div className="space-y-6">
-                    {/* Sample reviews - could be populated from an API */}
                     <div className="border-b pb-6">
                       <div className="flex items-center mb-2">
                         <div className="flex mr-2">
@@ -527,7 +510,6 @@ const ProductDetail = () => {
           </Tabs>
         </div>
         
-        {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-bold mb-6">Related Products</h2>
@@ -539,7 +521,6 @@ const ProductDetail = () => {
           </div>
         )}
         
-        {/* Disclaimer */}
         <div className="mt-16 border-t pt-8">
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="flex items-start">

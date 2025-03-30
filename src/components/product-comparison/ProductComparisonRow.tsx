@@ -8,7 +8,7 @@ interface ProductComparisonRowProps {
   label: string;
   products: Product[];
   cellRenderer: (product: Product) => React.ReactNode;
-  bestProductId: number | null;
+  bestProductId: string | number | null;
 }
 
 const ProductComparisonRow: React.FC<ProductComparisonRowProps> = ({
@@ -22,8 +22,8 @@ const ProductComparisonRow: React.FC<ProductComparisonRowProps> = ({
       <TableCell className="font-medium">{label}</TableCell>
       {products.map(product => (
         <TableCell 
-          key={product.id} 
-          className={`text-center ${product.id === bestProductId ? 'bg-amber-50' : ''}`}
+          key={String(product.id)} 
+          className={`text-center ${String(product.id) === String(bestProductId) ? 'bg-amber-50' : ''}`}
         >
           {cellRenderer(product)}
         </TableCell>
