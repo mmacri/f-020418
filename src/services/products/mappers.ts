@@ -19,7 +19,7 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
   }
   
   try {
-    // Safely parse attributes with type safety
+    // Safely parse attributes with explicit typing
     let attributes: Record<string, any> = {};
     if (product.attributes) {
       if (typeof product.attributes === 'string') {
@@ -33,7 +33,7 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
       }
     }
     
-    // Safely parse specifications with type safety
+    // Safely parse specifications with explicit typing
     let specifications: Record<string, any> = {};
     if (product.specifications) {
       if (typeof product.specifications === 'string') {

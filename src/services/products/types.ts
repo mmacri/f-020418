@@ -1,6 +1,7 @@
 
 import { Json } from '@/integrations/supabase/types';
 
+// Simple, explicit definition for Supabase product data
 export interface SupabaseProduct {
   id: string;
   slug: string;
