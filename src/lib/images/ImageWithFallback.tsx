@@ -1,74 +1,63 @@
 
-import React, { useState, useEffect } from 'react';
-import { imageUrls } from '@/lib/constants';
+import React, { useState } from 'react';
 import { handleImageError } from './imageErrorHandlers';
+import { imageUrls } from '@/lib/constants';
 
-interface ImageWithFallbackProps {
-  src?: string;
+export interface ImageWithFallbackProps {
+  src: string;
   alt: string;
   fallbackSrc?: string;
   className?: string;
-  type?: 'product' | 'category' | 'blog' | 'avatar';
   width?: number | string;
   height?: number | string;
+  loading?: 'lazy' | 'eager';
+  disableCacheBusting?: boolean;
   onLoad?: () => void;
-  onError?: () => void;
 }
 
 export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   src,
   alt,
-  fallbackSrc,
+  fallbackSrc = imageUrls.PLACEHOLDER,
   className = '',
-  type = 'product',
   width,
   height,
+  loading = 'lazy',
+  disableCacheBusting = false,
   onLoad,
-  onError
+  ...props
 }) => {
-  const [imgSrc, setImgSrc] = useState<string | undefined>(src);
   const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    setImgSrc(src);
-    setHasError(false);
-  }, [src]);
-
-  const getDefaultFallback = () => {
-    switch (type) {
-      case 'product':
-        return imageUrls.PRODUCT_DEFAULT;
-      case 'category':
-        return imageUrls.CATEGORY_DEFAULT;
-      case 'blog':
-        return imageUrls.BLOG_DEFAULT;
-      case 'avatar':
-        return imageUrls.AVATAR_DEFAULT;
-      default:
-        return imageUrls.PLACEHOLDER;
+  // Handle image loading error
+  const onError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    if (!hasError) {
+      setHasError(true);
+      handleImageError(e, fallbackSrc);
     }
   };
 
-  const actualFallback = fallbackSrc || getDefaultFallback();
-
-  const handleError = () => {
-    if (!hasError) {
-      console.warn(`Image failed to load: ${src}`);
-      setImgSrc(actualFallback);
-      setHasError(true);
-      if (onError) onError();
+  // Add cache busting to remote URLs if needed
+  const getImageUrl = (url: string) => {
+    if (disableCacheBusting || !url || url.startsWith('/') || url.startsWith('data:')) {
+      return url;
     }
+    // Add timestamp as cache buster
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Date.now()}`;
   };
 
   return (
     <img
-      src={imgSrc || actualFallback}
+      src={hasError ? fallbackSrc : getImageUrl(src)}
       alt={alt}
       className={className}
       width={width}
       height={height}
-      onError={handleError}
+      loading={loading}
+      onError={onError}
       onLoad={onLoad}
+      {...props}
     />
   );
 };

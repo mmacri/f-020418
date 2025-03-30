@@ -38,7 +38,7 @@ const SubcategoryHero: React.FC<SubcategoryHeroProps> = ({
         <ImageWithFallback
           src={imageUrl}
           alt={`${subcategoryName} subcategory background`}
-          fallbackSrc={imageUrls.DEFAULT_FALLBACK}
+          fallbackSrc={imageUrls.PLACEHOLDER}
           className="w-full h-full object-cover"
         />
       </div>

@@ -1,3 +1,4 @@
+
 // Add this function to the existing categoryService.ts file
 export const getCategoriesWithSubcategories = async () => {
   // This is a mock implementation - in a real app, you would fetch from an API
