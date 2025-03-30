@@ -1,5 +1,5 @@
 
-import { Product, ProductReview } from './types';
+import { Product, ProductReview, SupabaseProduct } from './types';
 import { supabase } from '@/integrations/supabase/client';
 
 // Extract and format image URL from product data
@@ -78,5 +78,39 @@ export const mapSupabaseReviewToReview = (review: any): ProductReview => {
     createdAt: review.created_at,
     updatedAt: review.updated_at,
     helpful: review.helpful_count || 0
+  };
+};
+
+// Map from our Product interface to Supabase format
+export const mapProductToSupabaseProduct = (product: Partial<Product>): Partial<SupabaseProduct> => {
+  // Extract product attributes that don't directly map to Supabase columns
+  const attributes: Record<string, any> = {};
+  
+  // Map frontend fields to attributes object
+  if (product.images) attributes.images = product.images;
+  if (product.features) attributes.features = product.features;
+  if (product.pros) attributes.pros = product.pros;
+  if (product.cons) attributes.cons = product.cons;
+  if (product.reviewCount) attributes.reviewCount = product.reviewCount;
+  if (product.originalPrice) attributes.originalPrice = product.originalPrice;
+  if (product.bestSeller !== undefined) attributes.bestSeller = product.bestSeller;
+  if (product.affiliateUrl) attributes.affiliateUrl = product.affiliateUrl;
+  if (product.asin) attributes.asin = product.asin;
+  if (product.brand) attributes.brand = product.brand;
+  
+  // Return mapped product data
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    description: product.description,
+    price: product.price,
+    sale_price: product.salePrice,
+    image_url: product.imageUrl,
+    rating: product.rating,
+    in_stock: product.inStock,
+    category_id: product.categoryId,
+    specifications: product.specifications || {},
+    attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
   };
 };

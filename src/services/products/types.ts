@@ -24,6 +24,7 @@ export interface Product {
   asin?: string;
   brand?: string;
   title?: string; // For compatibility with components that use title
+  salePrice?: number; // Adding this for compatibility with Supabase data
   
   // Add fields needed for compatibility with various components
   additionalImages?: any[]; // Legacy field for compatibility
@@ -96,4 +97,18 @@ export interface ProductFilterOptions {
   inStock?: boolean;
   bestSeller?: boolean;
   sortBy?: 'price-asc' | 'price-desc' | 'rating-desc' | 'newest';
+}
+
+// Add ProductReview interface
+export interface ProductReview {
+  id: string;
+  productId: string;
+  author: string;
+  rating: number;
+  title: string;
+  content: string;
+  verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  helpful: number;
 }

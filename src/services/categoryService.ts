@@ -39,11 +39,11 @@ interface SupabaseCategory {
   slug: string;
   description?: string;
   image_url?: string;
-  show_in_navigation?: boolean;
-  navigation_order?: number;
   parent_id?: string;
   created_at: string;
   updated_at: string;
+  show_in_navigation?: boolean;
+  navigation_order?: number;
 }
 
 // Define default categories to use when none exist or for fallback
@@ -205,14 +205,72 @@ export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
 /**
  * Get categories for navigation
  */
-export const getNavigationCategories = async (): Promise<Category[]> => {
+export const getNavigationCategories = async () => {
   try {
-    const categories = await getCategoriesWithSubcategories();
-    return categories.filter(cat => cat.showInNavigation !== false);
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('navigation_order', { ascending: true, nullsLast: true });
+    
+    if (error) {
+      console.error('Error fetching navigation categories:', error);
+      return [];
+    }
+
+    // Process categories to build a hierarchical structure
+    const categoriesWithChildren = await processCategories(categories as SupabaseCategory[]);
+    
+    // Only include categories marked for navigation
+    const navigationCategories = categoriesWithChildren.filter(
+      category => category.show_in_navigation !== false
+    );
+    
+    return navigationCategories;
   } catch (error) {
-    console.error("Error getting navigation categories:", error);
-    return DEFAULT_CATEGORIES.filter(cat => cat.showInNavigation !== false);
+    console.error('Error in getNavigationCategories:', error);
+    return [];
   }
+};
+
+// Helper function to process categories
+const processCategories = async (categories: SupabaseCategory[]) => {
+  // Map to maintain O(1) lookups
+  const categoryMap = new Map();
+  
+  // First pass: Create category objects and add to map
+  categories.forEach(category => {
+    categoryMap.set(category.id, {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      imageUrl: category.image_url,
+      parentId: category.parent_id,
+      show_in_navigation: category.show_in_navigation,
+      navigationOrder: category.navigation_order,
+      children: [],
+      subcategories: []
+    });
+  });
+  
+  // Second pass: Build hierarchy
+  const rootCategories = [];
+  
+  categories.forEach(category => {
+    const categoryObject = categoryMap.get(category.id);
+    
+    if (category.parent_id && categoryMap.has(category.parent_id)) {
+      // This is a child category
+      const parentCategory = categoryMap.get(category.parent_id);
+      parentCategory.children.push(categoryObject);
+      parentCategory.subcategories.push(categoryObject);
+    } else {
+      // This is a root category
+      rootCategories.push(categoryObject);
+    }
+  });
+  
+  return rootCategories;
 };
 
 /**
