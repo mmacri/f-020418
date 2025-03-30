@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { localStorageKeys } from '@/lib/constants';
 
@@ -308,6 +309,8 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
         slug: category.slug,
         description: category.description,
         imageUrl: category.image_url,
+        showInNavigation: category.show_in_navigation,
+        navigationOrder: category.navigation_order,
         subcategories: []
       };
     }
@@ -328,8 +331,8 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
       slug: category.slug,
       description: category.description,
       imageUrl: category.image_url,
-      showInNavigation: (category as any).show_in_navigation,
-      navigationOrder: (category as any).navigation_order,
+      showInNavigation: category.show_in_navigation,
+      navigationOrder: category.navigation_order,
       subcategories: mappedSubcategories
     };
   } catch (error) {

@@ -1,13 +1,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Product } from './types';
-import { mapSupabaseProductToProduct, mapProductToSupabaseProduct } from './mappers';
+import { Product, SupabaseProduct } from './types';
+import { mapProductToSupabase, mapSupabaseToProduct } from './mappers';
 
-export const createProduct = async (productData: Partial<Product>): Promise<Product> => {
+/**
+ * Create a new product in the database
+ */
+export const createProduct = async (product: Product): Promise<Product> => {
   try {
-    const supabaseProduct = mapProductToSupabaseProduct(productData);
+    const supabaseProduct = mapProductToSupabase(product);
     
-    // Ensure required fields are provided for insert
     if (!supabaseProduct.name || !supabaseProduct.slug) {
       throw new Error('Product name and slug are required');
     }
@@ -21,19 +23,22 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
       
     if (error) {
       console.error('Error creating product:', error);
-      throw new Error(`Failed to create product: ${error.message}`);
+      throw new Error('Failed to create product');
     }
     
-    return mapSupabaseProductToProduct(data);
+    return mapSupabaseToProduct(data);
   } catch (error) {
     console.error('Error in createProduct:', error);
     throw error;
   }
 };
 
-export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
+/**
+ * Update an existing product in the database
+ */
+export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product> => {
   try {
-    const supabaseProduct = mapProductToSupabaseProduct(productData);
+    const supabaseProduct = mapProductToSupabase(product);
     
     const { data, error } = await supabase
       .from('products')
@@ -43,11 +48,11 @@ export const updateProduct = async (id: string, productData: Partial<Product>): 
       .single();
       
     if (error) {
-      console.error('Error updating product:', error);
-      throw new Error(`Failed to update product: ${error.message}`);
+      console.error(`Error updating product ${id}:`, error);
+      throw new Error('Failed to update product');
     }
     
-    return mapSupabaseProductToProduct(data);
+    return mapSupabaseToProduct(data);
   } catch (error) {
     console.error('Error in updateProduct:', error);
     throw error;
