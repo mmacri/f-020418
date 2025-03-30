@@ -45,11 +45,13 @@ const Index = () => {
         }
         
         if (featuredData && featuredData.length > 0) {
-          // Map Supabase products to our Product interface
-          // Use type assertion to avoid deep type instantiation issues
-          const mappedProducts = featuredData.map(product => 
-            mapSupabaseProductToProduct(product as any)
-          );
+          // Use a simple array map without complex type assertions
+          const mappedProducts = [];
+          
+          for (const product of featuredData) {
+            mappedProducts.push(mapSupabaseProductToProduct(product));
+          }
+          
           setFeaturedProducts(mappedProducts);
         } else {
           // Get all products

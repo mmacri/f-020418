@@ -58,26 +58,43 @@ export interface Product {
 
 // Convert Supabase product format to our Product interface
 export const mapSupabaseProductToProduct = (product: any): Product => {
+  if (!product) {
+    console.error('Received null or undefined product in mapSupabaseProductToProduct');
+    // Return a default product to prevent errors
+    return {
+      id: 'default',
+      slug: 'default',
+      name: 'Product Not Available',
+      description: '',
+      price: 0,
+      rating: 0,
+      reviewCount: 0,
+      imageUrl: '',
+      inStock: false,
+      category: '',
+    };
+  }
+  
   // Safely extract attributes from Json
-  const attributes = product.attributes as Record<string, any> || {};
+  const attributes = (product.attributes || {}) as Record<string, any>;
   
   return {
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
+    id: product.id || 'unknown',
+    slug: product.slug || 'unknown',
+    name: product.name || 'Unnamed Product',
     description: product.description || '',
     price: product.price || 0,
     originalPrice: product.sale_price || undefined,
     rating: product.rating || 0,
     reviewCount: attributes.reviewCount || 0,
     imageUrl: product.image_url || '',
-    images: [product.image_url || ''],
-    inStock: product.in_stock || false,
+    images: product.image_url ? [product.image_url] : [],
+    inStock: product.in_stock !== false, // Default to true unless explicitly false
     category: attributes.category || '',
     categoryId: product.category_id,
     subcategory: attributes.subcategory || '',
-    specifications: product.specifications as Record<string, string> || {},
-    specs: product.specifications as Record<string, string> || {},
+    specifications: (product.specifications || {}) as Record<string, string>,
+    specs: (product.specifications || {}) as Record<string, string>,
     createdAt: product.created_at,
     updatedAt: product.updated_at,
     features: attributes.features || [],
