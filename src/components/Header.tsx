@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, X, Heart } from 'lucide-react';
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/sheet"
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { DEFAULT_NAVIGATION } from '@/lib/constants';
-import { isAdmin, isAuthenticated, logout } from '@/services/authService';
+import { isAdmin, isAuthenticated, logout } from '@/services/auth';
 
 interface NavItem {
   id: number;

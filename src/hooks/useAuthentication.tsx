@@ -5,7 +5,7 @@ import {
   logout as authLogout, 
   getUser, 
   isAuthenticated as checkIsAuthenticated 
-} from '@/services/authService';
+} from '@/services/auth';
 import { User } from '@/services/userService';
 import { supabase } from '@/integrations/supabase/client';
 

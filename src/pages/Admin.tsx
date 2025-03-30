@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate, useParams, useNavigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,7 +16,7 @@ import { publishScheduledPosts } from '@/services/blogService';
 import { toast } from 'sonner';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { isAdmin as checkIsAdmin } from '@/services/authService';
+import { isAdmin as checkIsAdmin } from '@/services/auth';
 
 const AdminPage = () => {
   const { tab } = useParams<{ tab: string }>();
@@ -28,7 +27,6 @@ const AdminPage = () => {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
 
   useEffect(() => {
-    // Check for scheduled posts and publish them
     const checkScheduledPosts = async () => {
       try {
         const publishedCount = await publishScheduledPosts();
@@ -40,7 +38,6 @@ const AdminPage = () => {
       }
     };
 
-    // Check admin status
     const checkAdminStatus = async () => {
       setCheckingAdmin(true);
       try {
@@ -50,12 +47,10 @@ const AdminPage = () => {
           return;
         }
 
-        // Check admin status using our service
         const hasAdminRole = await checkIsAdmin();
         console.log("Admin check result:", hasAdminRole);
         setIsAdmin(hasAdminRole);
         
-        // Check for scheduled posts if user is admin
         if (hasAdminRole) {
           await checkScheduledPosts();
         }
@@ -71,7 +66,6 @@ const AdminPage = () => {
       checkAdminStatus();
     }
     
-    // Set active tab from URL parameter
     if (tab) {
       setActiveTab(tab);
     }
@@ -117,7 +111,6 @@ const AdminPage = () => {
 
   const handleAuthSuccess = () => {
     console.log("Authentication successful");
-    // Additional auth success handling logic
   };
 
   return (
