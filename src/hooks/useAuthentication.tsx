@@ -1,7 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { login as authLogin, logout as authLogout, getCurrentUser, isAuthenticated as checkIsAuthenticated } from '@/services/authService';
+import { 
+  login as authLogin, 
+  logout as authLogout, 
+  getUser, 
+  isAuthenticated as checkIsAuthenticated 
+} from '@/services/authService';
 import { User } from '@/services/userService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseAuthenticationResult {
   isAuthenticated: boolean;
@@ -17,17 +23,47 @@ export const useAuthentication = (): UseAuthenticationResult => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check if user is logged in
+    // Function to check auth status
     const checkAuth = async () => {
       try {
-        const currentUser = getCurrentUser();
-        if (currentUser && checkIsAuthenticated()) {
-          setUser(currentUser);
-          setIsAuthenticated(true);
+        // First set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (session) {
+              const currentUser = await getUser();
+              if (currentUser) {
+                setUser(currentUser);
+                setIsAuthenticated(true);
+              } else {
+                setUser(null);
+                setIsAuthenticated(false);
+              }
+            } else {
+              setUser(null);
+              setIsAuthenticated(false);
+            }
+            setIsLoading(false);
+          }
+        );
+
+        // Then check current session
+        const isUserAuthenticated = await checkIsAuthenticated();
+        if (isUserAuthenticated) {
+          const currentUser = await getUser();
+          if (currentUser) {
+            setUser(currentUser);
+            setIsAuthenticated(true);
+          }
         }
+        
+        setIsLoading(false);
+        
+        // Clean up subscription
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
         console.error('Auth check error:', error);
-      } finally {
         setIsLoading(false);
       }
     };

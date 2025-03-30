@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate, useParams, useNavigate, Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +16,7 @@ import { publishScheduledPosts } from '@/services/blogService';
 import { toast } from 'sonner';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminPage = () => {
   const { tab } = useParams<{ tab: string }>();
@@ -38,16 +38,39 @@ const AdminPage = () => {
       }
     };
 
-    // Simulate admin check (replace with actual logic)
+    // Check admin status via Supabase
     const checkAdminStatus = async () => {
-      // In a real application, you would check the user's role or permissions
-      // against a backend service.
-      // For this example, we'll just set isAdmin to true after a short delay.
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setIsAdmin(true);
-      
-      // Check for scheduled posts
-      await checkScheduledPosts();
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Check if user has admin role in profiles table
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+            
+          if (error) {
+            console.error("Error checking admin status:", error);
+            setIsAdmin(false);
+            return;
+          }
+          
+          setIsAdmin(data?.role === 'admin');
+          
+          // Check for scheduled posts if user is admin
+          if (data?.role === 'admin') {
+            await checkScheduledPosts();
+          }
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Error in admin check:", error);
+        setIsAdmin(false);
+      }
     };
 
     if (isAuthenticated) {
