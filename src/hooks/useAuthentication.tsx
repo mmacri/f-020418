@@ -25,13 +25,41 @@ export const useAuthentication = (): UseAuthenticationResult => {
   // Function to get current user data
   const fetchUser = useCallback(async () => {
     try {
-      const currentUser = await getUser();
-      if (currentUser) {
-        console.log("User data fetched:", currentUser);
+      // Get current user data from Supabase
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      
+      if (supabaseUser) {
+        // Get user profile from our database
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', supabaseUser.id)
+          .single();
+        
+        const currentUser: User = {
+          id: typeof supabaseUser.id === 'string' && supabaseUser.id.length > 8 
+            ? parseInt(supabaseUser.id.substring(0, 8), 16) || 1 
+            : 1,
+          email: supabaseUser.email || '',
+          name: profileData?.display_name || supabaseUser.email?.split('@')[0] || '',
+          role: (profileData?.role as "admin" | "editor" | "user") || 'user',
+          avatar: profileData?.avatar_url,
+          createdAt: profileData?.created_at || new Date().toISOString(),
+          updatedAt: profileData?.updated_at || new Date().toISOString()
+        };
+        
+        console.log("Fetched user data:", currentUser);
         setUser(currentUser);
         return true;
       }
-      console.log("No user data found");
+      
+      // Fallback to legacy user service
+      const legacyUser = await getUser();
+      if (legacyUser) {
+        setUser(legacyUser);
+        return true;
+      }
+      
       return false;
     } catch (error) {
       console.error('Error fetching user:', error);
@@ -47,7 +75,8 @@ export const useAuthentication = (): UseAuthenticationResult => {
         setIsLoading(true);
         
         // First check current session
-        const isUserAuthenticated = await checkIsAuthenticated();
+        const { data: { session } } = await supabase.auth.getSession();
+        const isUserAuthenticated = !!session || await checkIsAuthenticated();
         console.log("Is user authenticated:", isUserAuthenticated);
         
         if (isUserAuthenticated) {
@@ -95,15 +124,31 @@ export const useAuthentication = (): UseAuthenticationResult => {
     setIsLoading(true);
     try {
       console.log("Attempting login for:", email);
-      const result = await authLogin(email, password);
       
-      if (result.success && result.user) {
-        console.log("Login successful:", result.user);
-        setUser(result.user);
-        setIsAuthenticated(true);
-        return true;
+      // Try Supabase authentication
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error("Supabase login error:", error.message);
+        
+        // Fallback to legacy login
+        const result = await authLogin(email, password);
+        if (result.success && result.user) {
+          setUser(result.user);
+          setIsAuthenticated(true);
+          return true;
+        }
+        return false;
       }
-      console.log("Login failed:", result.message);
+      
+      if (data.user) {
+        const success = await fetchUser();
+        return success;
+      }
+      
       return false;
     } catch (error) {
       console.error('Login error:', error);
@@ -116,7 +161,13 @@ export const useAuthentication = (): UseAuthenticationResult => {
   const logout = async () => {
     try {
       console.log("Attempting logout");
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Also run legacy logout for compatibility
       await authLogout();
+      
       setUser(null);
       setIsAuthenticated(false);
       console.log("Logout successful");

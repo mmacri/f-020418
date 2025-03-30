@@ -47,10 +47,6 @@ export const login = async (email: string, password: string): Promise<{
         console.error("Error fetching profile:", profileError);
       }
       
-      // Check if user is admin - don't block non-admin users from logging in
-      // We'll check admin permissions in the Admin component instead
-      const isUserAdmin = profileData?.role === 'admin';
-      
       // Convert Supabase user to our User format with proper type conversion
       const userObject: User = {
         id: typeof data.user.id === 'string' && data.user.id.length > 8 
@@ -100,11 +96,6 @@ export const logout = async (): Promise<void> => {
     
     // Remove token from localStorage
     localStorage.removeItem('authToken');
-    
-    // Redirect to home page after logout
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 500);
   } catch (error) {
     console.error("Logout error:", error);
     toast.error("Failed to log out. Please try again.");
