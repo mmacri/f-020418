@@ -32,13 +32,16 @@ const Index = () => {
         
         // Get featured products from Supabase
         try {
-          // Use explicit query with proper error handling
-          const { data: supabaseData, error: featuredError } = await supabase
+          // Use explicit query with proper type annotation to break inference chain
+          const { data: rawData, error: featuredError } = await supabase
             .from('products')
             .select('*')
             .eq('attributes->bestSeller', true)
             .order('rating', { ascending: false })
             .limit(6);
+            
+          // Break the typing chain completely
+          const supabaseData = rawData as any[];
             
           if (featuredError) {
             console.error('Error fetching featured products:', featuredError);
@@ -50,14 +53,12 @@ const Index = () => {
             const tempProducts: Product[] = [];
             
             // Simple loop to avoid type recursion
-            for (let i = 0; i < supabaseData.length; i++) {
+            for (const rawProduct of supabaseData) {
               try {
-                // Break the type inference chain completely
-                const rawProduct = supabaseData[i];
                 const product = mapSupabaseProductToProduct(rawProduct);
                 tempProducts.push(product);
               } catch (err) {
-                console.error('Error mapping product:', err, supabaseData[i]);
+                console.error('Error mapping product:', err, rawProduct);
               }
             }
             
