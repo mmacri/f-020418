@@ -31,7 +31,7 @@ const HeroSection: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
                 size="lg" 
-                className="bg-white text-indigo-700 hover:bg-gray-100 font-medium border border-white shadow-md"
+                className="bg-white text-indigo-700 hover:bg-gray-100 font-semibold border border-white shadow-md"
                 asChild
               >
                 <Link to="/categories/massage-guns">
@@ -42,7 +42,7 @@ const HeroSection: React.FC = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="bg-transparent border-2 border-white text-white hover:bg-white/20 font-medium"
+                className="bg-transparent border-2 border-white text-white hover:bg-white/20 font-semibold"
                 asChild
               >
                 <Link to="/blog">

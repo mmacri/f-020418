@@ -55,3 +55,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Improve button contrast */
+.btn-primary, 
+button[type="submit"],
+.btn-primary:hover, 
+button[type="submit"]:hover {
+  @apply font-semibold;
+  color: white !important;
+  background-color: hsl(var(--primary)) !important;
+}
+
+/* Improve outline button visibility */
+button[class*="outline"],
+a[class*="outline"] {
+  @apply border-2 font-medium;
+}
+
+/* Ensure text contrast in cards */
+.card-title, .card h3, .card h2 {
+  @apply font-semibold text-foreground;
+}
+
+/* Improve hero section gradients */
+section.bg-gradient-to-r.from-indigo-700.to-purple-700 {
+  background: linear-gradient(to right, #4338ca, #5b21b6) !important;
+}

@@ -215,3 +215,33 @@ section.relative.bg-gradient-to-r {
 .text-gray-600 {
   color: hsl(215, 16%, 40%); /* Darker shade for better contrast */
 }
+
+/* Fix for outline buttons */
+button[class*="outline"],
+a[class*="outline"] {
+  border-width: 2px !important;
+  font-weight: 500 !important;
+}
+
+/* Fix for icon buttons */
+button[class*="icon"] svg {
+  color: currentColor !important;
+}
+
+/* Ensure all form inputs are visible */
+input, textarea, select {
+  background-color: white !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Fix for navigation items */
+.NavigationMenuLink:focus, .NavigationMenuTrigger:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Better visibility for select dropdown items */
+.select-dropdown-item {
+  padding: 8px 12px !important;
+  font-weight: 500 !important;
+}

@@ -91,13 +91,13 @@ const Header = () => {
     if (isAdmin()) {
       return (
         <div className="flex items-center gap-2">
-          <Link to="/admin" className="text-sm text-gray-600 hover:text-gray-900">
+          <Link to="/admin" className="text-sm font-medium text-gray-700 hover:text-gray-900">
             Admin Dashboard
           </Link>
           <Button
             variant="outline"
             size="sm"
-            className="text-sm"
+            className="text-sm font-medium"
             onClick={handleLogout}
             aria-label="Sign out of admin account"
           >
@@ -140,7 +140,7 @@ const Header = () => {
                   className={({ isActive }) =>
                     isActive
                       ? "text-blue-600 font-semibold"
-                      : "text-gray-600 hover:text-gray-900"
+                      : "text-gray-700 hover:text-gray-900 font-medium"
                   }
                 >
                   {item.title}
@@ -148,18 +148,18 @@ const Header = () => {
               ) : item.type === "category-dropdown" && item.items ? (
                 <div key={item.id} className="relative group">
                   <button 
-                    className="text-gray-600 hover:text-gray-900"
+                    className="text-gray-700 hover:text-gray-900 font-medium"
                     aria-label={`${item.title} dropdown menu`}
                     title={`${item.title} categories`}
                   >
                     {item.title}
                   </button>
-                  <div className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-md hidden group-hover:block">
+                  <div className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-md hidden group-hover:block z-50">
                     {item.items.map(subItem => (
                       <Link
                         key={subItem.id}
                         to={subItem.url || "/"}
-                        className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium"
                       >
                         {subItem.title}
                       </Link>
@@ -173,10 +173,10 @@ const Header = () => {
 
         <div className="flex items-center gap-4">
           <Link to="/search" aria-label="Search products" title="Search products">
-            <Search className="h-5 w-5 text-gray-500 hover:text-gray-700" aria-hidden="true" />
+            <Search className="h-5 w-5 text-gray-700 hover:text-gray-900" aria-hidden="true" />
           </Link>
           <Link to="/wishlist" aria-label="Wishlist" title="View wishlist">
-            <Heart className="h-5 w-5 text-gray-500 hover:text-gray-700" aria-hidden="true" />
+            <Heart className="h-5 w-5 text-gray-700 hover:text-gray-900" aria-hidden="true" />
           </Link>
           <ThemeToggle />
           {renderAuthButtons()}
@@ -190,7 +190,7 @@ const Header = () => {
                 aria-label="Open menu"
                 title="Menu"
               >
-                <Menu className="h-5 w-5 text-gray-500 hover:text-gray-700" aria-hidden="true" />
+                <Menu className="h-5 w-5 text-gray-700 hover:text-gray-900" aria-hidden="true" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="sm:w-64">
@@ -206,7 +206,7 @@ const Header = () => {
                     {item.type === "link" && (
                       <Link
                         to={item.url || "/"}
-                        className="block px-4 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium"
                       >
                         {item.title}
                       </Link>
@@ -218,7 +218,7 @@ const Header = () => {
                           <Link
                             key={subItem.id}
                             to={subItem.url || "/"}
-                            className="block px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                            className="block px-6 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium"
                           >
                             {subItem.title}
                           </Link>

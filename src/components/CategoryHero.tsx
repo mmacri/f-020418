@@ -28,7 +28,7 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
     <section 
       className="hero-bg text-white py-12 relative min-h-[240px]" 
       style={{ 
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7))`,
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8))`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
@@ -54,7 +54,7 @@ const CategoryHero: React.FC<CategoryHeroProps> = ({
           <p className="text-lg mb-4">
             {description || category?.description || `Comprehensive guide to the top ${categoryName.toLowerCase()} for improving flexibility, mobility, and aiding recovery`}
           </p>
-          <p className="text-sm bg-indigo-700 inline-block px-3 py-1 rounded-full">
+          <p className="text-sm bg-indigo-700 inline-block px-3 py-1 rounded-full font-medium">
             <span className="mr-1">ⓘ</span> Affiliate Disclosure: We may earn commissions from qualifying purchases
           </p>
         </div>
