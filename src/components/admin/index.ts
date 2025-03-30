@@ -5,7 +5,7 @@ import AdminBlog from './AdminBlog';
 import AdminSettings from './AdminSettings';
 import AdminAuth from './AdminAuth';
 import AdminCategoryContent from './AdminCategoryContent';
-// Remove AdminCategories from exports if it doesn't have a default export
+import SubcategoryList from './SubcategoryList';
 
 export {
   AdminDashboard,
@@ -13,5 +13,6 @@ export {
   AdminBlog,
   AdminSettings,
   AdminAuth,
-  AdminCategoryContent
+  AdminCategoryContent,
+  SubcategoryList
 };

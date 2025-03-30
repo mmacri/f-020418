@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -9,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { FileUpload } from '@/components/FileUpload';
 import { Loader2 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface SubcategoryFormProps {
   formData: {
@@ -115,7 +117,9 @@ const SubcategoryForm: React.FC<SubcategoryFormProps> = ({
       ) : (
         <div className="space-y-2">
           <Label>Upload Image</Label>
-          <FileUpload onFileSelected={onFileChange} />
+          <FileUpload
+            onFileChange={onFileChange}
+          />
           <p className="text-xs text-muted-foreground">
             Recommended size: 1200x600 pixels, max 5MB
           </p>

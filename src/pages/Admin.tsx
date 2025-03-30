@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,8 +11,6 @@ import {
   AdminAuth,
   AdminCategoryContent
 } from '@/components/admin';
-// Import directly from the file since it doesn't have a default export
-// import AdminCategories from '@/components/admin/AdminCategories';
 
 const AdminPage = () => {
   const { tab } = useParams<{ tab: string }>();
@@ -52,6 +51,11 @@ const AdminPage = () => {
     );
   }
 
+  const handleAuthSuccess = () => {
+    console.log("Authentication successful");
+    // Additional auth success handling logic
+  };
+
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
@@ -81,7 +85,7 @@ const AdminPage = () => {
           <AdminSettings />
         </TabsContent>
         <TabsContent value="auth">
-          <AdminAuth />
+          <AdminAuth onAuthSuccess={handleAuthSuccess} />
         </TabsContent>
       </Tabs>
     </div>
