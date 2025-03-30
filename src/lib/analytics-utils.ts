@@ -1,4 +1,5 @@
-import { localStorageKeys } from '@/lib/constants';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthentication } from '@/hooks/useAuthentication';
 
 export interface ClickEvent {
   productId: string | number;
@@ -11,120 +12,113 @@ export interface ClickEvent {
   convertedStatus?: 'confirmed' | 'estimated' | 'unknown';
 }
 
-export interface AnalyticsData {
-  clicks: ClickEvent[];
-  lastSync: number;
-}
-
 /**
- * Track affiliate link click with extended information
+ * Track affiliate link click with Supabase integration
  */
-export const trackAffiliateClick = (
+export const trackAffiliateClick = async (
   productId: string | number,
   productName: string,
   affiliateUrl: string,
   source: string = 'unknown',
   asin?: string
+): Promise<void> => {
+  try {
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    // Insert event into analytics_events table
+    const { error } = await supabase
+      .from('analytics_events')
+      .insert({
+        event_type: 'affiliate_click',
+        page_url: window.location.href,
+        user_id: userId,
+        data: {
+          productId,
+          productName,
+          affiliateUrl,
+          asin,
+          source,
+          timestamp: Date.now()
+        }
+      });
+    
+    if (error) {
+      console.error('Error tracking affiliate click in Supabase:', error);
+      // Fallback to localStorage if Supabase insertion fails
+      saveAnalyticsToLocalStorage(productId, productName, affiliateUrl, source, asin, userId);
+    } else {
+      console.log(`Affiliate link click tracked in Supabase: ${productName} from ${source}`);
+    }
+  } catch (error) {
+    console.error('Error in trackAffiliateClick:', error);
+    // Fallback to localStorage
+    saveAnalyticsToLocalStorage(productId, productName, affiliateUrl, source, asin);
+  }
+};
+
+// Fallback to localStorage if Supabase tracking fails
+const saveAnalyticsToLocalStorage = (
+  productId: string | number,
+  productName: string,
+  affiliateUrl: string,
+  source: string = 'unknown',
+  asin?: string,
+  userId?: string
 ): void => {
   try {
-    // Get user ID if available (from auth)
-    const userId = localStorage.getItem(localStorageKeys.USER_ID) || 'anonymous';
-    
-    // Get existing analytics data from localStorage
-    const existingData = localStorage.getItem(localStorageKeys.ANALYTICS_DATA);
-    const analyticsData: AnalyticsData = existingData 
+    const localStorageKey = 'analyticsData';
+    const existingData = localStorage.getItem(localStorageKey);
+    const analyticsData = existingData 
       ? JSON.parse(existingData) 
       : { clicks: [], lastSync: 0 };
     
-    // Add new click event
-    const clickEvent: ClickEvent = {
+    analyticsData.clicks.push({
       productId,
       productName,
       affiliateUrl,
       timestamp: Date.now(),
       asin,
       source,
-      userId
-    };
+      userId: userId || 'anonymous'
+    });
     
-    analyticsData.clicks.push(clickEvent);
-    
-    // Store back in localStorage
-    localStorage.setItem(localStorageKeys.ANALYTICS_DATA, JSON.stringify(analyticsData));
-    
-    // Log for debugging
-    console.log(`Affiliate link click tracked: ${productName} from ${source}`);
-    
-    // If server-side tracking is implemented in the future, we could send the data here
-    // sendToAnalyticsServer(clickEvent);
+    localStorage.setItem(localStorageKey, JSON.stringify(analyticsData));
+    console.log(`Affiliate link click fallback to localStorage: ${productName} from ${source}`);
   } catch (error) {
-    console.error('Error tracking affiliate click:', error);
+    console.error('Error in localStorage fallback for analytics:', error);
   }
 };
 
 /**
- * Get analytics data filtered by date range
+ * Get analytics data summary for dashboard with server-side processing
  */
-export const getAnalyticsInDateRange = (startDate?: Date, endDate?: Date) => {
+export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
   try {
-    const existingData = localStorage.getItem(localStorageKeys.ANALYTICS_DATA);
-    if (!existingData) {
-      return { clicks: [] };
-    }
-    
-    const analyticsData: AnalyticsData = JSON.parse(existingData);
-    let filteredClicks = [...analyticsData.clicks];
+    let query = supabase
+      .from('analytics_events')
+      .select('*')
+      .eq('event_type', 'affiliate_click');
     
     // Apply date filters if provided
     if (startDate) {
-      const startTimestamp = startDate.getTime();
-      filteredClicks = filteredClicks.filter(click => click.timestamp >= startTimestamp);
+      const startTimestamp = startDate.toISOString();
+      query = query.gte('created_at', startTimestamp);
     }
     
     if (endDate) {
-      const endTimestamp = endDate.getTime() + (24 * 60 * 60 * 1000 - 1); // End of the selected day
-      filteredClicks = filteredClicks.filter(click => click.timestamp <= endTimestamp);
+      // Set to end of the selected day
+      const endDay = new Date(endDate);
+      endDay.setHours(23, 59, 59, 999);
+      const endTimestamp = endDay.toISOString();
+      query = query.lte('created_at', endTimestamp);
     }
     
-    return { clicks: filteredClicks };
-  } catch (error) {
-    console.error('Error getting analytics in date range:', error);
-    return { clicks: [] };
-  }
-};
-
-/**
- * Calculate estimated conversions based on product category and price point
- */
-export const calculateEstimatedConversions = (clicks: ClickEvent[], categoryRates?: Record<string, number>) => {
-  // Default conversion rates by price point if not specified by category
-  const defaultRates = {
-    low: 0.032, // 3.2% for products under $25
-    medium: 0.028, // 2.8% for products $25-$100
-    high: 0.018, // 1.8% for products over $100
-    unknown: 0.025 // 2.5% average
-  };
-  
-  // Optional category-specific rates
-  const categoryConversionRates = categoryRates || {
-    'fitness': 0.035,
-    'massage': 0.042,
-    'supplements': 0.038,
-    'mobility': 0.029,
-    'equipment': 0.022
-  };
-  
-  return clicks.length * 0.029; // Using a simplified average rate for now
-};
-
-/**
- * Get analytics data summary for dashboard with date range filtering
- */
-export const getAnalyticsSummary = (startDate?: Date, endDate?: Date) => {
-  try {
-    const { clicks } = getAnalyticsInDateRange(startDate, endDate);
+    const { data, error } = await query;
     
-    if (clicks.length === 0) {
+    if (error) {
+      console.error('Error fetching analytics data:', error);
       return {
         totalClicks: 0,
         uniqueProducts: 0,
@@ -137,65 +131,76 @@ export const getAnalyticsSummary = (startDate?: Date, endDate?: Date) => {
       };
     }
     
-    // Calculate total clicks
-    const totalClicks = clicks.length;
+    if (!data || data.length === 0) {
+      return {
+        totalClicks: 0,
+        uniqueProducts: 0,
+        clicksByDay: {},
+        topProducts: [],
+        clicksBySource: {},
+        estimatedConversions: 0,
+        conversionRate: 0,
+        estimatedRevenue: 0
+      };
+    }
     
-    // Calculate unique products
-    const uniqueProducts = new Set(clicks.map(click => click.productId)).size;
+    // Process the data
+    const totalClicks = data.length;
     
-    // Group clicks by day
-    const clicksByDay: {[key: string]: number} = {};
-    clicks.forEach(click => {
-      const date = new Date(click.timestamp).toISOString().split('T')[0];
-      clicksByDay[date] = (clicksByDay[date] || 0) + 1;
+    // Extract unique products
+    const productIds = new Set();
+    const productCounts = {};
+    const sourceCounts = {};
+    const clicksByDay = {};
+    
+    data.forEach(event => {
+      const productId = event.data.productId;
+      productIds.add(productId);
+      
+      // Count by product
+      productCounts[productId] = (productCounts[productId] || 0) + 1;
+      
+      // Count by source
+      const source = event.data.source || 'unknown';
+      sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+      
+      // Group by day
+      const day = new Date(event.created_at).toISOString().split('T')[0];
+      clicksByDay[day] = (clicksByDay[day] || 0) + 1;
     });
     
-    // Get top clicked products
-    const productCounts: {[key: string]: number} = {};
-    const productRevenue: {[key: string]: number} = {};
-    
-    clicks.forEach(click => {
-      const productKey = `${click.productId}`;
-      productCounts[productKey] = (productCounts[productKey] || 0) + 1;
-    });
-    
+    // Calculate top products
     const topProducts = Object.entries(productCounts)
-      .map(([productKey, count]) => {
-        const [productId] = productKey.split('|');
-        const productClick = clicks.find(click => click.productId.toString() === productId);
+      .map(([productId, count]) => {
+        // Find a sample event with this product to get the name
+        const sampleEvent = data.find(event => event.data.productId.toString() === productId);
         return {
           productId,
-          productName: productClick?.productName || 'Unknown Product',
+          productName: sampleEvent?.data?.productName || 'Unknown Product',
           count,
           conversionRate: 0.029, // Default conversion rate
-          estimatedConversions: Math.round(count * 0.029 * 10) / 10
+          estimatedConversions: Math.round((count as number) * 0.029 * 10) / 10
         };
       })
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => (b.count as number) - (a.count as number))
       .slice(0, 10);
     
-    // Group clicks by source
-    const clicksBySource: {[key: string]: number} = {};
-    clicks.forEach(click => {
-      clicksBySource[click.source] = (clicksBySource[click.source] || 0) + 1;
-    });
-    
     // Estimate conversions
-    const estimatedConversions = calculateEstimatedConversions(clicks);
-    const conversionRate = totalClicks > 0 ? (estimatedConversions / totalClicks) : 0;
+    const estimatedConversions = totalClicks * 0.029;
+    const conversionRate = totalClicks > 0 ? estimatedConversions / totalClicks : 0;
     
     return {
       totalClicks,
-      uniqueProducts,
+      uniqueProducts: productIds.size,
       clicksByDay,
       topProducts,
-      clicksBySource,
+      clicksBySource: sourceCounts,
       estimatedConversions,
       conversionRate,
       estimatedRevenue: Math.round(estimatedConversions * 4.5) // Average commission of $4.50 per conversion
     };
   } catch (error) {
-    console.error('Error getting analytics summary:', error);
+    console.error('Error in getAnalyticsSummary:', error);
     return {
       totalClicks: 0,
       uniqueProducts: 0,
