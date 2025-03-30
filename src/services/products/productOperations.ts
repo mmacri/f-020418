@@ -12,9 +12,10 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
       throw new Error('Product name and slug are required');
     }
     
+    // Need to cast to any to avoid TypeScript errors with Supabase types
     const { data, error } = await supabase
       .from('products')
-      .insert(supabaseProduct)
+      .insert(supabaseProduct as any)
       .select()
       .single();
       
@@ -36,7 +37,7 @@ export const updateProduct = async (id: string, productData: Partial<Product>): 
     
     const { data, error } = await supabase
       .from('products')
-      .update(supabaseProduct)
+      .update(supabaseProduct as any)
       .eq('id', id.toString())
       .select()
       .single();
