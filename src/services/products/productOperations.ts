@@ -1,14 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Product, SupabaseProduct } from './types';
-import { mapProductToSupabase, mapSupabaseToProduct } from './mappers';
+import { mapProductToSupabaseProduct, mapSupabaseProductToProduct } from './mappers';
 
 /**
  * Create a new product in the database
  */
 export const createProduct = async (product: Product): Promise<Product> => {
   try {
-    const supabaseProduct = mapProductToSupabase(product);
+    const supabaseProduct = mapProductToSupabaseProduct(product);
     
     if (!supabaseProduct.name || !supabaseProduct.slug) {
       throw new Error('Product name and slug are required');
@@ -26,7 +26,7 @@ export const createProduct = async (product: Product): Promise<Product> => {
       throw new Error('Failed to create product');
     }
     
-    return mapSupabaseToProduct(data);
+    return mapSupabaseProductToProduct(data);
   } catch (error) {
     console.error('Error in createProduct:', error);
     throw error;
@@ -38,7 +38,7 @@ export const createProduct = async (product: Product): Promise<Product> => {
  */
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product> => {
   try {
-    const supabaseProduct = mapProductToSupabase(product);
+    const supabaseProduct = mapProductToSupabaseProduct(product);
     
     const { data, error } = await supabase
       .from('products')
@@ -52,7 +52,7 @@ export const updateProduct = async (id: string, product: Partial<Product>): Prom
       throw new Error('Failed to update product');
     }
     
-    return mapSupabaseToProduct(data);
+    return mapSupabaseProductToProduct(data);
   } catch (error) {
     console.error('Error in updateProduct:', error);
     throw error;
