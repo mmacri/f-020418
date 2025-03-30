@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   Card,
@@ -63,6 +64,8 @@ const AffiliateDashboard: React.FC = () => {
     to: undefined,
   });
   const [isCustomDateRange, setIsCustomDateRange] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -89,15 +92,20 @@ const AffiliateDashboard: React.FC = () => {
     }
     
     try {
+      setIsLoading(true);
+      setError(null);
       const data = await getAnalyticsSummary(startDate, endDate);
       setAnalyticsData(data);
     } catch (error) {
       console.error("Error loading analytics data:", error);
+      setError("Failed to load analytics data");
       toast({
         title: "Failed to load analytics data",
         description: "Please try again later",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -133,7 +141,7 @@ const AffiliateDashboard: React.FC = () => {
         // Headers
         ['Date', 'Clicks', 'Estimated Conversions', 'Estimated Revenue'],
         // Data rows
-        ...Object.entries(analyticsData.clicksByDay).map(([date, clicks]) => {
+        ...Object.entries(analyticsData.clicksByDay || {}).map(([date, clicks]) => {
           const conversions = clicks * 0.029; // Using average conversion rate
           const revenue = conversions * 4.5; // Using average commission
           return [date, clicks.toString(), conversions.toFixed(1), revenue.toFixed(2)];
@@ -252,8 +260,8 @@ const AffiliateDashboard: React.FC = () => {
     const firstHalf = data.slice(0, midPoint);
     const secondHalf = data.slice(midPoint);
     
-    const firstHalfTotal = firstHalf.reduce((sum, item) => sum + item[metric], 0);
-    const secondHalfTotal = secondHalf.reduce((sum, item) => sum + item[metric], 0);
+    const firstHalfTotal = firstHalf.reduce((sum, item) => sum + (item[metric] || 0), 0);
+    const secondHalfTotal = secondHalf.reduce((sum, item) => sum + (item[metric] || 0), 0);
     
     if (firstHalfTotal === 0) return secondHalfTotal > 0 ? 100 : 0;
     
@@ -267,6 +275,35 @@ const AffiliateDashboard: React.FC = () => {
       minimumFractionDigits: 2
     }).format(amount);
   };
+  
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-500">
+              <p>{error}</p>
+              <Button 
+                onClick={loadAnalyticsData} 
+                variant="outline" 
+                className="mt-4"
+              >
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#4CAF50', '#9C27B0'];
   

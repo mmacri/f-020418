@@ -8,15 +8,18 @@ const AnalyticsDashboard: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [timeframe, setTimeframe] = useState<'week' | 'month' | 'all'>('week');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const summary = await getAnalyticsSummary();
         setAnalyticsData(summary);
-      } catch (error) {
-        console.error("Error fetching analytics data:", error);
+      } catch (err) {
+        console.error("Error fetching analytics data:", err);
+        setError("Failed to load analytics data. Please try again later.");
       } finally {
         setIsLoading(false);
       }
@@ -29,6 +32,20 @@ const AnalyticsDashboard: React.FC = () => {
     return (
       <div className="p-6 flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-red-500">
+              <p>{error}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

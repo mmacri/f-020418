@@ -74,7 +74,7 @@ const saveAnalyticsToLocalStorage = (
 ): void => {
   try {
     const localStorageKey = LOCAL_STORAGE_KEYS.ANALYTICS_DATA;
-    const existingData = window.localStorage.getItem(localStorageKey);
+    const existingData = localStorage.getItem(localStorageKey);
     const analyticsData = existingData 
       ? JSON.parse(existingData) 
       : { clicks: [], lastSync: 0 };
@@ -89,7 +89,7 @@ const saveAnalyticsToLocalStorage = (
       userId: userId || 'anonymous'
     });
     
-    window.localStorage.setItem(localStorageKey, JSON.stringify(analyticsData));
+    localStorage.setItem(localStorageKey, JSON.stringify(analyticsData));
     console.log(`Affiliate link click fallback to localStorage: ${productName} from ${source}`);
   } catch (error) {
     console.error('Error in localStorage fallback for analytics:', error);
@@ -250,14 +250,14 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
  */
 export const markClickAsConverted = (clickId: number): boolean => {
   try {
-    const existingData = window.localStorage.getItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA);
+    const existingData = localStorage.getItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA);
     if (!existingData) return false;
     
     const analyticsData: AnalyticsData = JSON.parse(existingData);
     
     if (clickId >= 0 && clickId < analyticsData.clicks.length) {
       analyticsData.clicks[clickId].convertedStatus = 'confirmed';
-      window.localStorage.setItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA, JSON.stringify(analyticsData));
+      localStorage.setItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA, JSON.stringify(analyticsData));
       return true;
     }
     
@@ -273,7 +273,7 @@ export const markClickAsConverted = (clickId: number): boolean => {
  */
 export const clearAnalyticsData = (): void => {
   try {
-    window.localStorage.removeItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA);
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA);
     console.log('Analytics data cleared');
   } catch (error) {
     console.error('Error clearing analytics data:', error);
