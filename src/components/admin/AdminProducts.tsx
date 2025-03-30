@@ -62,12 +62,9 @@ const AdminProducts = () => {
 
   useEffect(() => {
     if (formData.categoryId) {
-      // Convert categoryId to string for comparison since IDs in the categories array are strings
       const category = categories.find(cat => String(cat.id) === String(formData.categoryId));
       if (category) {
         setSubcategories(category.subcategories || []);
-        
-        // Clear subcategory if previous selection doesn't exist in the new list
         if (formData.subcategory && !category.subcategories.some(sub => sub.slug === formData.subcategory)) {
           setFormData(prev => ({ ...prev, subcategory: '' }));
         }
@@ -89,7 +86,6 @@ const AdminProducts = () => {
       setProducts(productsData);
       setCategories(categoriesData);
       
-      // If we have a selected category, set the subcategories
       if (formData.categoryId) {
         const category = categoriesData.find(cat => String(cat.id) === String(formData.categoryId));
         if (category) {
@@ -118,16 +114,14 @@ const AdminProducts = () => {
   };
 
   const handleCategoryChange = (value) => {
-    // Parse to integer if it's a string, but store as number
     const categoryId = parseInt(value, 10);
-    // Find category to get its name
     const category = categories.find(cat => String(cat.id) === String(categoryId));
     
     setFormData(prev => ({
       ...prev,
       categoryId,
       category: category?.name || '',
-      subcategory: '', // Reset subcategory when category changes
+      subcategory: '',
     }));
   };
 
@@ -197,7 +191,6 @@ const AdminProducts = () => {
   };
 
   const handleEditProduct = (product) => {
-    // Ensure we have features as an array even if they're missing in the product
     const features = Array.isArray(product.features) ? product.features : [];
     
     setEditingProduct(product);
@@ -227,13 +220,11 @@ const AdminProducts = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Ensure slug is created if empty
     let productSlug = formData.slug;
     if (!productSlug) {
       productSlug = formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     }
     
-    // Filter out empty features
     const filteredFeatures = formData.features.filter(f => f.trim() !== '');
     
     try {
@@ -241,7 +232,6 @@ const AdminProducts = () => {
         ...formData,
         slug: productSlug,
         features: filteredFeatures,
-        // Create images array from imageUrl
         images: formData.imageUrl ? [formData.imageUrl] : []
       };
       
@@ -408,7 +398,6 @@ const AdminProducts = () => {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6 py-4">
-            {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Basic Information</h3>
               
@@ -460,7 +449,6 @@ const AdminProducts = () => {
               </div>
             </div>
             
-            {/* Pricing and Categories */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Pricing & Categorization</h3>
               
@@ -536,7 +524,7 @@ const AdminProducts = () => {
                       <SelectValue placeholder={subcategories.length === 0 ? "Select a category first" : "Select a subcategory"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {subcategories.map((subcategory) => (
                         <SelectItem key={subcategory.id} value={subcategory.slug}>
                           {subcategory.name}
@@ -548,7 +536,6 @@ const AdminProducts = () => {
               </div>
             </div>
             
-            {/* Ratings and Images */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Ratings & Images</h3>
               
@@ -592,7 +579,6 @@ const AdminProducts = () => {
               </div>
             </div>
             
-            {/* Features */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Features</h3>
@@ -626,7 +612,6 @@ const AdminProducts = () => {
               ))}
             </div>
             
-            {/* Affiliate Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Affiliate & Stock Information</h3>
               
