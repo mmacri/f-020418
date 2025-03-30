@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { Minus } from 'lucide-react';
 import { Product } from '@/services/productService';
 
 interface ProductComparisonRowProps {

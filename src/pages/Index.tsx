@@ -43,7 +43,9 @@ const Index = () => {
         
         if (featuredData && featuredData.length > 0) {
           // Map Supabase products to our Product interface
-          const mappedProducts = featuredData.map(product => mapSupabaseProductToProduct(product));
+          const mappedProducts = featuredData.map(product => 
+            mapSupabaseProductToProduct(product as any)
+          );
           setFeaturedProducts(mappedProducts);
         } else {
           // Fall back to regular product fetching

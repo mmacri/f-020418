@@ -38,7 +38,7 @@ export interface Product {
   reviewCount: number;
   features?: string[];
   imageUrl: string;
-  images?: string[] | { url: string }[];
+  images?: (string | { url: string })[];
   additionalImages?: string[];
   inStock: boolean;
   category: string;
@@ -59,7 +59,7 @@ export interface Product {
 }
 
 // Convert Supabase product format to our Product interface
-const mapSupabaseProductToProduct = (product: SupabaseProduct): Product => {
+export const mapSupabaseProductToProduct = (product: SupabaseProduct): Product => {
   return {
     id: product.id,
     slug: product.slug,
@@ -111,6 +111,13 @@ const mapProductToSupabaseProduct = (product: Partial<Product>) => {
       pros: product.pros
     }
   };
+};
+
+// Helper function to extract image URL from either string or object format
+export const extractImageUrl = (image: string | { url: string } | undefined): string => {
+  if (!image) return '';
+  if (typeof image === 'string') return image;
+  return image.url;
 };
 
 // Fetch all products
