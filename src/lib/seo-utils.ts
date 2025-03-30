@@ -1,5 +1,29 @@
-import { Metadata } from 'next/dist/lib/metadata/api/types';
+
 import { Product } from '@/services/products/types';
+
+// Define a simple Metadata interface to replace the Next.js one
+export interface Metadata {
+  title?: string;
+  description?: string;
+  openGraph?: {
+    title?: string;
+    description?: string;
+    images?: { url: string }[];
+  };
+  twitter?: {
+    card?: string;
+    title?: string;
+    description?: string;
+    images?: string[];
+    creator?: string;
+  };
+  icons?: string;
+  metadataBase?: URL;
+  robots?: {
+    index?: boolean;
+    follow?: boolean;
+  };
+}
 
 export const constructMetadata = ({
   title = 'Recovery Essentials - Your Guide to Recovery Products',

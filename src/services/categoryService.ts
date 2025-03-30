@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { localStorageKeys } from '@/lib/constants';
 
@@ -30,6 +31,20 @@ export interface CategoryInput {
   imageUrl?: string;
   showInNavigation?: boolean;
   navigationOrder?: number;
+}
+
+// Define the shape of Supabase category data
+interface SupabaseCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image_url?: string;
+  show_in_navigation?: boolean;
+  navigation_order?: number;
+  parent_id?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Define default categories to use when none exist or for fallback
@@ -136,7 +151,7 @@ export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
     
     // Process categories to get subcategories
     const categoriesWithSubcategories = await Promise.all(
-      categories.map(async (category) => {
+      (categories as SupabaseCategory[]).map(async (category) => {
         // Get subcategories for this category
         const { data: subcategories, error: subError } = await supabase
           .from('categories')
@@ -159,7 +174,7 @@ export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
         }
         
         // Map to our Subcategory interface
-        const mappedSubcategories = subcategories.map(sub => ({
+        const mappedSubcategories = (subcategories as SupabaseCategory[]).map(sub => ({
           id: sub.id,
           name: sub.name,
           slug: sub.slug,
@@ -310,14 +325,16 @@ export const createCategory = async (categoryData: CategoryInput): Promise<Categ
       throw new Error("Failed to create category");
     }
     
+    const category = data as SupabaseCategory;
+    
     return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      description: data.description,
-      imageUrl: data.image_url,
-      showInNavigation: data.show_in_navigation,
-      navigationOrder: data.navigation_order,
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      imageUrl: category.image_url,
+      showInNavigation: category.show_in_navigation,
+      navigationOrder: category.navigation_order,
       subcategories: []
     };
   } catch (error) {
@@ -350,6 +367,8 @@ export const updateCategory = async (categoryId: string, categoryData: Partial<C
       throw new Error("Failed to update category");
     }
     
+    const category = data as SupabaseCategory;
+    
     // Get subcategories for this category
     const { data: subcategories, error: subError } = await supabase
       .from('categories')
@@ -359,7 +378,7 @@ export const updateCategory = async (categoryId: string, categoryData: Partial<C
     let mappedSubcategories: Subcategory[] = [];
     
     if (!subError && subcategories) {
-      mappedSubcategories = subcategories.map(sub => ({
+      mappedSubcategories = (subcategories as SupabaseCategory[]).map(sub => ({
         id: sub.id,
         name: sub.name,
         slug: sub.slug,
@@ -370,13 +389,13 @@ export const updateCategory = async (categoryId: string, categoryData: Partial<C
     }
     
     return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      description: data.description,
-      imageUrl: data.image_url,
-      showInNavigation: data.show_in_navigation,
-      navigationOrder: data.navigation_order,
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      imageUrl: category.image_url,
+      showInNavigation: category.show_in_navigation,
+      navigationOrder: category.navigation_order,
       subcategories: mappedSubcategories
     };
   } catch (error) {

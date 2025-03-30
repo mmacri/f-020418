@@ -96,7 +96,7 @@ export const getProductsBySubcategory = async (categorySlug: string, subcategory
       .from('products')
       .select('*')
       .eq('category_id', categoryData.id)
-      .eq('subcategory_slug', subcategorySlug);
+      .eq('attributes->>subcategorySlug', subcategorySlug);
     
     if (productsError) {
       console.error('Error fetching products by subcategory:', productsError);
@@ -118,7 +118,7 @@ export const getFeaturedProducts = async (limit: number = 6): Promise<Product[]>
     const { data: featuredData, error: featuredError } = await supabase
       .from('products')
       .select('*')
-      .eq('best_seller', true)
+      .eq('attributes->>bestSeller', 'true')
       .order('rating', { ascending: false })
       .limit(limit);
     
