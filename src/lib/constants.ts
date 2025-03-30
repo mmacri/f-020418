@@ -59,18 +59,6 @@ export const imageUrls = {
 };
 
 /**
- * Default navigation items
- */
-export const DEFAULT_NAVIGATION = [
-  { name: 'Home', href: '/' },
-  { name: 'Categories', href: '/categories' },
-  { name: 'Compare', href: '/product-comparison' },
-  { name: 'Blog', href: '/blog' },
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' }
-];
-
-/**
  * Default main menu items for Header component
  */
 export const DEFAULT_MAIN_MENU = [
@@ -78,6 +66,33 @@ export const DEFAULT_MAIN_MENU = [
   { name: 'Categories', href: '/categories' },
   { name: 'Compare', href: '/product-comparison' },
   { name: 'Blog', href: '/blog' }
+];
+
+/**
+ * Define navigation item interface with optional mainMenu
+ */
+interface NavigationItem {
+  name: string;
+  href: string;
+}
+
+/**
+ * Define the navigation type with mainMenu property
+ */
+interface Navigation extends Array<NavigationItem> {
+  mainMenu?: NavigationItem[];
+}
+
+/**
+ * Default navigation items
+ */
+export const DEFAULT_NAVIGATION: Navigation = [
+  { name: 'Home', href: '/' },
+  { name: 'Categories', href: '/categories' },
+  { name: 'Compare', href: '/product-comparison' },
+  { name: 'Blog', href: '/blog' },
+  { name: 'About', href: '/about' },
+  { name: 'Contact', href: '/contact' }
 ];
 
 // Add mainMenu to DEFAULT_NAVIGATION as a property
