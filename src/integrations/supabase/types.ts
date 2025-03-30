@@ -142,7 +142,9 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          navigation_order: number | null
           parent_id: string | null
+          show_in_navigation: boolean | null
           slug: string
           updated_at: string
         }
@@ -152,7 +154,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          navigation_order?: number | null
           parent_id?: string | null
+          show_in_navigation?: boolean | null
           slug: string
           updated_at?: string
         }
@@ -162,7 +166,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          navigation_order?: number | null
           parent_id?: string | null
+          show_in_navigation?: boolean | null
           slug?: string
           updated_at?: string
         }
