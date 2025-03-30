@@ -10,6 +10,7 @@ import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
 import NewsletterSection from '@/components/home/NewsletterSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -27,34 +28,53 @@ const Index = () => {
         const categoriesData = await getNavigationCategories();
         setCategories(categoriesData.filter(cat => cat.showInNavigation !== false));
         
-        // Get all products
-        const products = await getProducts();
-        
-        // Select featured products
-        // First, try to get products marked as "bestSeller" or with high ratings
-        let featured = products.filter(p => p.bestSeller === true);
-        
-        // If we don't have enough featured products, add products with high ratings
-        if (featured.length < 6) {
-          const highRatedProducts = products
-            .filter(p => !featured.some(fp => fp.id === p.id)) // Exclude already featured products
-            .sort((a, b) => b.rating - a.rating) // Sort by rating (high to low)
-            .slice(0, 6 - featured.length); // Get enough to fill up to 6 slots
+        // Try to get featured products directly from Supabase
+        const { data: featuredData, error: featuredError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('bestSeller', true)
+          .order('rating', { ascending: false })
+          .limit(6);
           
-          featured = [...featured, ...highRatedProducts];
+        if (featuredError) {
+          console.error('Error fetching featured products:', featuredError);
+          throw new Error('Failed to fetch featured products');
         }
         
-        // If we still don't have 6 products, get random ones
-        if (featured.length < 6) {
-          const randomProducts = [...products]
-            .filter(p => !featured.some(fp => fp.id === p.id)) // Exclude already featured products
-            .sort(() => 0.5 - Math.random()) // Randomize
-            .slice(0, 6 - featured.length); // Get enough to fill up to 6 slots
+        if (featuredData && featuredData.length > 0) {
+          // Directly use featured products from Supabase
+          setFeaturedProducts(featuredData as Product[]);
+        } else {
+          // Fall back to regular product fetching
+          // Get all products
+          const products = await getProducts();
           
-          featured = [...featured, ...randomProducts];
+          // Select featured products
+          // First, try to get products marked as "bestSeller" or with high ratings
+          let featured = products.filter(p => p.bestSeller === true);
+          
+          // If we don't have enough featured products, add products with high ratings
+          if (featured.length < 6) {
+            const highRatedProducts = products
+              .filter(p => !featured.some(fp => fp.id === p.id)) // Exclude already featured products
+              .sort((a, b) => b.rating - a.rating) // Sort by rating (high to low)
+              .slice(0, 6 - featured.length); // Get enough to fill up to 6 slots
+            
+            featured = [...featured, ...highRatedProducts];
+          }
+          
+          // If we still don't have 6 products, get random ones
+          if (featured.length < 6) {
+            const randomProducts = [...products]
+              .filter(p => !featured.some(fp => fp.id === p.id)) // Exclude already featured products
+              .sort(() => 0.5 - Math.random()) // Randomize
+              .slice(0, 6 - featured.length); // Get enough to fill up to 6 slots
+            
+            featured = [...featured, ...randomProducts];
+          }
+          
+          setFeaturedProducts(featured);
         }
-        
-        setFeaturedProducts(featured);
       } catch (error) {
         console.error('Error fetching data:', error);
         setError('Failed to load data. Please try refreshing the page.');

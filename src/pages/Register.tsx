@@ -1,13 +1,11 @@
 
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Eye, EyeOff, AlertCircle, Check } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -15,297 +13,288 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { register as registerUser } from "@/services/userService";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthentication } from '@/hooks/useAuthentication';
 
-// Enhanced form validation schema with more detailed requirements
-const registerSchema = z
-  .object({
-    name: z
-      .string()
-      .min(2, "Name must be at least 2 characters")
-      .max(50, "Name cannot exceed 50 characters")
-      .refine(name => /^[a-zA-Z\s'-]+$/.test(name), {
-        message: "Name can only contain letters, spaces, hyphens and apostrophes"
-      }),
-    email: z
-      .string()
-      .min(1, "Email is required")
-      .email("Please enter a valid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .refine(password => /[A-Z]/.test(password), {
-        message: "Password must contain at least one uppercase letter"
-      })
-      .refine(password => /[0-9]/.test(password), {
-        message: "Password must contain at least one number"
-      }),
-    confirmPassword: z
-      .string()
-      .min(1, "Please confirm your password")
-  })
-  .refine(data => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"]
-  });
+// Define the form schema
+const formSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  confirmPassword: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthentication();
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [registerError, setRegisterError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: ""
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
     },
-    mode: "onChange" // Enable real-time validation as user types
   });
 
-  // Clear error message when form values change
+  // Redirect if already authenticated
   useEffect(() => {
-    if (registerError) {
-      setRegisterError(null);
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
     }
-  }, [form.watch("email"), registerError]);
+  }, [isAuthenticated, navigate]);
 
-  // Password strength indicators
-  const password = form.watch("password");
-  const hasMinLength = password.length >= 8;
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-
-  const onSubmit = async (values: RegisterFormValues) => {
+  const onSubmit = async (values: FormValues) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    
     try {
-      setLoading(true);
-      setRegisterError(null);
-      
-      const result = await registerUser({
-        name: values.name,
+      // Register user with Supabase
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
-        password: values.password
+        password: values.password,
+        options: {
+          data: {
+            name: values.name,
+          },
+        },
       });
       
-      if (result.success) {
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created successfully"
-        });
-        navigate("/");
-      } else {
-        setRegisterError(result.message || "An error occurred during registration");
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+      
+      if (data.user) {
+        // Update the profile with the name
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            display_name: values.name,
+            role: 'user' // Default role is user, admin can upgrade later
+          })
+          .eq('id', data.user.id);
+        
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+        }
+        
+        setSuccessMessage(
+          'Registration successful! Please check your email to confirm your account before logging in.'
+        );
+        
+        // Clear form
+        form.reset();
+        
+        // Sign out user (they need to confirm email and then sign in properly)
+        await supabase.auth.signOut();
+        
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
       }
     } catch (error) {
-      console.error("Registration error:", error);
-      setRegisterError("An unexpected error occurred. Please try again.");
+      console.error('Registration error:', error);
+      setErrorMessage('An unexpected error occurred. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50" role="main">
-      <Header />
-      
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-          <div className="text-center">
-            <h1 className="mt-2 text-3xl font-extrabold text-gray-900">
-              Create your account
-            </h1>
-            <p className="mt-2 text-sm text-gray-600">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-6">
+        <Card className="w-full">
+          <CardHeader className="space-y-1">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+              <Link to="/" className="text-sm text-blue-600 hover:text-blue-800">
+                Back to home
+              </Link>
+            </div>
+            <CardDescription>
+              Enter your information to create an account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {errorMessage && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+            
+            {successMessage && (
+              <Alert className="mb-4 bg-green-50 border-green-200">
+                <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+              </Alert>
+            )}
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <Input
+                            placeholder="John Doe"
+                            className="pl-10"
+                            {...field}
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <Input
+                            placeholder="your.email@example.com"
+                            className="pl-10"
+                            {...field}
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <Input
+                            type={showPassword ? 'text' : 'password'}
+                            className="pl-10 pr-10"
+                            {...field}
+                            disabled={isLoading}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1 h-8 w-8 p-0"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-5 w-5 text-gray-400" />
+                            ) : (
+                              <Eye className="h-5 w-5 text-gray-400" />
+                            )}
+                            <span className="sr-only">
+                              {showPassword ? 'Hide password' : 'Show password'}
+                            </span>
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                          <Input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            className="pl-10 pr-10"
+                            {...field}
+                            disabled={isLoading}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1 h-8 w-8 p-0"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-5 w-5 text-gray-400" />
+                            ) : (
+                              <Eye className="h-5 w-5 text-gray-400" />
+                            )}
+                            <span className="sr-only">
+                              {showConfirmPassword ? 'Hide password' : 'Show password'}
+                            </span>
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <span className="mr-2">Creating account</span>
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </>
+                  ) : (
+                    'Create account'
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-center text-gray-500">
               Already have an account?{' '}
-              <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
                 Sign in
               </Link>
-            </p>
-          </div>
-          
-          {registerError && (
-            <Alert variant="destructive" className="animate-in fade-in-50">
-              <AlertCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-              <AlertDescription>{registerError}</AlertDescription>
-            </Alert>
-          )}
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate aria-label="Registration form">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="name">Full Name</FormLabel>
-                    <FormControl>
-                      <Input 
-                        id="name"
-                        placeholder="Enter your full name" 
-                        autoComplete="name"
-                        aria-required="true"
-                        aria-invalid={!!form.formState.errors.name}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="email">Email Address</FormLabel>
-                    <FormControl>
-                      <Input 
-                        id="email"
-                        type="email" 
-                        placeholder="Enter your email" 
-                        autoComplete="email"
-                        aria-required="true"
-                        aria-invalid={!!form.formState.errors.email}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="password">Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          id="password"
-                          type={showPassword ? "text" : "password"} 
-                          placeholder="Create a password" 
-                          autoComplete="new-password"
-                          aria-required="true"
-                          aria-invalid={!!form.formState.errors.password}
-                          {...field} 
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
-                          onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                    
-                    {/* Password strength indicator */}
-                    {password.length > 0 && (
-                      <div className="mt-2 space-y-2" aria-live="polite">
-                        <p className="text-xs text-gray-600 font-medium">Password requirements:</p>
-                        <ul className="space-y-1 text-xs">
-                          <li className="flex items-center">
-                            <span className={`inline-flex mr-2 ${hasMinLength ? 'text-green-500' : 'text-gray-400'}`}>
-                              {hasMinLength ? <Check className="h-3 w-3" /> : "•"}
-                            </span>
-                            At least 8 characters
-                          </li>
-                          <li className="flex items-center">
-                            <span className={`inline-flex mr-2 ${hasUppercase ? 'text-green-500' : 'text-gray-400'}`}>
-                              {hasUppercase ? <Check className="h-3 w-3" /> : "•"}
-                            </span>
-                            At least one uppercase letter
-                          </li>
-                          <li className="flex items-center">
-                            <span className={`inline-flex mr-2 ${hasNumber ? 'text-green-500' : 'text-gray-400'}`}>
-                              {hasNumber ? <Check className="h-3 w-3" /> : "•"}
-                            </span>
-                            At least one number
-                          </li>
-                        </ul>
-                      </div>
-                    )}
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          id="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"} 
-                          placeholder="Confirm your password" 
-                          autoComplete="new-password"
-                          aria-required="true"
-                          aria-invalid={!!form.formState.errors.confirmPassword}
-                          {...field} 
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        >
-                          {showConfirmPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={loading}
-                  aria-busy={loading}
-                >
-                  {loading ? "Creating Account..." : "Sign Up"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-          
-          <div className="mt-6">
-            <p className="text-xs text-center text-gray-600">
-              By signing up, you agree to our{' '}
-              <Link to="/terms" className="text-indigo-600 hover:text-indigo-500">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="text-indigo-600 hover:text-indigo-500">
-                Privacy Policy
-              </Link>
-            </p>
-          </div>
-        </div>
+            </div>
+            
+            <div className="text-sm text-center text-gray-500">
+              Note: New accounts must be approved by an administrator before admin access is granted.
+            </div>
+          </CardFooter>
+        </Card>
       </div>
-
-      <Footer />
     </div>
   );
 };

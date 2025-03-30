@@ -1,134 +1,51 @@
 
-import { useState } from "react";
-import { Lock, Mail } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { login } from "@/services/userService";
-import { useToast } from "@/hooks/use-toast";
-
-const adminAuthSchema = z.object({
-  email: z.string().min(1, { message: "Email is required" }).email(),
-  password: z.string().min(1, { message: "Password is required" }),
-});
-
-type AdminAuthFormValues = z.infer<typeof adminAuthSchema>;
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import AdminAuthStatus from './AdminAuthStatus';
+import { useAuthentication } from '@/hooks/useAuthentication';
 
 interface AdminAuthProps {
-  onAuthSuccess: () => void;
+  onAuthSuccess?: () => void;
 }
 
-const AdminAuth = ({ onAuthSuccess }: AdminAuthProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthSuccess }) => {
+  const { isAuthenticated } = useAuthentication();
 
-  const form = useForm<AdminAuthFormValues>({
-    resolver: zodResolver(adminAuthSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const onSubmit = async (data: AdminAuthFormValues) => {
-    setIsLoading(true);
-    
-    try {
-      // Ensure data is not optional since LoginData requires email and password
-      const response = await login({
-        email: data.email,
-        password: data.password
-      });
-      
-      if (response.success && response.user?.role === "admin") {
-        toast({
-          title: "Authentication Successful",
-          description: "Welcome to the admin dashboard.",
-          variant: "default",
-        });
-        onAuthSuccess();
-      } else {
-        toast({
-          title: "Authentication Failed",
-          description: "You don't have admin privileges or your credentials are incorrect.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  // Call onAuthSuccess if provided and user is authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && onAuthSuccess) {
+      onAuthSuccess();
     }
-  };
+  }, [isAuthenticated, onAuthSuccess]);
 
   return (
-    <div className="max-w-md mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle>Admin Login</CardTitle>
-          <CardDescription>Login to access the admin dashboard</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input 
-                          {...field} 
-                          placeholder="admin@recoveryessentials.com" 
-                          className="pl-10"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input 
-                          {...field} 
-                          type="password" 
-                          placeholder="••••••••" 
-                          className="pl-10"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Log in to Admin"}
-              </Button>
-            </form>
-          </Form>
+    <div className="space-y-6">
+      <Card className="border shadow-sm">
+        <CardContent className="pt-6">
+          <Tabs defaultValue="status" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="status">Authentication Status</TabsTrigger>
+              <TabsTrigger value="permissions">Permissions</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="status">
+              <AdminAuthStatus />
+            </TabsContent>
+            
+            <TabsContent value="permissions">
+              <div className="py-10 text-center text-muted-foreground">
+                <p>User permissions management coming soon.</p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="settings">
+              <div className="py-10 text-center text-muted-foreground">
+                <p>Authentication settings coming soon.</p>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
