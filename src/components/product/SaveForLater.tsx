@@ -9,11 +9,12 @@ import { toast } from 'sonner';
 
 interface SaveForLaterProps {
   productId: string | number;
+  productName?: string; // Make productName optional
   className?: string;
   variant?: 'default' | 'secondary' | 'outline' | 'destructive' | 'ghost' | 'link';
 }
 
-const SaveForLater = ({ productId, className, variant = 'outline' }: SaveForLaterProps) => {
+const SaveForLater = ({ productId, productName, className, variant = 'outline' }: SaveForLaterProps) => {
   const { isInWishlist, addToWishlist, removeFromWishlist, isPending } = useWishlist();
   const { isAuthenticated } = useAuthentication();
   const navigate = useNavigate();

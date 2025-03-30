@@ -13,7 +13,7 @@ export interface ClickEvent {
 }
 
 // Constants for localStorage keys
-const localStorage = {
+const LOCAL_STORAGE_KEYS = {
   ANALYTICS_DATA: 'analyticsData'
 };
 
@@ -73,7 +73,7 @@ const saveAnalyticsToLocalStorage = (
   userId?: string
 ): void => {
   try {
-    const localStorageKey = localStorage.ANALYTICS_DATA;
+    const localStorageKey = LOCAL_STORAGE_KEYS.ANALYTICS_DATA;
     const existingData = window.localStorage.getItem(localStorageKey);
     const analyticsData = existingData 
       ? JSON.parse(existingData) 
@@ -246,14 +246,14 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
  */
 export const markClickAsConverted = (clickId: number): boolean => {
   try {
-    const existingData = localStorage.getItem(localStorage.ANALYTICS_DATA);
+    const existingData = window.localStorage.getItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA);
     if (!existingData) return false;
     
     const analyticsData: AnalyticsData = JSON.parse(existingData);
     
     if (clickId >= 0 && clickId < analyticsData.clicks.length) {
       analyticsData.clicks[clickId].convertedStatus = 'confirmed';
-      localStorage.setItem(localStorage.ANALYTICS_DATA, JSON.stringify(analyticsData));
+      window.localStorage.setItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA, JSON.stringify(analyticsData));
       return true;
     }
     
@@ -269,7 +269,7 @@ export const markClickAsConverted = (clickId: number): boolean => {
  */
 export const clearAnalyticsData = (): void => {
   try {
-    localStorage.removeItem(localStorage.ANALYTICS_DATA);
+    window.localStorage.removeItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA);
     console.log('Analytics data cleared');
   } catch (error) {
     console.error('Error clearing analytics data:', error);

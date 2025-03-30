@@ -62,7 +62,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
       const { data: wishlistData, error: wishlistError } = await supabase
         .from('wishlists')
         .select('product_id')
-        .eq('user_id', user.id);
+        .eq('user_id', String(user.id));
       
       if (wishlistError) throw wishlistError;
       
@@ -120,7 +120,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
       const { error } = await supabase
         .from('wishlists')
         .insert({
-          user_id: user.id,
+          user_id: String(user.id),
           product_id: formattedProductId
         });
       
@@ -166,7 +166,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
       const { error } = await supabase
         .from('wishlists')
         .delete()
-        .eq('user_id', user.id)
+        .eq('user_id', String(user.id))
         .eq('product_id', formattedProductId);
       
       if (error) throw error;
@@ -194,7 +194,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
       const { error } = await supabase
         .from('wishlists')
         .delete()
-        .eq('user_id', user.id);
+        .eq('user_id', String(user.id));
       
       if (error) throw error;
       
