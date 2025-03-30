@@ -10,11 +10,13 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { User, getCurrentUser, updateUserProfile, updateUserPassword } from "@/services/userService";
 import { SlidersHorizontal, KeyRound, User as UserIcon, ShieldCheck, Save, RefreshCw } from "lucide-react";
+import HeroImageSettings from "./HeroImageSettings";
+import ImageSettingsPanel from "./ImageSettingsPanel";
 
 // Profile form schema
 const profileFormSchema = z.object({
@@ -40,6 +42,7 @@ const AdminSettings = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [cacheSize, setCacheSize] = useState<string>("0 KB");
+  const [activeTab, setActiveTab] = useState("profile");
   
   // Load user data
   useEffect(() => {
@@ -118,7 +121,7 @@ const AdminSettings = () => {
         
         if (updatedUser) {
           setUser(updatedUser);
-          toast({
+          useToast().toast({
             title: "Profile updated",
             description: "Your profile has been updated successfully",
           });
@@ -126,7 +129,7 @@ const AdminSettings = () => {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast({
+      useToast().toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
@@ -145,13 +148,13 @@ const AdminSettings = () => {
         const success = await updateUserPassword(user.id, data.currentPassword, data.newPassword);
         
         if (success) {
-          toast({
+          useToast().toast({
             title: "Password updated",
             description: "Your password has been updated successfully",
           });
           passwordForm.reset();
         } else {
-          toast({
+          useToast().toast({
             title: "Error",
             description: "Current password is incorrect",
             variant: "destructive",
@@ -160,7 +163,7 @@ const AdminSettings = () => {
       }
     } catch (error) {
       console.error("Error updating password:", error);
-      toast({
+      useToast().toast({
         title: "Error",
         description: "Failed to update password. Please try again.",
         variant: "destructive",
@@ -174,6 +177,11 @@ const AdminSettings = () => {
   const handleClearCache = () => {
     api.clearCache();
     calculateCacheSize();
+    
+    useToast().toast({
+      title: "Cache Cleared",
+      description: "Application cache has been cleared successfully",
+    });
   };
   
   if (!user) {
@@ -193,7 +201,7 @@ const AdminSettings = () => {
         </p>
       </div>
       
-      <Tabs defaultValue="profile" className="space-y-6">
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <UserIcon className="h-4 w-4" />
@@ -202,6 +210,10 @@ const AdminSettings = () => {
           <TabsTrigger value="password" className="flex items-center gap-2">
             <KeyRound className="h-4 w-4" />
             <span>Password</span>
+          </TabsTrigger>
+          <TabsTrigger value="images" className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4" />
+            <span>Images</span>
           </TabsTrigger>
           <TabsTrigger value="preferences" className="flex items-center gap-2">
             <SlidersHorizontal className="h-4 w-4" />
@@ -411,6 +423,12 @@ const AdminSettings = () => {
           </Card>
         </TabsContent>
         
+        {/* Images Tab */}
+        <TabsContent value="images" className="space-y-6">
+          <HeroImageSettings />
+          <ImageSettingsPanel />
+        </TabsContent>
+        
         {/* Preferences Tab */}
         <TabsContent value="preferences" className="space-y-6">
           <Card>
@@ -440,12 +458,12 @@ const AdminSettings = () => {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <FormLabel>Use Data Caching</FormLabel>
-                  <FormDescription>
+                  <label className="text-sm font-medium">Use Data Caching</label>
+                  <p className="text-xs text-muted-foreground">
                     Enable caching for faster page loads
-                  </FormDescription>
+                  </p>
                 </div>
-                <Switch checked />
+                <Switch defaultChecked />
               </div>
             </CardContent>
           </Card>

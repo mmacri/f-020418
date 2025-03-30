@@ -8,6 +8,7 @@ import { ImageWithFallback } from '@/lib/images';
 
 const HeroSection: React.FC = () => {
   const [heroImageUrl, setHeroImageUrl] = useState<string>(imageUrls.HERO_DEFAULT);
+  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   
   useEffect(() => {
     // Try to load the hero image from localStorage
@@ -62,7 +63,14 @@ const HeroSection: React.FC = () => {
               className="rounded-lg w-full h-auto"
               fallbackSrc={imageUrls.HERO_DEFAULT}
               disableCacheBusting={false}
+              type="hero"
+              onLoad={() => setImageLoaded(true)}
             />
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg">
+                <p className="text-gray-500">Loading image...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

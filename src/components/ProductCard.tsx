@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatPrice, getProductUrl } from '@/lib/product-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Star, StarHalf } from 'lucide-react';
 import { Product } from '@/services/productService';
-import { ImageWithFallback, getProductImageUrl } from '@/lib/image-utils';
+import { ImageWithFallback, getProductImageUrl } from '@/lib/images';
 
 type ProductImage = {
   url: string;

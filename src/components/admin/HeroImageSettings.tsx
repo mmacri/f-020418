@@ -102,6 +102,7 @@ const HeroImageSettings: React.FC = () => {
               alt="Hero Preview"
               className="max-h-full max-w-full object-contain"
               fallbackSrc={useLocalFallback ? imageUrls.PLACEHOLDER : imageUrls.HERO_DEFAULT}
+              type="category"
             />
           </div>
         </div>

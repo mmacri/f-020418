@@ -13,7 +13,7 @@ export interface ImageWithFallbackProps {
   loading?: 'lazy' | 'eager';
   disableCacheBusting?: boolean;
   onLoad?: () => void;
-  type?: 'product' | 'category' | 'blog' | 'avatar' | 'subcategory'; // Add type property
+  type?: 'product' | 'category' | 'blog' | 'avatar' | 'subcategory' | 'hero'; // Added hero type
 }
 
 export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
@@ -26,7 +26,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   loading = 'lazy',
   disableCacheBusting = false,
   onLoad,
-  type, // Include the type parameter
+  type,
   ...props
 }) => {
   const [hasError, setHasError] = useState(false);
@@ -46,6 +46,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
           return imageUrls.BLOG_DEFAULT;
         case 'avatar':
           return imageUrls.AVATAR_DEFAULT;
+        case 'hero':
+          return imageUrls.HERO_DEFAULT;
         default:
           return imageUrls.PLACEHOLDER;
       }
@@ -59,6 +61,13 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     if (!hasError) {
       setHasError(true);
       handleImageError(e, getFallbackSrc());
+    }
+  };
+
+  // Handle image load success
+  const handleLoad = () => {
+    if (onLoad) {
+      onLoad();
     }
   };
 
@@ -81,7 +90,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       height={height}
       loading={loading}
       onError={onError}
-      onLoad={onLoad}
+      onLoad={handleLoad}
       {...props}
     />
   );
