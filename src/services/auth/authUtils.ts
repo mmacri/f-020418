@@ -52,7 +52,7 @@ export const isAdmin = async (): Promise<boolean> => {
   }
 };
 
-// Check if user is an admin and authenticated with Supabase enhancement
+// Check if user is an admin and authenticated
 export const isAuthenticatedAdmin = async (): Promise<boolean> => {
   return await isAuthenticated() && await isAdmin();
 };
