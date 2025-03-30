@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,7 @@ const AdminCategories = () => {
   const [editingSubcategory, setEditingSubcategory] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageMethod, setImageMethod] = useState('url');
+  const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url');
   const [uploadedImage, setUploadedImage] = useState(null);
 
   useEffect(() => {
@@ -261,6 +260,10 @@ const AdminCategories = () => {
     setUploadedImage(file);
   };
 
+  const handleImageMethodChange = (value: 'url' | 'upload') => {
+    setImageMethod(value);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -280,6 +283,9 @@ const AdminCategories = () => {
               category={category}
               onEdit={() => openCategoryModal(category)}
               onDelete={() => handleDeleteCategory(category)}
+              onAddSubcategory={() => openSubcategoryModal(category)}
+              onEditSubcategory={(subcategory) => openSubcategoryModal(category, subcategory)}
+              onDeleteSubcategory={(subcategory) => handleDeleteSubcategory(category, subcategory)}
             />
           ))}
         </div>
@@ -325,7 +331,7 @@ const AdminCategories = () => {
             onCancel={() => setIsSubcategoryModalOpen(false)}
             isLoading={isSubmitting}
             imageMethod={imageMethod}
-            onImageMethodChange={setImageMethod}
+            onImageMethodChange={handleImageMethodChange}
             onFileChange={handleFileChange}
           />
         </SheetContent>
