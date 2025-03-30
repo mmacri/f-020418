@@ -44,17 +44,23 @@ const Index = () => {
           }
           
           if (supabaseData && supabaseData.length > 0) {
-            // Import the mapper function directly to avoid circular dependency
-            const { mapSupabaseProductToProduct } = await import('@/services/products/mappers');
+            // Import mapper dynamically to avoid circular dependency
+            const mapperModule = await import('@/services/products/mappers');
             
-            // Map products one by one to avoid excessive type instantiation
-            const productsFromSupabase: Product[] = [];
-            for (const item of supabaseData) {
-              const product = mapSupabaseProductToProduct(item);
-              productsFromSupabase.push(product);
-            }
+            // Create a temporary array to hold the mapped products
+            const tempProducts: Product[] = [];
             
-            setFeaturedProducts(productsFromSupabase);
+            // Process each product separately to avoid complex type instantiation
+            supabaseData.forEach((item) => {
+              try {
+                const mappedProduct = mapperModule.mapSupabaseProductToProduct(item);
+                tempProducts.push(mappedProduct);
+              } catch (err) {
+                console.error('Error mapping product:', err);
+              }
+            });
+            
+            setFeaturedProducts(tempProducts);
           } else {
             // Fallback to getting all products if no featured products from Supabase
             const products = await getProducts();
