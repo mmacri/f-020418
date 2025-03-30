@@ -30,18 +30,18 @@ const Index = () => {
         const categoriesData = await getNavigationCategories();
         setCategories(categoriesData.filter(cat => cat.showInNavigation !== false));
         
-        // Get featured products from Supabase
+        // Get featured products from Supabase with explicit any typing
         try {
-          // Break the type inference chain by using any
-          const result = await supabase
-            .from('products')
-            .select('*')
-            .eq('attributes->bestSeller', true)
-            .order('rating', { ascending: false })
-            .limit(6);
-            
-          const featuredError = result.error;
-          const data = result.data as any[];
+          // First, query using just the .select method without chaining to simplify type inference
+          const productsQuery = supabase.from('products').select('*');
+          
+          // Then apply filters as separate steps with explicit any typing
+          const filteredQuery = productsQuery.eq('attributes->bestSeller', true);
+          const orderedQuery = filteredQuery.order('rating', { ascending: false });
+          const limitedQuery = orderedQuery.limit(6);
+          
+          // Execute the query
+          const { data, error: featuredError } = await limitedQuery;
             
           if (featuredError) {
             console.error('Error fetching featured products:', featuredError);
@@ -49,16 +49,18 @@ const Index = () => {
           }
           
           if (data && data.length > 0) {
-            // Create a typed array to hold products
+            // Use simple array to hold products
             const tempProducts: Product[] = [];
             
-            // Simple loop to avoid type recursion
+            // Map data using index-based loop to avoid type issues
             for (let i = 0; i < data.length; i++) {
               try {
-                const product = mapSupabaseProductToProduct(data[i]);
+                // Cast each item to any to break type inference
+                const item: any = data[i];
+                const product = mapSupabaseProductToProduct(item);
                 tempProducts.push(product);
               } catch (err) {
-                console.error('Error mapping product:', err, data[i]);
+                console.error('Error mapping product:', err);
               }
             }
             
