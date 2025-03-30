@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
@@ -13,7 +12,7 @@ import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 
 // Define a more specific type for Supabase product attributes
-type SupabaseAttributes = {
+interface SupabaseAttributes {
   reviewCount?: number;
   features?: string[];
   category?: string;
@@ -21,10 +20,10 @@ type SupabaseAttributes = {
   brand?: string;
   bestSeller?: boolean;
   pros?: string[];
-};
+}
 
 // Define a concrete type for Supabase product data
-type SupabaseProductData = {
+interface SupabaseProductData {
   id: string;
   slug: string;
   name: string;
@@ -40,7 +39,7 @@ type SupabaseProductData = {
   specifications: Record<string, string> | null;
   created_at: string;
   updated_at: string;
-};
+}
 
 // Import mapSupabaseProductToProduct function for mapping Supabase data to Product
 import { mapSupabaseProductToProduct } from '@/services/productService';

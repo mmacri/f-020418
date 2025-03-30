@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { localStorageKeys } from '@/lib/constants';
 
 interface SaveForLaterProps {
-  productId: number;
+  productId: string;
   productName: string;
 }
 
@@ -16,7 +15,6 @@ const SaveForLater: React.FC<SaveForLaterProps> = ({ productId, productName }) =
   const queryClient = useQueryClient();
   const [isSaved, setIsSaved] = useState(false);
   
-  // Initialize from localStorage
   useEffect(() => {
     try {
       const savedItems = JSON.parse(localStorage.getItem(localStorageKeys.WISHLIST_ITEMS) || '[]');
@@ -26,19 +24,16 @@ const SaveForLater: React.FC<SaveForLaterProps> = ({ productId, productName }) =
     }
   }, [productId]);
 
-  // Toggle save/unsave
   const toggleSaveMutation = useMutation({
     mutationFn: async () => {
       try {
         const savedItems = JSON.parse(localStorage.getItem(localStorageKeys.WISHLIST_ITEMS) || '[]');
         
         if (savedItems.includes(productId)) {
-          // Remove from saved
-          const updatedItems = savedItems.filter((id: number) => id !== productId);
+          const updatedItems = savedItems.filter((id: string) => id !== productId);
           localStorage.setItem(localStorageKeys.WISHLIST_ITEMS, JSON.stringify(updatedItems));
           return { saved: false };
         } else {
-          // Add to saved
           savedItems.push(productId);
           localStorage.setItem(localStorageKeys.WISHLIST_ITEMS, JSON.stringify(savedItems));
           return { saved: true };

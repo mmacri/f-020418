@@ -17,7 +17,7 @@ const ProductPriceRow: React.FC<ProductPriceRowProps> = ({ products, bestProduct
       cellRenderer={(product) => (
         <span className="font-bold text-indigo-600">{formatPrice(product.price)}</span>
       )}
-      bestProductId={bestProductId}
+      bestProductId={bestProductId ? String(bestProductId) : null}
     />
   );
 };
