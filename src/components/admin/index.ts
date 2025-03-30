@@ -8,6 +8,11 @@ import AdminAuth from './AdminAuth';
 import AdminCategoryContent from './AdminCategoryContent';
 import SubcategoryList from './SubcategoryList';
 import CategoryCard from './CategoryCard';
+import ProductsHeader from './ProductsHeader';
+import ProductsTable from './ProductsTable';
+import ProductsLoadingState from './ProductsLoadingState';
+import EmptyProductsState from './EmptyProductsState';
+import ProductForm from './ProductForm';
 
 export {
   AdminDashboard,
@@ -18,5 +23,10 @@ export {
   AdminAuth,
   AdminCategoryContent,
   SubcategoryList,
-  CategoryCard
+  CategoryCard,
+  ProductsHeader,
+  ProductsTable,
+  ProductsLoadingState,
+  EmptyProductsState,
+  ProductForm
 };
