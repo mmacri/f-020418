@@ -46,15 +46,15 @@ const Index = () => {
           }
           
           if (supabaseData && supabaseData.length > 0) {
-            // Break the deep type inference by using explicit typing
+            // Create a typed array to hold products
             const tempProducts: Product[] = [];
             
-            // Use traditional for loop to avoid inference issues
+            // Use a simple for loop with explicit type casting to avoid deep type inference
             for (let i = 0; i < supabaseData.length; i++) {
               try {
-                // Use explicit type assertion to prevent excessive type inference
-                const rawProduct = supabaseData[i] as SupabaseProduct;
-                const product = mapSupabaseProductToProduct(rawProduct);
+                // Manually cast to any to break TypeScript's deep type inference
+                const data = supabaseData[i] as any;
+                const product = mapSupabaseProductToProduct(data);
                 tempProducts.push(product);
               } catch (err) {
                 console.error('Error mapping product:', err, supabaseData[i]);
