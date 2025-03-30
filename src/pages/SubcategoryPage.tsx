@@ -1,13 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
 import SubcategoryHero from '@/components/SubcategoryHero';
 import { getSubcategoryBySlug } from '@/services/categoryService';
-import { getProductsByCategory } from '@/lib/product-utils';
+import { getProductsBySubcategory } from '@/lib/product-utils';
 import { generateCategoryBreadcrumbs } from '@/lib/category-utils';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import ProductCard from '@/components/ProductCard';
 import { Loader2 } from 'lucide-react';
+import { trackAffiliateClick } from '@/lib/analytics-utils';
 
 const SubcategoryPage = () => {
   const { categorySlug, subcategorySlug } = useParams<{ categorySlug: string; subcategorySlug: string }>();
@@ -32,8 +34,31 @@ const SubcategoryPage = () => {
           setBreadcrumbs(crumbs);
           
           // Get products for this subcategory
-          const subcategoryProducts = await getProductsByCategory(categorySlug, subcategorySlug);
+          const subcategoryProducts = await getProductsBySubcategory(categorySlug, subcategorySlug);
           setProducts(subcategoryProducts);
+          
+          // Track page view for analytics
+          try {
+            // Record analytics for subcategory page view
+            const { data: analyticsData } = await supabase
+              .from('analytics_events')
+              .insert({
+                event_type: 'subcategory_view',
+                page_url: window.location.href,
+                data: {
+                  categoryId: data.category.id,
+                  categoryName: data.category.name,
+                  subcategoryId: data.subcategory.id,
+                  subcategoryName: data.subcategory.name,
+                  timestamp: Date.now()
+                }
+              })
+              .select();
+              
+            console.log('Subcategory view tracked:', analyticsData);
+          } catch (analyticsError) {
+            console.error('Error tracking subcategory view:', analyticsError);
+          }
         }
       } catch (error) {
         console.error('Error loading subcategory data:', error);
@@ -44,6 +69,19 @@ const SubcategoryPage = () => {
     
     fetchData();
   }, [categorySlug, subcategorySlug]);
+
+  // Handle affiliate link clicks
+  const handleProductClick = (product: any) => {
+    if (product.affiliateUrl) {
+      trackAffiliateClick(
+        product.id,
+        product.name,
+        product.affiliateUrl,
+        `subcategory_${subcategorySlug}`,
+        product.asin
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -97,7 +135,11 @@ const SubcategoryPage = () => {
           {products.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map(product => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  onClick={() => handleProductClick(product)}
+                />
               ))}
             </div>
           ) : (

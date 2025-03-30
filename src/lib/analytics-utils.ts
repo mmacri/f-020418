@@ -215,6 +215,13 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
     
+    // Ensure that clicksByDay is not undefined or empty
+    if (Object.keys(clicksByDay).length === 0) {
+      // Add at least one day to avoid errors
+      const today = new Date().toISOString().split('T')[0];
+      clicksByDay[today] = 0;
+    }
+    
     // Estimate conversions
     const estimatedConversions = totalClicks * 0.029;
     const conversionRate = totalClicks > 0 ? estimatedConversions / totalClicks : 0;
@@ -231,11 +238,12 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
     };
   } catch (error) {
     console.error('Error in getAnalyticsSummary:', error);
-    // Return default empty data structure on error
+    // Return default empty data structure on error with a valid clicksByDay object
+    const today = new Date().toISOString().split('T')[0];
     return {
       totalClicks: 0,
       uniqueProducts: 0,
-      clicksByDay: {},
+      clicksByDay: { [today]: 0 },
       topProducts: [],
       clicksBySource: {},
       estimatedConversions: 0,

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
-import { getProducts } from '@/services/productService';
+import { getFeaturedProducts } from '@/lib/product-utils';
 import HeroSection from '@/components/home/HeroSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import FeaturedProductsSection from '@/components/home/FeaturedProductsSection';
@@ -12,7 +12,6 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/services/products/types';
-import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -30,71 +29,26 @@ const Index = () => {
         const categoriesData = await getNavigationCategories();
         setCategories(categoriesData.filter(cat => cat.showInNavigation !== false));
         
-        // Get featured products from Supabase
+        // Get featured products
+        const featuredData = await getFeaturedProducts(6); // Limit to 6 products
+        setFeaturedProducts(featuredData);
+        
+        // Track homepage view for analytics
         try {
-          // Use the RPC function we created
-          const { data, error: featuredError } = await supabase
-            .rpc('get_featured_products');
-            
-          if (featuredError) {
-            console.error('Error fetching featured products:', featuredError);
-            throw new Error('Failed to fetch featured products');
-          }
-          
-          if (data && data.length > 0) {
-            const tempProducts: Product[] = [];
-            
-            // Map the raw data to products
-            for (let i = 0; i < data.length; i++) {
-              try {
-                const rawProduct = data[i];
-                const product = mapSupabaseProductToProduct(rawProduct);
-                tempProducts.push(product);
-              } catch (err) {
-                console.error('Error mapping product:', err);
+          const { data: analyticsData } = await supabase
+            .from('analytics_events')
+            .insert({
+              event_type: 'home_page_view',
+              page_url: window.location.href,
+              data: {
+                timestamp: Date.now()
               }
-            }
+            })
+            .select();
             
-            setFeaturedProducts(tempProducts);
-          } else {
-            // Fallback to getting all products if no featured products from Supabase
-            const products = await getProducts();
-            
-            // Select featured products
-            let featured = products.filter(p => p.bestSeller === true);
-            
-            // If we don't have enough featured products, add products with high ratings
-            if (featured.length < 6) {
-              const highRatedProducts = products
-                .filter(p => !featured.some(fp => String(fp.id) === String(p.id)))
-                .sort((a, b) => b.rating - a.rating)
-                .slice(0, 6 - featured.length);
-              
-              featured = [...featured, ...highRatedProducts];
-            }
-            
-            // If we still don't have 6 products, get random ones
-            if (featured.length < 6) {
-              const randomProducts = [...products]
-                .filter(p => !featured.some(fp => String(fp.id) === String(p.id)))
-                .sort(() => 0.5 - Math.random())
-                .slice(0, 6 - featured.length);
-              
-              featured = [...featured, ...randomProducts];
-            }
-            
-            setFeaturedProducts(featured);
-          }
-        } catch (supabaseError) {
-          console.error('Error with Supabase:', supabaseError);
-          
-          // Fallback to standard product fetching
-          const products = await getProducts();
-          const featured = products
-            .filter(p => p.bestSeller === true)
-            .slice(0, 6);
-            
-          setFeaturedProducts(featured);
+          console.log('Homepage view tracked:', analyticsData);
+        } catch (analyticsError) {
+          console.error('Error tracking homepage view:', analyticsError);
         }
       } catch (error) {
         console.error('Error fetching data:', error);

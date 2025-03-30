@@ -1,4 +1,5 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { localStorageKeys } from '@/lib/constants';
 
 // Define proper types for our data
@@ -32,7 +33,7 @@ export interface CategoryInput {
   navigationOrder?: number;
 }
 
-// Define default categories to use when none exist
+// Define default categories to use when none exist or for fallback
 const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "1",
@@ -122,19 +123,74 @@ const DEFAULT_CATEGORIES: Category[] = [
  */
 export const getCategoriesWithSubcategories = async (): Promise<Category[]> => {
   try {
-    // Check if we have cached data
-    const cachedData = localStorage.getItem(localStorageKeys.CATEGORIES);
-    if (cachedData) {
-      const parsedData = JSON.parse(cachedData);
-      // If data exists and is an array, return it
-      if (Array.isArray(parsedData) && parsedData.length > 0) {
-        return parsedData;
+    // Try to get categories from Supabase
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error("Error getting categories from Supabase:", error);
+      // Fall back to localStorage
+      const cachedData = localStorage.getItem(localStorageKeys.CATEGORIES);
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        // If data exists and is an array, return it
+        if (Array.isArray(parsedData) && parsedData.length > 0) {
+          return parsedData;
+        }
       }
+      
+      // If no valid data was found in storage or Supabase, store the default categories and return them
+      localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
+      return DEFAULT_CATEGORIES;
     }
     
-    // If no valid data was found in storage, store the default categories and return them
-    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
-    return DEFAULT_CATEGORIES;
+    // Process categories to get subcategories
+    const categoriesWithSubcategories = await Promise.all(
+      categories.map(async (category) => {
+        // For now, we're using parent_id to identify subcategories
+        // A future improvement would be to create a separate subcategories table
+        const { data: subcategories, error: subError } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('parent_id', category.id)
+          .order('name');
+        
+        if (subError) {
+          console.error(`Error getting subcategories for ${category.name}:`, subError);
+          return {
+            ...category,
+            subcategories: []
+          };
+        }
+        
+        // Map to our Subcategory interface
+        const mappedSubcategories = subcategories.map(sub => ({
+          id: sub.id,
+          name: sub.name,
+          slug: sub.slug,
+          description: sub.description,
+          imageUrl: sub.image_url,
+          showInNavigation: true // Default to true
+        }));
+        
+        return {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+          description: category.description,
+          imageUrl: category.image_url,
+          showInNavigation: true, // Default to true
+          navigationOrder: 0, // Default order
+          subcategories: mappedSubcategories
+        };
+      })
+    );
+    
+    // Cache in localStorage for future use
+    localStorage.setItem(localStorageKeys.CATEGORIES, JSON.stringify(categoriesWithSubcategories));
+    return categoriesWithSubcategories;
   } catch (error) {
     console.error("Error getting categories:", error);
     // In case of error, still return default categories
@@ -161,8 +217,58 @@ export const getNavigationCategories = async (): Promise<Category[]> => {
  */
 export const getCategoryBySlug = async (slug: string): Promise<Category | null> => {
   try {
-    const categories = await getCategoriesWithSubcategories();
-    return categories.find(category => category.slug === slug) || null;
+    // Try to get from Supabase first
+    const { data: category, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('slug', slug)
+      .eq('parent_id', null) // Ensure it's a parent category, not a subcategory
+      .single();
+    
+    if (error) {
+      console.error(`Error getting category with slug ${slug} from Supabase:`, error);
+      // Fall back to local cache
+      const categories = await getCategoriesWithSubcategories();
+      return categories.find(category => category.slug === slug) || null;
+    }
+    
+    // Get subcategories for this category
+    const { data: subcategories, error: subError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('parent_id', category.id)
+      .order('name');
+    
+    if (subError) {
+      console.error(`Error getting subcategories for ${category.name}:`, subError);
+      return {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description,
+        imageUrl: category.image_url,
+        subcategories: []
+      };
+    }
+    
+    // Map to our Subcategory interface
+    const mappedSubcategories = subcategories.map(sub => ({
+      id: sub.id,
+      name: sub.name,
+      slug: sub.slug,
+      description: sub.description,
+      imageUrl: sub.image_url,
+      showInNavigation: true // Default to true
+    }));
+    
+    return {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      imageUrl: category.image_url,
+      subcategories: mappedSubcategories
+    };
   } catch (error) {
     console.error(`Error getting category with slug ${slug}:`, error);
     // Check default categories as fallback
@@ -175,9 +281,11 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
  */
 export const getSubcategoryBySlug = async (categorySlug: string, subcategorySlug: string): Promise<{category: Category, subcategory: Subcategory} | null> => {
   try {
+    // Get the parent category first
     const category = await getCategoryBySlug(categorySlug);
     if (!category || !category.subcategories) return null;
     
+    // Find the subcategory within the parent
     const subcategory = category.subcategories.find(sub => sub.slug === subcategorySlug);
     if (!subcategory) return null;
     
