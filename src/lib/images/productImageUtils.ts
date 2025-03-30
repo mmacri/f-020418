@@ -1,29 +1,29 @@
 
+import { parseImageUrl } from './imageUtils';
+import { imageUrls } from '@/lib/constants';
+
 /**
- * Get a product image URL from different product object formats
+ * Get a properly formatted product image URL
  */
-export const getProductImageUrl = (product: any): string => {
-  if (!product) return '/placeholder.svg';
-  
-  // Handle different product image structures
-  if (product.imageUrl) {
-    return product.imageUrl;
+export const getProductImageUrl = (product: any, index: number = 0): string => {
+  // Check if product has images array
+  if (product.images && Array.isArray(product.images) && product.images.length > index) {
+    return parseImageUrl(product.images[index]) || imageUrls.PRODUCT_DEFAULT;
   }
   
-  if (product.images && product.images.length > 0) {
-    const firstImage = product.images[0];
-    
-    // Handle string image URLs
-    if (typeof firstImage === 'string') {
-      return firstImage;
-    }
-    
-    // Handle object image structures
-    if (typeof firstImage === 'object' && firstImage !== null) {
-      return firstImage.url || firstImage.src || firstImage.path || '/placeholder.svg';
+  // Check for legacy imageUrl field
+  if (index === 0 && product.imageUrl) {
+    return parseImageUrl(product.imageUrl) || imageUrls.PRODUCT_DEFAULT;
+  }
+  
+  // Check for additionalImages for legacy support
+  if (index > 0 && product.additionalImages && Array.isArray(product.additionalImages)) {
+    const additionalIndex = index - 1;
+    if (additionalIndex < product.additionalImages.length) {
+      return parseImageUrl(product.additionalImages[additionalIndex]) || imageUrls.PRODUCT_DEFAULT;
     }
   }
   
-  // Default fallback
-  return '/placeholder.svg';
+  // Return default product image
+  return imageUrls.PRODUCT_DEFAULT;
 };

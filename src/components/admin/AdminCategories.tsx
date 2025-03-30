@@ -1,279 +1,338 @@
+
 import React, { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import CategoryForm from './CategoryForm';
-import SubcategoryForm from './SubcategoryForm';
-import CategoryCard from './CategoryCard';
-import { getCategoriesWithSubcategories, createCategory, updateCategory, deleteCategory, createSubcategory, updateSubcategory, deleteSubcategory } from '@/services/categoryService';
-
-const initialCategoryForm = {
-  name: '',
-  slug: '',
-  description: '',
-  imageUrl: '',
-  showInNavigation: true,
-  navigationOrder: 0,
-  subcategories: []
-};
-
-const initialSubcategoryForm = {
-  name: '',
-  slug: '',
-  description: '',
-  imageUrl: '',
-  showInNavigation: true
-};
+import { Input } from '@/components/ui/input';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { Plus, Loader2 } from 'lucide-react';
+import { 
+  getCategoriesWithSubcategories, 
+  createCategory, 
+  updateCategory, 
+  deleteCategory,
+  createSubcategory,
+  updateSubcategory,
+  deleteSubcategory,
+  CategoryInput,
+  Category,
+  Subcategory
+} from '@/services/categoryService';
+import { CategoryCard } from '@/components/admin';
+import { generateSlug } from '@/lib/utils';
+import CategoryForm from '@/components/admin/CategoryForm';
+import SubcategoryForm from '@/components/admin/SubcategoryForm';
 
 const AdminCategories = () => {
-  const { toast } = useToast();
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isSubcategoryModalOpen, setIsSubcategoryModalOpen] = useState(false);
-  const [categoryFormData, setCategoryFormData] = useState(initialCategoryForm);
-  const [subcategoryFormData, setSubcategoryFormData] = useState(initialSubcategoryForm);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const [editingSubcategory, setEditingSubcategory] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubcategoryFormOpen, setIsSubcategoryFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<CategoryInput>({
+    name: '',
+    slug: '',
+    description: '',
+    imageUrl: '',
+    showInNavigation: true,
+    navigationOrder: 0
+  });
+  const [subcategoryFormData, setSubcategoryFormData] = useState<Subcategory>({
+    id: '',
+    name: '',
+    slug: '',
+    description: '',
+    imageUrl: '',
+    showInNavigation: true
+  });
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url');
-  const [uploadedImage, setUploadedImage] = useState(null);
 
   useEffect(() => {
-    fetchCategories();
+    loadCategories();
   }, []);
 
-  const fetchCategories = async () => {
+  const loadCategories = async () => {
     setIsLoading(true);
     try {
       const data = await getCategoriesWithSubcategories();
       setCategories(data);
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load categories. Please try again.',
-        variant: 'destructive',
-      });
+      console.error('Error loading categories:', error);
+      toast.error('Failed to load categories');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCategoryFormChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setCategoryFormData({
-      ...categoryFormData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
-
-  const handleSubcategoryFormChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setSubcategoryFormData({
-      ...subcategoryFormData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-  };
-
-  const handleCategoryNameChange = (e) => {
-    const { value } = e.target;
-    setCategoryFormData({
-      ...categoryFormData,
-      name: value,
-      slug: value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    });
-  };
-
-  const handleSubcategoryNameChange = (e) => {
-    const { value } = e.target;
-    setSubcategoryFormData({
-      ...subcategoryFormData,
-      name: value,
-      slug: value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    });
-  };
-
-  const openCategoryModal = (category = null) => {
-    if (category) {
-      setEditingCategory(category);
-      setCategoryFormData({
-        ...category,
-        showInNavigation: category.showInNavigation !== false,
-      });
-    } else {
-      setEditingCategory(null);
-      setCategoryFormData(initialCategoryForm);
-    }
-    setIsCategoryModalOpen(true);
-  };
-
-  const openSubcategoryModal = (category, subcategory = null) => {
-    setSelectedCategory(category);
-    if (subcategory) {
-      setEditingSubcategory(subcategory);
-      setSubcategoryFormData({
-        ...subcategory,
-        showInNavigation: subcategory.showInNavigation !== false,
-      });
-      setImageMethod(subcategory.imageUrl ? 'url' : 'upload');
-    } else {
-      setEditingSubcategory(null);
-      setSubcategoryFormData(initialSubcategoryForm);
-      setImageMethod('url');
-    }
-    setIsSubcategoryModalOpen(true);
-  };
-
-  const handleSubmitCategory = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
     
-    try {
-      if (editingCategory) {
-        await updateCategory(editingCategory.id, categoryFormData);
-        toast({
-          title: 'Success',
-          description: `Category "${categoryFormData.name}" has been updated.`,
-        });
-      } else {
-        await createCategory(categoryFormData);
-        toast({
-          title: 'Success',
-          description: `Category "${categoryFormData.name}" has been created.`,
-        });
-      }
-      
-      setIsCategoryModalOpen(false);
-      fetchCategories();
-    } catch (error) {
-      console.error('Error saving category:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to save category. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSubmitSubcategory = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    if (!selectedCategory) {
-      toast({
-        title: 'Error',
-        description: 'No category selected.',
-        variant: 'destructive',
-      });
-      setIsSubmitting(false);
+    // Handle checkbox special case
+    if (type === 'checkbox') {
+      const isChecked = (e as React.ChangeEvent<HTMLInputElement>).target.checked;
+      setFormData(prev => ({ ...prev, [name]: isChecked }));
       return;
     }
     
+    // Handle number inputs
+    if (name === 'navigationOrder') {
+      setFormData(prev => ({ ...prev, [name]: Number(value) }));
+      return;
+    }
+    
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubcategoryInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    
+    // Handle checkbox special case
+    if (type === 'checkbox') {
+      const isChecked = (e as React.ChangeEvent<HTMLInputElement>).target.checked;
+      setSubcategoryFormData(prev => ({ ...prev, [name]: isChecked }));
+      return;
+    }
+    
+    setSubcategoryFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    const slug = generateSlug(name);
+    setFormData(prev => ({ ...prev, name, slug }));
+  };
+
+  const handleSubcategoryNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    const slug = generateSlug(name);
+    setSubcategoryFormData(prev => ({ ...prev, name, slug }));
+  };
+
+  const openNewCategoryForm = () => {
+    setFormData({
+      name: '',
+      slug: '',
+      description: '',
+      imageUrl: '',
+      showInNavigation: true,
+      navigationOrder: categories.length
+    });
+    setIsEditing(false);
+    setIsFormOpen(true);
+  };
+
+  const openEditCategoryForm = (category: Category) => {
+    setFormData({
+      name: category.name,
+      slug: category.slug,
+      description: category.description || '',
+      imageUrl: category.imageUrl || '',
+      showInNavigation: category.showInNavigation !== false,
+      navigationOrder: category.navigationOrder || 0
+    });
+    setIsEditing(true);
+    setIsFormOpen(true);
+    setSelectedCategory(category);
+  };
+
+  const openNewSubcategoryForm = (category: Category) => {
+    setSubcategoryFormData({
+      id: '',
+      name: '',
+      slug: '',
+      description: '',
+      imageUrl: '',
+      showInNavigation: true
+    });
+    setIsEditing(false);
+    setIsSubcategoryFormOpen(true);
+    setSelectedCategory(category);
+    setImageMethod('url');
+    setSelectedFile(null);
+  };
+
+  const openEditSubcategoryForm = (subcategory: Subcategory) => {
+    setSubcategoryFormData({
+      id: subcategory.id,
+      name: subcategory.name,
+      slug: subcategory.slug,
+      description: subcategory.description || '',
+      imageUrl: subcategory.imageUrl || '',
+      showInNavigation: subcategory.showInNavigation !== false
+    });
+    
+    // Find the parent category
+    const parentCategory = categories.find(cat => 
+      cat.subcategories?.some(sub => sub.id === subcategory.id)
+    );
+    
+    if (parentCategory) {
+      setSelectedCategory(parentCategory);
+    }
+    
+    setIsEditing(true);
+    setIsSubcategoryFormOpen(true);
+    setImageMethod('url');
+    setSelectedFile(null);
+  };
+
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast.error('Category name is required');
+      return;
+    }
+    
+    if (!formData.slug.trim()) {
+      toast.error('Category slug is required');
+      return;
+    }
+    
+    setIsSaving(true);
+    
     try {
-      // Handle image upload if needed
-      let finalImageUrl = subcategoryFormData.imageUrl;
-      
-      if (imageMethod === 'upload' && uploadedImage) {
-        // In a real app, you would upload to a server here
-        // For now, we'll use URL.createObjectURL for demo purposes
-        finalImageUrl = URL.createObjectURL(uploadedImage);
+      if (isEditing && selectedCategory) {
+        await updateCategory(selectedCategory.id, formData);
+        toast.success('Category updated successfully');
+      } else {
+        await createCategory(formData);
+        toast.success('Category created successfully');
+      }
+      setIsFormOpen(false);
+      loadCategories();
+    } catch (error) {
+      console.error('Error saving category:', error);
+      toast.error('Failed to save category');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSubcategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!subcategoryFormData.name.trim()) {
+      toast.error('Subcategory name is required');
+      return;
+    }
+    
+    if (!subcategoryFormData.slug.trim()) {
+      toast.error('Subcategory slug is required');
+      return;
+    }
+    
+    if (!selectedCategory) {
+      toast.error('Parent category not selected');
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      // Handle file upload if needed
+      let imageUrl = subcategoryFormData.imageUrl;
+      if (imageMethod === 'upload' && selectedFile) {
+        // In a real application, you would upload the file to your server or a service like S3
+        // For this example, we'll create a mock URL
+        imageUrl = URL.createObjectURL(selectedFile);
+        // This is just for demo purposes - in production you'd use a proper upload API
       }
       
       const dataToSave = {
         ...subcategoryFormData,
-        imageUrl: finalImageUrl,
+        imageUrl
       };
       
-      if (editingSubcategory) {
-        await updateSubcategory(selectedCategory.id, editingSubcategory.id, dataToSave);
-        toast({
-          title: 'Success',
-          description: `Subcategory "${subcategoryFormData.name}" has been updated.`,
-        });
+      if (isEditing) {
+        await updateSubcategory(selectedCategory.id, subcategoryFormData.id, dataToSave);
+        toast.success('Subcategory updated successfully');
       } else {
         await createSubcategory(selectedCategory.id, dataToSave);
-        toast({
-          title: 'Success',
-          description: `Subcategory "${subcategoryFormData.name}" has been created.`,
-        });
+        toast.success('Subcategory created successfully');
       }
-      
-      setIsSubcategoryModalOpen(false);
-      fetchCategories();
+      setIsSubcategoryFormOpen(false);
+      loadCategories();
     } catch (error) {
       console.error('Error saving subcategory:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to save subcategory. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to save subcategory');
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
-  const handleDeleteCategory = async (category) => {
-    if (window.confirm(`Are you sure you want to delete "${category.name}"? This will also delete all its subcategories.`)) {
-      try {
-        await deleteCategory(category.id);
-        toast({
-          title: 'Success',
-          description: `Category "${category.name}" has been deleted.`,
-        });
-        fetchCategories();
-      } catch (error) {
-        console.error('Error deleting category:', error);
-        toast({
-          title: 'Error',
-          description: error.message || 'Failed to delete category. Please try again.',
-          variant: 'destructive',
-        });
-      }
+  const handleDeleteCategory = async (category: Category) => {
+    if (!window.confirm(`Are you sure you want to delete the category "${category.name}"? This will also delete all subcategories.`)) {
+      return;
+    }
+    
+    try {
+      await deleteCategory(category.id);
+      toast.success('Category deleted successfully');
+      loadCategories();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category');
     }
   };
 
-  const handleDeleteSubcategory = async (category, subcategory) => {
-    if (window.confirm(`Are you sure you want to delete subcategory "${subcategory.name}"?`)) {
-      try {
-        await deleteSubcategory(category.id, subcategory.id);
-        toast({
-          title: 'Success',
-          description: `Subcategory "${subcategory.name}" has been deleted.`,
-        });
-        fetchCategories();
-      } catch (error) {
-        console.error('Error deleting subcategory:', error);
-        toast({
-          title: 'Error',
-          description: error.message || 'Failed to delete subcategory. Please try again.',
-          variant: 'destructive',
-        });
-      }
+  const handleDeleteSubcategory = async (subcategory: Subcategory) => {
+    if (!window.confirm(`Are you sure you want to delete the subcategory "${subcategory.name}"?`)) {
+      return;
+    }
+    
+    // Find parent category
+    const parentCategory = categories.find(cat => 
+      cat.subcategories?.some(sub => sub.id === subcategory.id)
+    );
+    
+    if (!parentCategory) {
+      toast.error('Parent category not found');
+      return;
+    }
+    
+    try {
+      await deleteSubcategory(parentCategory.id, subcategory.id);
+      toast.success('Subcategory deleted successfully');
+      loadCategories();
+    } catch (error) {
+      console.error('Error deleting subcategory:', error);
+      toast.error('Failed to delete subcategory');
     }
   };
 
-  const handleFileChange = (file) => {
-    setUploadedImage(file);
-  };
-
-  const handleImageMethodChange = (value: 'url' | 'upload') => {
-    setImageMethod(value);
+  const handleFileChange = (file: File | null) => {
+    setSelectedFile(file);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Categories Management</h2>
-        <Button onClick={() => openCategoryModal()}>Add Category</Button>
+        <h2 className="text-3xl font-bold">Categories</h2>
+        <Button onClick={openNewCategoryForm}>
+          <Plus className="mr-2 h-4 w-4" /> Add Category
+        </Button>
       </div>
       
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <p>Loading categories...</p>
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : categories.length === 0 ? (
+        <div className="text-center py-10 border-2 border-dashed rounded-lg border-muted-foreground/20">
+          <p className="text-muted-foreground">No categories yet. Create your first category to get started.</p>
+          <Button onClick={openNewCategoryForm} variant="outline" className="mt-4">
+            <Plus className="mr-2 h-4 w-4" /> Add Category
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -281,61 +340,70 @@ const AdminCategories = () => {
             <CategoryCard
               key={category.id}
               category={category}
-              onEdit={() => openCategoryModal(category)}
-              onDelete={() => handleDeleteCategory(category)}
-              onAddSubcategory={() => openSubcategoryModal(category)}
-              onEditSubcategory={(subcategory) => openSubcategoryModal(category, subcategory)}
-              onDeleteSubcategory={(subcategory) => handleDeleteSubcategory(category, subcategory)}
+              onEdit={openEditCategoryForm}
+              onDelete={handleDeleteCategory}
+              onAddSubcategory={openNewSubcategoryForm}
+              onEditSubcategory={openEditSubcategoryForm}
+              onDeleteSubcategory={handleDeleteSubcategory}
             />
           ))}
         </div>
       )}
       
-      {/* Category Form Modal */}
-      <Sheet open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
-        <SheetContent className="md:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</SheetTitle>
-          </SheetHeader>
+      {/* Category Form Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {isEditing ? 'Edit Category' : 'Add New Category'}
+            </DialogTitle>
+            <DialogDescription>
+              {isEditing 
+                ? 'Update your category details below.'
+                : 'Enter the details for your new category.'}
+            </DialogDescription>
+          </DialogHeader>
+          
           <CategoryForm
-            formData={categoryFormData}
-            isEditing={!!editingCategory}
-            onInputChange={handleCategoryFormChange}
-            onNameChange={handleCategoryNameChange}
-            onSubmit={handleSubmitCategory}
-            onCancel={() => setIsCategoryModalOpen(false)}
-            isLoading={isSubmitting}
+            formData={formData}
+            isEditing={isEditing}
+            onInputChange={handleInputChange}
+            onNameChange={handleNameChange}
+            onSubmit={handleCategorySubmit}
+            onCancel={() => setIsFormOpen(false)}
+            isLoading={isSaving}
           />
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       
-      {/* Subcategory Form Modal */}
-      <Sheet open={isSubcategoryModalOpen} onOpenChange={setIsSubcategoryModalOpen}>
-        <SheetContent className="md:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>
-              {editingSubcategory ? 'Edit Subcategory' : 'Add New Subcategory'}
-              {selectedCategory && (
-                <span className="block text-sm font-normal mt-1 text-muted-foreground">
-                  For category: {selectedCategory.name}
-                </span>
-              )}
-            </SheetTitle>
-          </SheetHeader>
+      {/* Subcategory Form Dialog */}
+      <Dialog open={isSubcategoryFormOpen} onOpenChange={setIsSubcategoryFormOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {isEditing ? 'Edit Subcategory' : 'Add New Subcategory'}
+            </DialogTitle>
+            <DialogDescription>
+              {isEditing 
+                ? 'Update your subcategory details below.'
+                : `Add a new subcategory to ${selectedCategory?.name || 'category'}.`}
+            </DialogDescription>
+          </DialogHeader>
+          
           <SubcategoryForm
             formData={subcategoryFormData}
-            isEditing={!!editingSubcategory}
-            onInputChange={handleSubcategoryFormChange}
+            isEditing={isEditing}
+            onInputChange={handleSubcategoryInputChange}
             onNameChange={handleSubcategoryNameChange}
-            onSubmit={handleSubmitSubcategory}
-            onCancel={() => setIsSubcategoryModalOpen(false)}
-            isLoading={isSubmitting}
+            onSubmit={handleSubcategorySubmit}
+            onCancel={() => setIsSubcategoryFormOpen(false)}
+            isLoading={isSaving}
             imageMethod={imageMethod}
-            onImageMethodChange={handleImageMethodChange}
+            onImageMethodChange={setImageMethod}
             onFileChange={handleFileChange}
           />
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

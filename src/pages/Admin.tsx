@@ -9,8 +9,10 @@ import {
   AdminBlog, 
   AdminSettings, 
   AdminAuth,
-  AdminCategoryContent
+  AdminCategoryContent,
+  SubcategoryList
 } from '@/components/admin';
+import AdminCategories from '@/components/admin/AdminCategories';
 import { publishScheduledPosts } from '@/services/blogService';
 import { toast } from 'sonner';
 
@@ -94,6 +96,7 @@ const AdminPage = () => {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="blog">Blog</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
           <TabsTrigger value="auth">Auth</TabsTrigger>
@@ -105,6 +108,9 @@ const AdminPage = () => {
           <AdminProducts />
         </TabsContent>
         <TabsContent value="categories">
+          <AdminCategories />
+        </TabsContent>
+        <TabsContent value="content">
           <AdminCategoryContent />
         </TabsContent>
         <TabsContent value="blog">

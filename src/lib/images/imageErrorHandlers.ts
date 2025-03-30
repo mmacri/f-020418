@@ -1,44 +1,44 @@
 
-import React from 'react';
-import { imageUrls, localStorageKeys } from '../constants';
+import { imageUrls } from '@/lib/constants';
 
 /**
- * Helper function to handle image loading errors with local storage fallback options
+ * Handle image loading errors with custom fallback logic
  */
 export const handleImageError = (
-  event: React.SyntheticEvent<HTMLImageElement, Event>,
-  type: 'product' | 'category' | 'hero' | 'blog' = 'product'
-): void => {
-  const imageElement = event.currentTarget;
+  e: React.SyntheticEvent<HTMLImageElement, Event>,
+  fallbackSrc?: string
+) => {
+  const target = e.currentTarget;
   
-  // Check if we should use local fallbacks
-  const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
+  // Prevent infinite loops by checking if we've already applied a fallback
+  if (target.dataset.fallbackApplied === 'true') {
+    return;
+  }
   
-  // Get the appropriate fallback image based on type
-  const getFallbackImage = () => {
-    if (useLocalFallback) {
-      return '/placeholder.svg'; // Local path
-    }
-    
-    switch (type) {
-      case 'product':
-        return imageUrls.PRODUCT_DEFAULT;
-      case 'category':
-        return imageUrls.CATEGORY_DEFAULT;
-      case 'hero':
-        return imageUrls.HERO_DEFAULT;
-      case 'blog':
-        return imageUrls.BLOG_DEFAULT;
-      default:
-        return imageUrls.DEFAULT_FALLBACK;
-    }
-  };
+  // Set fallback image source
+  target.src = fallbackSrc || imageUrls.PLACEHOLDER;
   
-  const fallbackImage = getFallbackImage();
+  // Mark that we've applied a fallback
+  target.dataset.fallbackApplied = 'true';
   
-  // Set the fallback image
-  imageElement.src = fallbackImage;
-  
-  // Log the error
-  console.log(`Image error handled for type: ${type}, using fallback: ${fallbackImage}`);
+  // Apply appropriate styling
+  target.classList.add('fallback-image');
+};
+
+/**
+ * Get a fallback image URL based on content type
+ */
+export const getFallbackImage = (type: 'product' | 'category' | 'blog' | 'avatar' = 'product') => {
+  switch (type) {
+    case 'product':
+      return imageUrls.PRODUCT_DEFAULT;
+    case 'category':
+      return imageUrls.CATEGORY_DEFAULT;
+    case 'blog':
+      return imageUrls.BLOG_DEFAULT;
+    case 'avatar':
+      return imageUrls.AVATAR_DEFAULT;
+    default:
+      return imageUrls.PLACEHOLDER;
+  }
 };

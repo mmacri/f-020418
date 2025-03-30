@@ -7,7 +7,7 @@ import { getCategoryBySlug, getNavigationCategories, getSubcategoryBySlug } from
 export const getCategoryById = async (categoryId: string) => {
   try {
     const categories = await getNavigationCategories();
-    return categories.find(cat => String(cat.id) === categoryId) || null;
+    return categories.find(cat => String(cat.id) === String(categoryId)) || null;
   } catch (error) {
     console.error("Error getting category by ID:", error);
     return null;
@@ -22,7 +22,7 @@ export const getSubcategoryById = async (categoryId: string, subcategoryId: stri
     const category = await getCategoryById(categoryId);
     if (!category) return null;
     
-    return category.subcategories.find(sub => String(sub.id) === subcategoryId) || null;
+    return category.subcategories?.find(sub => String(sub.id) === String(subcategoryId)) || null;
   } catch (error) {
     console.error("Error getting subcategory by ID:", error);
     return null;
@@ -43,9 +43,9 @@ export const getCategoryInfoForProduct = async (product: any) => {
     let subcategory = null;
     
     if (product.subcategoryId) {
-      subcategory = category.subcategories.find(sub => String(sub.id) === String(product.subcategoryId));
+      subcategory = category.subcategories?.find(sub => String(sub.id) === String(product.subcategoryId));
     } else if (product.subcategory) {
-      subcategory = category.subcategories.find(
+      subcategory = category.subcategories?.find(
         sub => sub.name.toLowerCase() === product.subcategory.toLowerCase() ||
                sub.slug === product.subcategory.toLowerCase().replace(/\s+/g, '-')
       );
@@ -108,11 +108,11 @@ export const getProductsForSubcategory = async (categorySlug: string, subcategor
     const category = await getCategoryBySlug(categorySlug);
     if (!category) return [];
     
-    const subcategory = category.subcategories.find(sub => sub.slug === subcategorySlug);
+    const subcategory = category.subcategories?.find(sub => sub.slug === subcategorySlug);
     if (!subcategory) return [];
     
     // Implementation would vary based on your product service
-    // This is a placeholder that would need to be replaced with actual implementation
+    // For now, we'll return an empty array
     return [];
   } catch (error) {
     console.error("Error getting products for subcategory:", error);

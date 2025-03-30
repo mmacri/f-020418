@@ -1,84 +1,74 @@
 
-import React from 'react';
-import { imageUrls, localStorageKeys } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { imageUrls } from '@/lib/constants';
+import { handleImageError } from './imageErrorHandlers';
 
 interface ImageWithFallbackProps {
-  src: string;
+  src?: string;
   alt: string;
-  className?: string;
   fallbackSrc?: string;
-  type?: 'product' | 'category' | 'hero' | 'blog';
-  disableCacheBusting?: boolean;
+  className?: string;
+  type?: 'product' | 'category' | 'blog' | 'avatar';
+  width?: number | string;
+  height?: number | string;
   onLoad?: () => void;
-  loading?: 'lazy' | 'eager';
+  onError?: () => void;
 }
 
-// Component to handle image loading with fallback
 export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   src,
   alt,
-  className = '',
   fallbackSrc,
+  className = '',
   type = 'product',
-  disableCacheBusting = true,
+  width,
+  height,
   onLoad,
-  loading,
+  onError
 }) => {
+  const [imgSrc, setImgSrc] = useState<string | undefined>(src);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+  }, [src]);
+
   const getDefaultFallback = () => {
     switch (type) {
       case 'product':
         return imageUrls.PRODUCT_DEFAULT;
       case 'category':
         return imageUrls.CATEGORY_DEFAULT;
-      case 'hero':
-        return imageUrls.HERO_DEFAULT;
       case 'blog':
         return imageUrls.BLOG_DEFAULT;
+      case 'avatar':
+        return imageUrls.AVATAR_DEFAULT;
       default:
-        return imageUrls.DEFAULT_FALLBACK;
+        return imageUrls.PLACEHOLDER;
     }
   };
 
-  const defaultFallback = getDefaultFallback();
-  const finalFallbackSrc = fallbackSrc || defaultFallback;
-
-  // Use a unique key for cache busting if enabled
-  const cacheBuster = disableCacheBusting ? '' : `?t=${Date.now()}`;
-  const srcWithCacheBuster = src ? `${src}${cacheBuster}` : '';
-
-  const [imgSrc, setImgSrc] = React.useState<string>(srcWithCacheBuster || finalFallbackSrc);
-  const [error, setError] = React.useState<boolean>(false);
-
-  // Reset image source if src prop changes
-  React.useEffect(() => {
-    if (src) {
-      setImgSrc(srcWithCacheBuster);
-      setError(false);
-    }
-  }, [src, srcWithCacheBuster]);
+  const actualFallback = fallbackSrc || getDefaultFallback();
 
   const handleError = () => {
-    if (!error) {
-      console.log(`Image failed to load: ${src}. Using fallback.`);
-      setError(true);
-      setImgSrc(finalFallbackSrc);
-    }
-  };
-
-  const handleLoad = () => {
-    if (onLoad) {
-      onLoad();
+    if (!hasError) {
+      console.warn(`Image failed to load: ${src}`);
+      setImgSrc(actualFallback);
+      setHasError(true);
+      if (onError) onError();
     }
   };
 
   return (
     <img
-      src={imgSrc}
+      src={imgSrc || actualFallback}
       alt={alt}
       className={className}
+      width={width}
+      height={height}
       onError={handleError}
-      onLoad={handleLoad}
-      loading={loading}
+      onLoad={onLoad}
     />
   );
 };

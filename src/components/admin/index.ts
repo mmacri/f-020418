@@ -5,6 +5,7 @@ import AdminBlog from './AdminBlog';
 import AdminSettings from './AdminSettings';
 import AdminAuth from './AdminAuth';
 import AdminCategoryContent from './AdminCategoryContent';
+import CategoryCard from './CategoryCard';
 import SubcategoryList from './SubcategoryList';
 
 export {
@@ -14,5 +15,6 @@ export {
   AdminSettings,
   AdminAuth,
   AdminCategoryContent,
+  CategoryCard,
   SubcategoryList
 };

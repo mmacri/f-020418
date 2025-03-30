@@ -1,61 +1,91 @@
 
 /**
- * Parse image URLs from various formats
+ * Parse an image URL to ensure it's valid
  */
-export const parseImageUrl = (image: any): string => {
-  if (!image) return '';
+export const parseImageUrl = (url?: string): string | undefined => {
+  if (!url) return undefined;
   
-  if (typeof image === 'string') {
-    return image;
+  // Check if the URL is already valid
+  try {
+    new URL(url);
+    return url;
+  } catch (e) {
+    // Not a valid URL
+    
+    // Check if it's a relative path that needs to be converted
+    if (url.startsWith('/')) {
+      return `${window.location.origin}${url}`;
+    }
+    
+    // Check if it's missing http/https
+    if (!url.startsWith('http')) {
+      return `https://${url}`;
+    }
   }
   
-  if (typeof image === 'object') {
-    // If it's an object, try to find url, src, or other common properties
-    return image.url || image.src || image.imageUrl || image.path || '';
-  }
-  
-  return '';
+  return url;
 };
 
 /**
- * Get image dimensions from a URL if possible
+ * Get an image's dimensions
  */
-export const getImageDimensions = async (url: string): Promise<{width: number; height: number}> => {
-  return new Promise((resolve) => {
+export const getImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      resolve({width: img.width, height: img.height});
+      resolve({
+        width: img.width,
+        height: img.height
+      });
     };
     img.onerror = () => {
-      resolve({width: 0, height: 0});
+      reject(new Error('Failed to load image'));
     };
     img.src = url;
   });
 };
 
 /**
- * Check if an image exists and is accessible
+ * Check if an image URL exists and is loadable
  */
-export const checkImageExists = async (url: string): Promise<boolean> => {
-  if (!url) return false;
-  
-  try {
-    const response = await fetch(url, { method: 'HEAD' });
-    return response.ok;
-  } catch (error) {
-    console.error('Error checking image:', error);
-    return false;
-  }
+export const checkImageExists = (url: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
 };
 
 /**
- * Generate a placeholder image URL
+ * Generate a colored placeholder image with text
  */
 export const generatePlaceholderImage = (
-  width: number = 800, 
-  height: number = 600, 
-  text: string = 'Image Placeholder'
+  text: string = 'No Image',
+  width: number = 300,
+  height: number = 200,
+  bgColor: string = '#f0f0f0',
+  textColor: string = '#666666'
 ): string => {
-  // Use a placeholder service
-  return `https://via.placeholder.com/${width}x${height}?text=${encodeURIComponent(text)}`;
+  // Create a canvas element
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+  
+  // Fill background
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, width, height);
+  
+  // Add text
+  ctx.fillStyle = textColor;
+  ctx.font = `${Math.floor(width/20)}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, width/2, height/2);
+  
+  // Return as data URL
+  return canvas.toDataURL('image/png');
 };
