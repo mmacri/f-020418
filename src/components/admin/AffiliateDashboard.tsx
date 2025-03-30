@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Card,
@@ -168,7 +167,9 @@ const AffiliateDashboard: React.FC = () => {
   };
   
   const prepareChartData = () => {
-    if (!analyticsData) return [];
+    if (!analyticsData || !analyticsData.clicksByDay || typeof analyticsData.clicksByDay !== 'object') {
+      return [];
+    }
     
     const clicksByDay = analyticsData.clicksByDay || {};
     const now = new Date();
@@ -229,7 +230,9 @@ const AffiliateDashboard: React.FC = () => {
   };
   
   const prepareSourceData = () => {
-    if (!analyticsData || !analyticsData.clicksBySource) return [];
+    if (!analyticsData || !analyticsData.clicksBySource || typeof analyticsData.clicksBySource !== 'object') {
+      return [];
+    }
     
     const { clicksBySource } = analyticsData;
     return Object.entries(clicksBySource).map(([source, count]) => ({

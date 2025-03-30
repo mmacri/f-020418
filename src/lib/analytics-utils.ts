@@ -142,6 +142,7 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
     }
     
     if (!data || data.length === 0) {
+      console.log('No analytics data found');
       return {
         totalClicks: 0,
         uniqueProducts: 0,
@@ -185,9 +186,11 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
       const source = eventData.source || 'unknown';
       sourceCounts[source] = (sourceCounts[source] || 0) + 1;
       
-      // Group by day
-      const day = new Date(event.created_at).toISOString().split('T')[0];
-      clicksByDay[day] = (clicksByDay[day] || 0) + 1;
+      // Group by day - use created_at from the event record, not from the event data
+      if (event.created_at) {
+        const day = new Date(event.created_at).toISOString().split('T')[0];
+        clicksByDay[day] = (clicksByDay[day] || 0) + 1;
+      }
     });
     
     // Calculate top products
@@ -196,7 +199,7 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
         // Find a sample event with this product to get the name
         const sampleEvent = data.find(event => {
           const eventData = event.data as any;
-          return eventData.productId && eventData.productId.toString() === productId;
+          return eventData && eventData.productId && eventData.productId.toString() === productId;
         });
         
         const eventData = (sampleEvent?.data as any) || {};
@@ -228,6 +231,7 @@ export const getAnalyticsSummary = async (startDate?: Date, endDate?: Date) => {
     };
   } catch (error) {
     console.error('Error in getAnalyticsSummary:', error);
+    // Return default empty data structure on error
     return {
       totalClicks: 0,
       uniqueProducts: 0,
