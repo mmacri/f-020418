@@ -32,7 +32,7 @@ const Index = () => {
         setCategories(categoriesData.filter(cat => cat.showInNavigation !== false));
         
         // Try to get featured products directly from Supabase
-        const { data: featuredData, error: featuredError } = await supabase
+        const { data, error: featuredError } = await supabase
           .from('products')
           .select('*')
           .eq('attributes->bestSeller', true)
@@ -44,15 +44,14 @@ const Index = () => {
           throw new Error('Failed to fetch featured products');
         }
         
-        if (featuredData && featuredData.length > 0) {
-          // Create an array to hold our mapped products with explicit type
+        if (data && data.length > 0) {
+          // Fix: Use explicit array creation with proper typing and a for loop instead of map
           const mappedProducts: Product[] = [];
           
-          // Use a traditional for loop to avoid TypeScript type inference issues
-          for (let i = 0; i < featuredData.length; i++) {
-            // Explicitly type as 'any' to avoid deep instantiation error
-            const product: any = featuredData[i];
-            mappedProducts.push(mapSupabaseProductToProduct(product));
+          // Using for...of loop to simplify iteration and avoid deep type instantiation issues
+          for (const item of data) {
+            // Explicitly passing as any to avoid complex type checking
+            mappedProducts.push(mapSupabaseProductToProduct(item as any));
           }
           
           setFeaturedProducts(mappedProducts);
