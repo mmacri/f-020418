@@ -1,4 +1,3 @@
-
 import { Product } from '@/services/products/types';
 
 // Define a simple Metadata interface to replace the Next.js one

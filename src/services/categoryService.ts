@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { localStorageKeys } from '@/lib/constants';
 
@@ -256,7 +255,7 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
     }
     
     // Map to our Subcategory interface
-    const mappedSubcategories = subcategories.map(sub => ({
+    const mappedSubcategories = (subcategories as SupabaseCategory[]).map(sub => ({
       id: sub.id,
       name: sub.name,
       slug: sub.slug,
@@ -271,8 +270,8 @@ export const getCategoryBySlug = async (slug: string): Promise<Category | null> 
       slug: category.slug,
       description: category.description,
       imageUrl: category.image_url,
-      showInNavigation: category.show_in_navigation,
-      navigationOrder: category.navigation_order,
+      showInNavigation: (category as any).show_in_navigation,
+      navigationOrder: (category as any).navigation_order,
       subcategories: mappedSubcategories
     };
   } catch (error) {

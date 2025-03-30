@@ -67,5 +67,16 @@ export const api = {
     }
     
     return response.json();
+  },
+  // Add clearCache method to remove cached API responses from localStorage
+  clearCache: () => {
+    const keys = Object.keys(localStorage);
+    const cacheKeys = keys.filter(key => key.startsWith('api_cache_'));
+    
+    cacheKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    return cacheKeys.length;
   }
 };

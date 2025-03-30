@@ -1,140 +1,82 @@
 
-import { Product, SupabaseProduct } from './types';
+import { Product, ProductReview } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
-export const mapSupabaseProductToProduct = (product: SupabaseProduct): Product => {
-  if (!product) {
-    console.error('Received null or undefined product in mapSupabaseProductToProduct');
-    return {
-      id: 'default',
-      slug: 'default',
-      name: 'Product Not Available',
-      description: '',
-      price: 0,
-      rating: 0,
-      reviewCount: 0,
-      imageUrl: '',
-      inStock: false,
-      category: '',
-    };
+// Extract and format image URL from product data
+export const extractImageUrl = (product: any): string => {
+  // First, try to get the image URL directly
+  if (product.imageUrl) {
+    return product.imageUrl;
   }
   
-  try {
-    // Safely parse attributes with explicit typing
-    let attributes: Record<string, any> = {};
-    if (product.attributes) {
-      if (typeof product.attributes === 'string') {
-        try {
-          attributes = JSON.parse(product.attributes);
-        } catch (e) {
-          console.error('Error parsing attributes string:', e);
-        }
-      } else {
-        attributes = product.attributes as Record<string, any>;
-      }
-    }
-    
-    // Safely parse specifications with explicit typing
-    let specifications: Record<string, any> = {};
-    if (product.specifications) {
-      if (typeof product.specifications === 'string') {
-        try {
-          specifications = JSON.parse(product.specifications);
-        } catch (e) {
-          console.error('Error parsing specifications string:', e);
-        }
-      } else {
-        specifications = product.specifications as Record<string, any>;
-      }
-    }
-    
-    const productId = product.id ? product.id : 'unknown';
-    
-    const mappedProduct: Product = {
-      id: productId,
-      slug: product.slug || 'unknown',
-      name: product.name || 'Unnamed Product',
-      title: product.name || 'Unnamed Product', // Add title for compatibility
-      description: product.description || '',
-      shortDescription: attributes.shortDescription || '',
-      price: product.price || 0,
-      originalPrice: product.original_price || undefined,
-      rating: product.rating || 0,
-      reviewCount: product.review_count || 0,
-      imageUrl: product.image_url || '',
-      images: product.images || [],
-      additionalImages: product.images || [], // For backward compatibility
-      inStock: product.in_stock !== false, // Default to true unless explicitly false
-      category: attributes.category || '',
-      categoryId: product.category_id,
-      subcategory: product.subcategory_slug || '',
-      specifications: specifications,
-      features: product.features || [],
-      pros: product.pros || [],
-      cons: product.cons || [],
-      bestSeller: product.best_seller || false,
-      affiliateUrl: product.affiliate_url || '',
-      affiliateLink: product.affiliate_url || '', // For backward compatibility
-      asin: product.asin || '',
-      brand: product.brand || '',
-      comparePrice: product.original_price || undefined, // For backward compatibility
-      createdAt: product.created_at,
-      updatedAt: product.updated_at
-    };
-    
-    return mappedProduct;
-  } catch (error) {
-    console.error('Error mapping product:', error, product);
-    return {
-      id: product.id || 'error',
-      slug: product.slug || 'error',
-      name: product.name || 'Error Mapping Product',
-      title: product.name || 'Error Mapping Product',
-      description: 'There was an error processing this product data.',
-      price: 0,
-      rating: 0,
-      reviewCount: 0,
-      imageUrl: '',
-      inStock: false,
-      category: '',
-    };
+  // Then try image_url (from Supabase)
+  if (product.image_url) {
+    return product.image_url;
   }
+  
+  // Try to get from images array if available
+  if (product.images && product.images.length > 0) {
+    // Handle different image formats
+    const firstImage = product.images[0];
+    if (typeof firstImage === 'string') {
+      return firstImage;
+    }
+    if (typeof firstImage === 'object' && firstImage.url) {
+      return firstImage.url;
+    }
+  }
+  
+  // Fallback to a default image
+  return "https://ext.same-assets.com/30303031/product-image-placeholder.jpg";
 };
 
-export const mapProductToSupabaseProduct = (product: Partial<Product>): SupabaseProduct => {
-  // Get the first image url, handling both string and object types
-  const getFirstImageUrl = (images?: (string | { url: string })[]): string => {
-    if (!images || images.length === 0) return '';
-    const firstImage = images[0];
-    return typeof firstImage === 'string' ? firstImage : firstImage.url;
-  };
-
+// Map Supabase product data to our Product interface
+export const mapSupabaseProductToProduct = (product: any): Product => {
+  // Extract data from attributes JSON if available
+  const attributes = product.attributes || {};
+  
   return {
-    id: product.id?.toString(),
-    slug: product.slug,
+    id: product.id,
     name: product.name,
-    description: product.description,
-    price: product.price,
-    original_price: product.originalPrice || product.comparePrice,
-    rating: product.rating,
-    review_count: product.reviewCount,
-    image_url: product.imageUrl || getFirstImageUrl(product.images as any),
-    images: product.images,
-    in_stock: product.inStock,
-    category_id: product.categoryId?.toString(),
-    subcategory_slug: product.subcategory,
-    specifications: product.specifications,
-    features: product.features,
-    pros: product.pros,
-    cons: product.cons,
-    best_seller: product.bestSeller,
-    affiliate_url: product.affiliateUrl || product.affiliateLink,
-    asin: product.asin,
-    brand: product.brand
+    slug: product.slug,
+    description: product.description || '',
+    price: product.price || 0,
+    salePrice: product.sale_price,
+    imageUrl: product.image_url || '',
+    rating: product.rating || 0,
+    inStock: product.in_stock !== false,
+    categoryId: product.category_id,
+    specifications: product.specifications || {},
+    createdAt: product.created_at,
+    updatedAt: product.updated_at,
+    
+    // Optional fields from attributes
+    subcategoryId: attributes.subcategoryId,
+    brand: attributes.brand,
+    images: attributes.images || [],
+    features: attributes.features || [],
+    pros: attributes.pros || [],
+    cons: attributes.cons || [],
+    reviewCount: attributes.reviewCount || 0,
+    originalPrice: attributes.originalPrice || product.price,
+    bestSeller: attributes.bestSeller === true,
+    affiliateUrl: attributes.affiliateUrl,
+    asin: attributes.asin,
   };
 };
 
-export const extractImageUrl = (image: string | { url: string } | undefined): string => {
-  if (!image) return '';
-  if (typeof image === 'string') return image;
-  return image.url;
+// Map product review from database to frontend type
+export const mapSupabaseReviewToReview = (review: any): ProductReview => {
+  return {
+    id: review.id,
+    productId: review.product_id,
+    author: review.author_name || 'Anonymous',
+    rating: review.rating || 0,
+    title: review.title || '',
+    content: review.content || '',
+    verified: review.verified === true,
+    createdAt: review.created_at,
+    updatedAt: review.updated_at,
+    helpful: review.helpful_count || 0
+  };
 };
