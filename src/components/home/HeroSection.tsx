@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart } from 'lucide-react';
@@ -17,7 +18,7 @@ const HeroSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-24">
+    <section className="relative bg-gradient-to-r from-indigo-700 to-purple-700 text-white py-24">
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 md:pr-8 mb-8 md:mb-0">
@@ -30,7 +31,7 @@ const HeroSection: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
                 size="lg" 
-                className="bg-white text-indigo-600 hover:bg-gray-100 font-medium"
+                className="bg-white text-indigo-700 hover:bg-gray-100 font-medium border border-white shadow-md"
                 asChild
               >
                 <Link to="/categories/massage-guns">
@@ -41,7 +42,7 @@ const HeroSection: React.FC = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="bg-transparent border-white text-white hover:bg-white/10 font-medium"
+                className="bg-transparent border-2 border-white text-white hover:bg-white/20 font-medium"
                 asChild
               >
                 <Link to="/blog">

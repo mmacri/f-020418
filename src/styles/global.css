@@ -6,21 +6,21 @@
 
 /* Site-wide variables */
 :root {
-  --primary: hsl(var(--primary));
-  --primary-dark: hsl(var(--primary));
-  --primary-light: hsl(var(--primary), 0.8);
-  --secondary: hsl(var(--secondary));
-  --accent: hsl(var(--accent));
+  --primary: hsl(222, 47%, 11%);
+  --primary-dark: hsl(222, 47%, 8%);
+  --primary-light: hsl(222, 47%, 20%);
+  --secondary: hsl(210, 40%, 96%);
+  --accent: hsl(210, 40%, 96%);
   --success: #10B981;
   --danger: #EF4444;
   --warning: #F59E0B;
   --info: #3B82F6;
-  --text-dark: hsl(var(--foreground));
-  --text-medium: hsl(var(--muted-foreground));
-  --text-light: hsl(var(--foreground), 0.8);
-  --border-color: hsl(var(--border));
-  --background-light: hsl(var(--background));
-  --background-dark: hsl(var(--card));
+  --text-dark: hsl(222, 84%, 5%);
+  --text-medium: hsl(215, 16%, 47%);
+  --text-light: hsl(210, 40%, 98%);
+  --border-color: hsl(214, 32%, 91%);
+  --background-light: hsl(0, 0%, 100%);
+  --background-dark: hsl(222, 84%, 5%);
 }
 
 body {
@@ -36,7 +36,7 @@ p, li, span, div, button, a {
 }
 
 .text-gray-600, .text-muted-foreground {
-  color: hsl(var(--muted-foreground));
+  color: var(--text-medium);
   font-weight: 500; /* Make muted text slightly bolder for better readability */
 }
 
@@ -181,38 +181,37 @@ img {
 
 /* Ensure proper color contrast and theme consistency */
 .bg-background {
-  background-color: hsl(var(--background));
+  background-color: var(--background-light);
 }
 
 .text-foreground {
-  color: hsl(var(--foreground));
+  color: var(--text-dark);
 }
 
-/* Dark mode specific styles */
-.dark .bg-background {
-  background-color: hsl(var(--background));
+/* Improved contrast for buttons */
+.btn, button[class*="btn-"], button[type="submit"], 
+.button, a.button, .btn-primary, button.btn-primary {
+  color: white !important;
+  background-color: var(--primary) !important;
+  border: 1px solid var(--primary-dark) !important;
+  font-weight: 500 !important;
 }
 
-.dark .text-foreground {
-  color: hsl(var(--foreground));
+.btn:hover, button[class*="btn-"]:hover, button[type="submit"]:hover,
+.button:hover, a.button:hover, .btn-primary:hover, button.btn-primary:hover {
+  background-color: var(--primary-dark) !important;
 }
 
-/* Ensure colors work in both light and dark mode with improved contrast */
-.dark .text-gray-600 {
-  color: hsl(var(--muted-foreground));
-}
-
-.dark .text-gray-900 {
-  color: hsl(var(--foreground));
+/* Hero section gradients */
+section.relative.bg-gradient-to-r {
+  background: linear-gradient(to right, #4338ca, #5b21b6) !important;
 }
 
 /* Improved contrast for light mode */
-@media (prefers-color-scheme: light) {
-  .text-gray-500 {
-    color: hsl(215, 16%, 45%); /* Darker shade for better contrast */
-  }
-  
-  .text-gray-600 {
-    color: hsl(215, 16%, 40%); /* Darker shade for better contrast */
-  }
+.text-gray-500 {
+  color: hsl(215, 16%, 45%); /* Darker shade for better contrast */
+}
+
+.text-gray-600 {
+  color: hsl(215, 16%, 40%); /* Darker shade for better contrast */
 }
