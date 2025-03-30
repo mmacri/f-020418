@@ -26,8 +26,8 @@ export function ThemeProvider({
     root.classList.add("light");
   }, []);
 
-  const value = {
-    theme: "light",
+  const value: ThemeProviderState = {
+    theme: "light", // Explicitly using the literal "light" which matches ThemeProviderState
   };
 
   return (
