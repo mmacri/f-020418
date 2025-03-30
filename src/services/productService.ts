@@ -57,7 +57,7 @@ export interface Product {
 }
 
 // Convert Supabase product format to our Product interface
-// Accept 'any' type to avoid excessive type checking that could lead to infinite instantiation
+// Accept any type for the product parameter to avoid excessive type checking
 export const mapSupabaseProductToProduct = (product: any): Product => {
   if (!product) {
     console.error('Received null or undefined product in mapSupabaseProductToProduct');
