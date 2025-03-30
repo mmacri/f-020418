@@ -33,11 +33,23 @@ interface NavItem {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [mainMenu, setMainMenu] = useState<NavItem[]>(DEFAULT_NAVIGATION.mainMenu as NavItem[]);
+  const [mainMenu, setMainMenu] = useState<NavItem[]>([]);
   const { theme } = useTheme();
   const location = useLocation();
 
   useEffect(() => {
+    // Convert DEFAULT_NAVIGATION.mainMenu to NavItem[]
+    if (DEFAULT_NAVIGATION.mainMenu) {
+      const transformedMenu: NavItem[] = DEFAULT_NAVIGATION.mainMenu.map((item, index) => ({
+        id: index + 1,
+        title: item.name,
+        type: "link",
+        url: item.href,
+        showInHeader: true
+      }));
+      setMainMenu(transformedMenu);
+    }
+
     // Example: Load categories dynamically (replace with your actual data fetching)
     const fetchCategories = async () => {
       // Simulate fetching categories from an API
