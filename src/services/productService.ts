@@ -1,9 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
 
-// Define the interface for Supabase product data
 export interface SupabaseProduct {
   id: string;
   slug: string;
@@ -22,7 +20,6 @@ export interface SupabaseProduct {
   updated_at: string;
 }
 
-// Define the Product interface that will be used in the application
 export interface Product {
   id: number | string;
   slug: string;
@@ -56,12 +53,9 @@ export interface Product {
   pros?: string[];
 }
 
-// Convert Supabase product format to our Product interface
-// We're using a generic any type to avoid TypeScript deep instantiation issues
 export const mapSupabaseProductToProduct = (product: any): Product => {
   if (!product) {
     console.error('Received null or undefined product in mapSupabaseProductToProduct');
-    // Return a default product to prevent errors
     return {
       id: 'default',
       slug: 'default',
@@ -76,36 +70,62 @@ export const mapSupabaseProductToProduct = (product: any): Product => {
     };
   }
   
-  // Safely extract attributes from Json
-  const attributes = (product.attributes || {}) as Record<string, any>;
-  
-  return {
-    id: product.id || 'unknown',
-    slug: product.slug || 'unknown',
-    name: product.name || 'Unnamed Product',
-    description: product.description || '',
-    price: product.price || 0,
-    originalPrice: product.sale_price || undefined,
-    rating: product.rating || 0,
-    reviewCount: attributes.reviewCount || 0,
-    imageUrl: product.image_url || '',
-    images: product.image_url ? [product.image_url] : [],
-    inStock: product.in_stock !== false, // Default to true unless explicitly false
-    category: attributes.category || '',
-    categoryId: product.category_id,
-    subcategory: attributes.subcategory || '',
-    specifications: (product.specifications || {}) as Record<string, string>,
-    specs: (product.specifications || {}) as Record<string, string>,
-    createdAt: product.created_at,
-    updatedAt: product.updated_at,
-    features: attributes.features || [],
-    bestSeller: attributes.bestSeller || false,
-    brand: attributes.brand || '',
-    pros: attributes.pros || []
-  };
+  try {
+    const attributes = product.attributes ? 
+      (typeof product.attributes === 'string' ? 
+        JSON.parse(product.attributes) : 
+        product.attributes) : 
+      {};
+    
+    const specifications = product.specifications ? 
+      (typeof product.specifications === 'string' ? 
+        JSON.parse(product.specifications) : 
+        product.specifications) : 
+      {};
+    
+    const productId = product.id ? product.id : 'unknown';
+    
+    return {
+      id: productId,
+      slug: product.slug || 'unknown',
+      name: product.name || 'Unnamed Product',
+      description: product.description || '',
+      price: product.price || 0,
+      originalPrice: product.sale_price || undefined,
+      rating: product.rating || 0,
+      reviewCount: attributes.reviewCount || 0,
+      imageUrl: product.image_url || '',
+      images: product.image_url ? [product.image_url] : [],
+      inStock: product.in_stock !== false, // Default to true unless explicitly false
+      category: attributes.category || '',
+      categoryId: product.category_id,
+      subcategory: attributes.subcategory || '',
+      specifications: specifications,
+      specs: specifications,
+      createdAt: product.created_at,
+      updatedAt: product.updated_at,
+      features: Array.isArray(attributes.features) ? attributes.features : [],
+      bestSeller: !!attributes.bestSeller,
+      brand: attributes.brand || '',
+      pros: Array.isArray(attributes.pros) ? attributes.pros : []
+    };
+  } catch (error) {
+    console.error('Error mapping product:', error, product);
+    return {
+      id: product.id || 'error',
+      slug: product.slug || 'error',
+      name: product.name || 'Error Mapping Product',
+      description: 'There was an error processing this product data.',
+      price: 0,
+      rating: 0,
+      reviewCount: 0,
+      imageUrl: '',
+      inStock: false,
+      category: '',
+    };
+  }
 };
 
-// Convert our Product interface to Supabase product format
 const mapProductToSupabaseProduct = (product: Partial<Product>) => {
   return {
     id: product.id?.toString(),
@@ -132,17 +152,14 @@ const mapProductToSupabaseProduct = (product: Partial<Product>) => {
   };
 };
 
-// Helper function to extract image URL from either string or object format
 export const extractImageUrl = (image: string | { url: string } | undefined): string => {
   if (!image) return '';
   if (typeof image === 'string') return image;
   return image.url;
 };
 
-// Fetch all products
 export const getProducts = async (): Promise<Product[]> => {
   try {
-    // Try to get products from Supabase
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -154,20 +171,16 @@ export const getProducts = async (): Promise<Product[]> => {
     }
     
     if (data && data.length > 0) {
-      // Transform the data to match the Product interface
       return data.map(product => mapSupabaseProductToProduct(product as SupabaseProduct));
     }
     
-    // Fall back to mock data if no data in Supabase
     return generateMockProducts();
   } catch (error) {
     console.error('Error in getProducts:', error);
-    // Fall back to mock data if error
     return generateMockProducts();
   }
 };
 
-// Get product by ID
 export const getProductById = async (id: number | string): Promise<Product | null> => {
   try {
     const { data, error } = await supabase
@@ -188,7 +201,6 @@ export const getProductById = async (id: number | string): Promise<Product | nul
   }
 };
 
-// Get product by slug
 export const getProductBySlug = async (slug: string): Promise<Product | null> => {
   try {
     const { data, error } = await supabase
@@ -209,10 +221,8 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
   }
 };
 
-// Get products by category
 export const getProductsByCategory = async (category: string): Promise<Product[]> => {
   try {
-    // First try to find category ID
     const { data: categoryData } = await supabase
       .from('categories')
       .select('id')
@@ -241,13 +251,10 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
   }
 };
 
-// Get products by subcategory
 export const getProductsBySubcategory = async (category: string, subcategory: string): Promise<Product[]> => {
   try {
-    // First get all products by category
     const products = await getProductsByCategory(category);
     
-    // Then filter by subcategory
     return products.filter(
       product => product.subcategory?.toLowerCase() === subcategory.toLowerCase()
     );
@@ -257,7 +264,6 @@ export const getProductsBySubcategory = async (category: string, subcategory: st
   }
 };
 
-// Add a new product (previously named createProduct)
 export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product | null> => {
   try {
     const supabaseProduct = mapProductToSupabaseProduct(product);
@@ -283,10 +289,8 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<Product 
   }
 };
 
-// Alias for addProduct to maintain compatibility with existing code
 export const createProduct = addProduct;
 
-// Update an existing product
 export const updateProduct = async (id: number | string, product: Partial<Product>): Promise<Product | null> => {
   try {
     const supabaseProduct = mapProductToSupabaseProduct({
@@ -318,7 +322,6 @@ export const updateProduct = async (id: number | string, product: Partial<Produc
   }
 };
 
-// Delete a product
 export const deleteProduct = async (id: number | string): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -341,14 +344,12 @@ export const deleteProduct = async (id: number | string): Promise<boolean> => {
   }
 };
 
-// Search products
 export const searchProducts = async (query: string): Promise<Product[]> => {
   try {
     if (!query.trim()) {
       return [];
     }
     
-    // Search by name or description
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -368,7 +369,6 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
   }
 };
 
-// Helper function to generate mock products if needed
 const generateMockProducts = (): Product[] => {
   return [
     {

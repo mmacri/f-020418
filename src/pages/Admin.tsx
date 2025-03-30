@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { isAdmin as checkIsAdmin } from '@/services/authService';
 
 const AdminPage = () => {
   const { tab } = useParams<{ tab: string }>();
@@ -40,36 +41,24 @@ const AdminPage = () => {
       }
     };
 
-    // Check admin status via Supabase
+    // Check admin status
     const checkAdminStatus = async () => {
       setCheckingAdmin(true);
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // Check if user has admin role in profiles table
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-            
-          if (error) {
-            console.error("Error checking admin status:", error);
-            setIsAdmin(false);
-            return;
-          }
-          
-          const hasAdminRole = data?.role === 'admin';
-          setIsAdmin(hasAdminRole);
-          
-          // Check for scheduled posts if user is admin
-          if (hasAdminRole) {
-            await checkScheduledPosts();
-          }
-        } else {
+        if (!isAuthenticated) {
+          console.log("User not authenticated for admin check");
           setIsAdmin(false);
+          return;
+        }
+
+        // Check admin status using our service
+        const hasAdminRole = await checkIsAdmin();
+        console.log("Admin check result:", hasAdminRole);
+        setIsAdmin(hasAdminRole);
+        
+        // Check for scheduled posts if user is admin
+        if (hasAdminRole) {
+          await checkScheduledPosts();
         }
       } catch (error) {
         console.error("Error in admin check:", error);
@@ -79,22 +68,22 @@ const AdminPage = () => {
       }
     };
 
-    if (isAuthenticated) {
+    if (!isLoading) {
       checkAdminStatus();
-    } else {
-      setCheckingAdmin(false);
     }
     
     // Set active tab from URL parameter
     if (tab) {
       setActiveTab(tab);
     }
-  }, [isAuthenticated, tab, user]);
+  }, [isAuthenticated, isLoading, tab, user]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     navigate(`/admin/${value}`);
   };
+
+  console.log("Admin page state:", { isLoading, checkingAdmin, isAuthenticated, isAdmin, user });
 
   if (isLoading || checkingAdmin) {
     return (
@@ -108,10 +97,12 @@ const AdminPage = () => {
   }
 
   if (!isAuthenticated) {
+    console.log("Not authenticated, redirecting to login");
     return <Navigate to="/login" />;
   }
 
   if (!isAdmin) {
+    console.log("Not admin, showing unauthorized message");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

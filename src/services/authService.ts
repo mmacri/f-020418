@@ -37,25 +37,25 @@ export const login = async (email: string, password: string): Promise<{
     
     if (data.user) {
       // Get user profile data including role
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', data.user.id)
         .single();
       
-      // Check if user is admin
-      if (profileData && profileData.role !== 'admin') {
-        // Sign out non-admin users
-        await supabase.auth.signOut();
-        return {
-          success: false,
-          message: "Only administrators can log in to this application."
-        };
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
       }
+      
+      // Check if user is admin - don't block non-admin users from logging in
+      // We'll check admin permissions in the Admin component instead
+      const isUserAdmin = profileData?.role === 'admin';
       
       // Convert Supabase user to our User format with proper type conversion
       const userObject: User = {
-        id: parseInt(data.user.id.substring(0, 8), 16) || 1, // Convert UUID to number or use default
+        id: typeof data.user.id === 'string' && data.user.id.length > 8 
+          ? parseInt(data.user.id.substring(0, 8), 16) || 1 
+          : 1, // Convert UUID to number or use default
         email: data.user.email || email,
         name: profileData?.display_name || email.split('@')[0],
         role: (profileData?.role as "admin" | "editor" | "user") || 'user',
@@ -98,6 +98,9 @@ export const logout = async (): Promise<void> => {
     
     toast.success("You have been successfully logged out.");
     
+    // Remove token from localStorage
+    localStorage.removeItem('authToken');
+    
     // Redirect to home page after logout
     setTimeout(() => {
       window.location.href = '/';
@@ -113,10 +116,15 @@ export const isAuthenticated = async (): Promise<boolean> => {
   try {
     // Check Supabase session first
     const { data } = await supabase.auth.getSession();
-    if (data.session) return true;
+    if (data.session) {
+      console.log("User is authenticated via Supabase session");
+      return true;
+    }
     
     // Fall back to existing auth check for compatibility
-    return localStorage.getItem('authToken') !== null;
+    const hasAuthToken = localStorage.getItem('authToken') !== null;
+    console.log("Auth token check:", hasAuthToken);
+    return hasAuthToken;
   } catch (error) {
     console.error("Authentication check error:", error);
     return false;
@@ -129,16 +137,23 @@ export const getUser = async (): Promise<User | null> => {
     // Try to get user from Supabase first
     const { data } = await supabase.auth.getUser();
     if (data.user) {
+      console.log("Supabase user:", data.user);
       // Get user profile data
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', data.user.id)
         .single();
       
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      }
+      
       if (profileData) {
         return {
-          id: parseInt(data.user.id.substring(0, 8), 16) || 1, // Convert UUID to number or use default
+          id: typeof data.user.id === 'string' && data.user.id.length > 8 
+            ? parseInt(data.user.id.substring(0, 8), 16) || 1 
+            : 1,
           email: data.user.email || '',
           name: profileData.display_name || data.user.email?.split('@')[0] || '',
           role: (profileData.role as "admin" | "editor" | "user") || 'user',
@@ -150,7 +165,9 @@ export const getUser = async (): Promise<User | null> => {
     }
     
     // Fall back to existing user service
-    return getCurrentUser();
+    const currentUser = await getCurrentUser();
+    console.log("Legacy user service:", currentUser);
+    return currentUser;
   } catch (error) {
     console.error("Get user error:", error);
     return null;
@@ -164,17 +181,23 @@ export const isAdmin = async (): Promise<boolean> => {
     const { data } = await supabase.auth.getUser();
     if (data.user) {
       // Get user profile data to check role
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', data.user.id)
         .single();
       
+      if (profileError) {
+        console.error("Error checking admin status:", profileError);
+      }
+      
       return profileData?.role === 'admin';
     }
     
     // Fall back to existing admin check
-    return checkIsAdmin();
+    const isLegacyAdmin = await checkIsAdmin();
+    console.log("Legacy admin check:", isLegacyAdmin);
+    return isLegacyAdmin;
   } catch (error) {
     console.error("Admin check error:", error);
     return false;

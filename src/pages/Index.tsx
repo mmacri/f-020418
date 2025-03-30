@@ -31,13 +31,16 @@ const Index = () => {
         const categoriesData = await getNavigationCategories();
         setCategories(categoriesData.filter(cat => cat.showInNavigation !== false));
         
-        // Try to get featured products directly from Supabase
-        const { data: supabaseProducts, error: featuredError } = await supabase
+        // Try to get featured products directly from Supabase - using type any to avoid deep instantiation error
+        const response = await supabase
           .from('products')
           .select('*')
           .eq('attributes->bestSeller', true)
           .order('rating', { ascending: false })
           .limit(6);
+          
+        const supabaseProducts = response.data as any[];
+        const featuredError = response.error;
           
         if (featuredError) {
           console.error('Error fetching featured products:', featuredError);
@@ -48,17 +51,19 @@ const Index = () => {
           // Create an array to hold our mapped products
           const mappedProducts: Product[] = [];
           
-          // Use standard for loop to avoid TypeScript deep instantiation issues
+          // Loop through products and map them
           for (let i = 0; i < supabaseProducts.length; i++) {
-            // Use type assertion to any to bypass TypeScript's deep type checking
-            const productData = supabaseProducts[i] as any;
-            const mappedProduct = mapSupabaseProductToProduct(productData);
-            mappedProducts.push(mappedProduct);
+            try {
+              const mappedProduct = mapSupabaseProductToProduct(supabaseProducts[i]);
+              mappedProducts.push(mappedProduct);
+            } catch (err) {
+              console.error('Error mapping product:', err, supabaseProducts[i]);
+            }
           }
           
           setFeaturedProducts(mappedProducts);
         } else {
-          // Get all products
+          // Get all products if no featured products from Supabase
           const products = await getProducts();
           
           // Select featured products
