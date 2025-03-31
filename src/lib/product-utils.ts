@@ -246,18 +246,41 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     if (data && data.length > 0) {
       // Use a traditional for loop with index to avoid type recursion
       for (let i = 0; i < data.length; i++) {
-        // First create a properly typed product to avoid deep type recursion
-        const product = data[i];
+        const product = data[i] as any;
         
-        // Use simple approach with type casting to avoid property access errors
-        const typedProduct: SupabaseProduct = {
-          ...product,
+        // Type casting and explicit typing to avoid deep type inference
+        const mappedProduct = mapSupabaseProductToProduct({
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          description: product.description,
+          price: product.price,
+          sale_price: product.sale_price,
+          original_price: product.original_price,
+          rating: product.rating,
+          review_count: product.review_count,
+          image_url: product.image_url,
+          images: product.images,
+          in_stock: product.in_stock,
+          best_seller: product.best_seller,
+          featured: product.featured,
+          is_new: product.is_new,
+          category: product.category,
+          category_id: product.category_id,
+          subcategory: product.subcategory,
+          subcategory_slug: product.subcategory_slug,
           specifications: product.specifications as Json,
-          attributes: product.attributes as Json
-        };
-        
-        // Map the typed product to our application's Product type
-        const mappedProduct = mapSupabaseProductToProduct(typedProduct);
+          attributes: product.attributes as Json,
+          features: product.features,
+          pros: product.pros,
+          cons: product.cons,
+          affiliate_url: product.affiliate_url,
+          asin: product.asin,
+          brand: product.brand,
+          availability: product.availability,
+          created_at: product.created_at,
+          updated_at: product.updated_at
+        });
         
         // Add to result array
         result.push(mappedProduct);
