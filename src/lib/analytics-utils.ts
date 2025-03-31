@@ -278,11 +278,40 @@ export const markClickAsConverted = (clickId: number): boolean => {
 
 /**
  * Clear analytics data (for testing or privacy reasons)
+ * @param startDate Optional start date to clear data from
+ * @param endDate Optional end date to clear data to
  */
-export const clearAnalyticsData = (): void => {
+export const clearAnalyticsData = async (startDate?: Date, endDate?: Date): Promise<void> => {
   try {
+    // Clear localStorage data first
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ANALYTICS_DATA);
-    console.log('Analytics data cleared');
+    
+    // If we have Supabase integration, also clear data there
+    let query = supabase
+      .from('analytics_events')
+      .delete();
+    
+    // Apply date filters if provided
+    if (startDate) {
+      const startTimestamp = startDate.toISOString();
+      query = query.gte('created_at', startTimestamp);
+    }
+    
+    if (endDate) {
+      // Set to end of the selected day
+      const endDay = new Date(endDate);
+      endDay.setHours(23, 59, 59, 999);
+      const endTimestamp = endDay.toISOString();
+      query = query.lte('created_at', endTimestamp);
+    }
+    
+    const { error } = await query;
+    
+    if (error) {
+      console.error('Error clearing analytics data in Supabase:', error);
+    } else {
+      console.log('Analytics data cleared successfully');
+    }
   } catch (error) {
     console.error('Error clearing analytics data:', error);
   }

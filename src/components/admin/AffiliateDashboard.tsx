@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Card,
@@ -10,7 +9,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAnalyticsSummary, clearAnalyticsData } from '@/lib/analytics-utils';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Download, Filter, TrendingUp } from 'lucide-react';
+import { 
+  Calendar as CalendarIcon, 
+  Download, 
+  Filter, 
+  TrendingUp, 
+  Trash2,
+  AlertTriangle
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +34,16 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface AnalyticsSummary {
   totalClicks: number;
@@ -66,6 +82,8 @@ const AffiliateDashboard: React.FC = () => {
   const [isCustomDateRange, setIsCustomDateRange] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [clearPeriod, setClearPeriod] = useState<'current' | 'all'>('current');
   const { toast } = useToast();
   
   useEffect(() => {
@@ -109,60 +127,81 @@ const AffiliateDashboard: React.FC = () => {
     }
   };
   
-  const handleClearData = () => {
-    if (window.confirm('Are you sure you want to clear all analytics data? This cannot be undone.')) {
-      clearAnalyticsData();
-      loadAnalyticsData();
-      toast({
-        title: 'Data Cleared',
-        description: 'All analytics data has been cleared successfully.',
-      });
-    }
+  const handleClearData = (type: 'current' | 'all') => {
+    setClearPeriod(type);
+    setIsAlertOpen(true);
   };
   
-  const handlePeriodChange = (newPeriod: '7d' | '30d' | 'all') => {
-    setPeriod(newPeriod);
-    setIsCustomDateRange(false);
+  const confirmClearData = () => {
+    clearAnalyticsData();
+    loadAnalyticsData();
+    toast({
+      title: 'Data Cleared',
+      description: clearPeriod === 'all' 
+        ? 'All analytics data has been cleared successfully.' 
+        : `Analytics data for the ${period === '7d' ? 'last 7 days' : period === '30d' ? 'last 30 days' : 'selected date range'} has been cleared.`,
+    });
+    setIsAlertOpen(false);
   };
   
-  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined }) => {
-    setDateRange(range);
-    if (range.from && range.to) {
-      setIsCustomDateRange(true);
-    }
-  };
-
-  const handleExportData = () => {
+  const handleExportData = (exportPeriod?: '7d' | '30d' | 'custom' | 'all') => {
     if (!analyticsData) return;
     
     try {
-      // Format data for export
+      let periodToExport = exportPeriod || period;
+      let fileName = `affiliate-analytics-${new Date().toISOString().split('T')[0]}`;
+      let dateRange = '';
+      
+      if (exportPeriod) {
+        if (exportPeriod === '7d') {
+          fileName += '-last-7-days';
+          dateRange = '(Last 7 Days)';
+        } else if (exportPeriod === '30d') {
+          fileName += '-last-30-days';
+          dateRange = '(Last 30 Days)';
+        } else if (exportPeriod === 'custom' && dateRange.from && dateRange.to) {
+          fileName += `-${format(dateRange.from, 'yyyy-MM-dd')}-to-${format(dateRange.to, 'yyyy-MM-dd')}`;
+          dateRange = `(${format(dateRange.from, 'MMM dd, yyyy')} to ${format(dateRange.to, 'MMM dd, yyyy')})`;
+        } else if (exportPeriod === 'all') {
+          fileName += '-all-time';
+          dateRange = '(All Time)';
+        }
+      } else {
+        if (period === '7d') {
+          dateRange = '(Last 7 Days)';
+        } else if (period === '30d') {
+          dateRange = '(Last 30 Days)';
+        } else if (isCustomDateRange && dateRange.from && dateRange.to) {
+          dateRange = `(${format(dateRange.from, 'MMM dd, yyyy')} to ${format(dateRange.to, 'MMM dd, yyyy')})`;
+        } else {
+          dateRange = '(All Time)';
+        }
+      }
+      
       const csvData = [
-        // Headers
+        [`Affiliate Analytics Export ${dateRange}`],
         ['Date', 'Clicks', 'Estimated Conversions', 'Estimated Revenue'],
-        // Data rows
         ...Object.entries(analyticsData.clicksByDay || {}).map(([date, clicks]) => {
           const conversions = clicks * 0.029; // Using average conversion rate
           const revenue = conversions * 4.5; // Using average commission
-          return [date, clicks.toString(), conversions.toFixed(1), revenue.toFixed(2)];
+          return [date, clicks.toString(), conversions.toFixed(1), `$${revenue.toFixed(2)}`];
         })
       ]
       .map(row => row.join(','))
       .join('\n');
       
-      // Create and download the file
       const blob = new Blob([csvData], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `affiliate-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `${fileName}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       
       toast({
         title: 'Export Successful',
-        description: 'Analytics data has been exported to CSV.',
+        description: `Analytics data has been exported to ${fileName}.csv.`,
       });
     } catch (error) {
       console.error('Error exporting data:', error);
@@ -199,7 +238,6 @@ const AffiliateDashboard: React.FC = () => {
       });
     }
     
-    // If we want to group by week or month
     if (chartView !== 'daily') {
       const groupedData: {[key: string]: {clicks: number, conversions: number, revenue: number, count: number}} = {};
       
@@ -208,11 +246,9 @@ const AffiliateDashboard: React.FC = () => {
         const date = new Date(day.date);
         
         if (chartView === 'weekly') {
-          // Get the week number and year
           const weekNumber = Math.ceil((date.getDate() + (new Date(date.getFullYear(), date.getMonth(), 1).getDay())) / 7);
           groupKey = `Week ${weekNumber}, ${date.getFullYear()}`;
         } else {
-          // Monthly grouping
           groupKey = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
         }
         
@@ -255,7 +291,6 @@ const AffiliateDashboard: React.FC = () => {
     const data = prepareChartData();
     if (data.length < 2) return 0;
     
-    // For period comparison, compare first half vs second half
     const midPoint = Math.floor(data.length / 2);
     const firstHalf = data.slice(0, midPoint);
     const secondHalf = data.slice(midPoint);
@@ -309,16 +344,79 @@ const AffiliateDashboard: React.FC = () => {
   
   return (
     <div className="space-y-8">
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear Analytics Data</AlertDialogTitle>
+            <AlertDialogDescription>
+              {clearPeriod === 'all' ? (
+                <>
+                  <AlertTriangle className="h-5 w-5 text-amber-500 inline-block mr-2" />
+                  This will permanently delete <span className="font-bold">all</span> analytics data. This action cannot be undone.
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="h-5 w-5 text-amber-500 inline-block mr-2" />
+                  This will clear data for the {period === '7d' ? 'last 7 days' : period === '30d' ? 'last 30 days' : 'selected date range'}. This action cannot be undone.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClearData} className="bg-red-600 hover:bg-red-700">
+              Yes, Clear Data
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Affiliate Performance</h2>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleExportData} className="flex items-center gap-1">
-            <Download className="h-4 w-4" />
-            Export Data
-          </Button>
-          <Button variant="outline" onClick={handleClearData} className="text-red-600 border-red-600 hover:bg-red-50">
-            Clear Analytics Data
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-1">
+                <Download className="h-4 w-4" />
+                Export Data
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-48">
+              <div className="flex flex-col space-y-1">
+                <Button variant="ghost" size="sm" onClick={() => handleExportData('current')} className="justify-start">
+                  Current Period
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleExportData('7d')} className="justify-start">
+                  Last 7 Days
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleExportData('30d')} className="justify-start">
+                  Last 30 Days
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleExportData('all')} className="justify-start">
+                  All Time
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="text-red-600 border-red-600 hover:bg-red-50 flex items-center gap-1">
+                <Trash2 className="h-4 w-4" />
+                Clear Data
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-48">
+              <div className="flex flex-col space-y-1">
+                <Button variant="ghost" size="sm" onClick={() => handleClearData('current')} className="justify-start text-red-600 hover:bg-red-50 hover:text-red-700">
+                  Current Period
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleClearData('all')} className="justify-start text-red-600 hover:bg-red-50 hover:text-red-700">
+                  All Data
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
       
