@@ -9,11 +9,11 @@ import { ImageWithFallback } from '@/lib/images';
 export interface FileUploadWithPreviewProps {
   onFileChange: (url: string) => void;
   currentImage?: string;
-  bucket: string;
+  bucket: 'product-images' | 'category-images' | 'blog-images';
   folder?: string;
   maxSize?: number; // in MB
   aspectRatio?: 'square' | 'landscape' | 'portrait';
-  className?: string; // Add className prop
+  className?: string; // Changed from string to optional string
 }
 
 const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
