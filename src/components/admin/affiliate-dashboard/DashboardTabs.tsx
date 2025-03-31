@@ -1,17 +1,14 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import ClicksChart from './ClicksChart';
-import TopProductsTable from './TopProductsTable';
-import TrafficSourcesChart from './TrafficSourcesChart';
-import AdvancedAnalytics from './AdvancedAnalytics';
-import { ChartDataItem, ChartViewType } from './types';
-import { formatCurrency } from './utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ClicksChart } from './';
+import { TrafficSourcesChart } from './';
+import { TopProductsTable } from './';
 
 interface DashboardTabsProps {
-  chartData: ChartDataItem[];
-  sourceData: {name: string; value: number}[];
+  chartData: any[];
+  sourceData: any[];
   topProducts: any[];
   totals: {
     clicks: number;
@@ -19,8 +16,9 @@ interface DashboardTabsProps {
     revenue: number;
     conversionRate: number;
   };
-  chartView: ChartViewType;
-  setChartView: (view: ChartViewType) => void;
+  chartView: 'daily' | 'weekly' | 'monthly';
+  setChartView: (view: 'daily' | 'weekly' | 'monthly') => void;
+  isLoading?: boolean;
 }
 
 const DashboardTabs: React.FC<DashboardTabsProps> = ({
@@ -29,95 +27,81 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
   topProducts,
   totals,
   chartView,
-  setChartView
+  setChartView,
+  isLoading = false
 }) => {
   return (
-    <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+    <Tabs defaultValue="overview">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="traffic">Traffic Sources</TabsTrigger>
         <TabsTrigger value="products">Top Products</TabsTrigger>
-        <TabsTrigger value="sources">Traffic Sources</TabsTrigger>
-        <TabsTrigger value="advanced">Advanced Analytics</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="overview" className="space-y-4 pt-4">
+      <TabsContent value="overview" className="pt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Daily Performance</CardTitle>
-            <CardDescription>
-              Clicks and conversions over time
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-            <ClicksChart 
-              chartData={chartData}
-              chartView={chartView}
-              setChartView={setChartView}
-              formatCurrency={formatCurrency}
-            />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="products" className="space-y-4 pt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Performing Products</CardTitle>
-            <CardDescription>
-              Products generating the most affiliate revenue
-            </CardDescription>
+            <CardTitle>Click Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            <TopProductsTable 
-              analyticsData={{
-                totalClicks: totals.clicks,
-                uniqueProducts: topProducts.length,
-                topProducts: topProducts.map(p => ({
-                  productId: p.id.toString(),
-                  productName: p.name,
-                  count: p.clicks,
-                  estimatedConversions: p.conversions
-                })),
-                clicksByDay: {},
-                clicksBySource: {}
-              }}
-            />
+            <div className="flex items-center justify-end space-x-2 mb-4">
+              <button 
+                onClick={() => setChartView('daily')}
+                className={`text-sm px-3 py-1 rounded-md ${chartView === 'daily' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>
+                Daily
+              </button>
+              <button 
+                onClick={() => setChartView('weekly')}
+                className={`text-sm px-3 py-1 rounded-md ${chartView === 'weekly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>
+                Weekly
+              </button>
+              <button 
+                onClick={() => setChartView('monthly')}
+                className={`text-sm px-3 py-1 rounded-md ${chartView === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>
+                Monthly
+              </button>
+            </div>
+            
+            <div className="h-96">
+              <ClicksChart 
+                data={chartData} 
+                viewMode={chartView} 
+                isLoading={isLoading} 
+              />
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
       
-      <TabsContent value="sources" className="space-y-4 pt-4">
+      <TabsContent value="traffic" className="pt-6">
         <Card>
           <CardHeader>
             <CardTitle>Traffic Sources</CardTitle>
-            <CardDescription>
-              Where your affiliate clicks are coming from
-            </CardDescription>
           </CardHeader>
-          <CardContent className="h-80">
-            <TrafficSourcesChart 
-              analyticsData={{
-                totalClicks: totals.clicks,
-                uniqueProducts: topProducts.length,
-                clicksBySource: Object.fromEntries(
-                  sourceData.map(source => [source.name, source.value])
-                ),
-                topProducts: [],
-                clicksByDay: {}
-              }}
-              prepareSourceData={() => sourceData}
-            />
+          <CardContent>
+            <div className="h-96">
+              <TrafficSourcesChart 
+                data={sourceData} 
+                isLoading={isLoading}
+              />
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
       
-      <TabsContent value="advanced" className="space-y-4 pt-4">
-        <AdvancedAnalytics 
-          chartData={chartData} 
-          sourceData={sourceData} 
-          estimatedRevenue={totals.revenue}
-          formatCurrency={formatCurrency}
-        />
+      <TabsContent value="products" className="pt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Products Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TopProductsTable 
+              products={topProducts}
+              totals={totals}
+              isLoading={isLoading}
+            />
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   );

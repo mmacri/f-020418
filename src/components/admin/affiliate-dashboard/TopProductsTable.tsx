@@ -1,12 +1,41 @@
 
 import React from 'react';
-import { AnalyticsSummary } from './types';
+import { formatCurrency } from './utils/formatters';
 
 interface TopProductsTableProps {
-  analyticsData: AnalyticsSummary | null;
+  products: any[];
+  totals: {
+    clicks: number;
+    conversions: number;
+    revenue: number;
+    conversionRate: number;
+  };
+  isLoading?: boolean;
 }
 
-const TopProductsTable: React.FC<TopProductsTableProps> = ({ analyticsData }) => {
+const TopProductsTable: React.FC<TopProductsTableProps> = ({ 
+  products, 
+  totals,
+  isLoading = false
+}) => {
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  // Handle empty data
+  if (!products || products.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-40 text-muted-foreground">
+        No product data available
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -21,29 +50,24 @@ const TopProductsTable: React.FC<TopProductsTableProps> = ({ analyticsData }) =>
           </tr>
         </thead>
         <tbody>
-          {analyticsData?.topProducts?.map((product) => (
-            <tr key={product.productId} className="border-b">
-              <td className="py-3">{product.productName}</td>
-              <td className="py-3 text-gray-500">{product.productId}</td>
-              <td className="py-3 text-right">{product.count}</td>
+          {products.map((product) => (
+            <tr key={product.id} className="border-b">
+              <td className="py-3">{product.name}</td>
+              <td className="py-3 text-gray-500">{product.id}</td>
+              <td className="py-3 text-right">{product.clicks}</td>
               <td className="py-3 text-right">
-                {product.estimatedConversions || (product.count * 0.029).toFixed(1)}
+                {product.conversions}
               </td>
-              <td className="py-3 text-right">2.9%</td>
               <td className="py-3 text-right">
-                {analyticsData.totalClicks 
-                  ? ((product.count / analyticsData.totalClicks) * 100).toFixed(1) + '%' 
+                {((product.conversions / product.clicks) * 100).toFixed(1)}%
+              </td>
+              <td className="py-3 text-right">
+                {totals.clicks 
+                  ? ((product.clicks / totals.clicks) * 100).toFixed(1) + '%' 
                   : '0%'}
               </td>
             </tr>
           ))}
-          {(!analyticsData?.topProducts || analyticsData.topProducts.length === 0) && (
-            <tr>
-              <td colSpan={6} className="py-4 text-center text-gray-500">
-                No product data available yet
-              </td>
-            </tr>
-          )}
         </tbody>
       </table>
     </div>

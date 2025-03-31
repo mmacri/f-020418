@@ -34,8 +34,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const refreshData = () => {
-    // This function will be called when data needs to be refreshed
-    // This is a placeholder that components can override with their implementation
+    // This is a placeholder function that will be overridden by individual dashboard components
     console.log('Refreshing dashboard data');
   };
 

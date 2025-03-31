@@ -52,3 +52,19 @@ export const exportAnalyticsData = (chartData: any[], sourcesData: any[], produc
   
   return report;
 };
+
+/**
+ * Export data to Excel format
+ * Note: In a real implementation, you would use a library like xlsx to create Excel files
+ * For now, we'll just create a CSV and return it
+ */
+export const exportToExcel = (data: any[], filename: string): string => {
+  return exportToCSV(data, filename);
+};
+
+/**
+ * Export analytics data to Excel format
+ */
+export const exportAnalyticsDataToExcel = (chartData: any[], sourcesData: any[], productsData: any[]): string => {
+  return exportAnalyticsData(chartData, sourcesData, productsData);
+};
