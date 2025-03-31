@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { WishlistProvider } from "@/hooks/useWishlist";
 import Index from "@/pages/Index";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
@@ -38,49 +39,51 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/recovery-apps" element={<RecoveryApps />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/newsletter" element={<Newsletter />} />
-          <Route path="/product-comparison" element={<ProductComparisonPage />} />
-          <Route path="/product-comparison/:category" element={<ProductComparisonPage />} />
-          <Route path="/wishlist" element={<Wishlist />} />
+      <WishlistProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/recovery-apps" element={<RecoveryApps />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/newsletter" element={<Newsletter />} />
+            <Route path="/product-comparison" element={<ProductComparisonPage />} />
+            <Route path="/product-comparison/:category" element={<ProductComparisonPage />} />
+            <Route path="/wishlist" element={<Wishlist />} />
 
-          {/* Product routes */}
-          <Route path="/products/:slug" element={<ProductDetail />} />
-          <Route path="/products" element={<AllProductsPage />} />
-          
-          {/* Category routes */}
-          <Route path="/categories" element={<AllCategoriesPage />} />
-          <Route path="/categories/:categorySlug" element={<CategoryPage />} />
-          <Route path="/categories/:categorySlug/:subSlug" element={<SubcategoryPage />} />
+            {/* Product routes */}
+            <Route path="/products/:slug" element={<ProductDetail />} />
+            <Route path="/products" element={<AllProductsPage />} />
+            
+            {/* Category routes */}
+            <Route path="/categories" element={<AllCategoriesPage />} />
+            <Route path="/categories/:categorySlug" element={<CategoryPage />} />
+            <Route path="/categories/:categorySlug/:subSlug" element={<SubcategoryPage />} />
 
-          {/* Legal pages */}
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
-          
-          {/* Admin routes */}
-          <Route path="/admin/*" element={<Admin />} />
-          
-          {/* Demo routes */}
-          <Route path="/workflow-demo" element={<WorkflowDemo />} />
-          <Route path="/auto-workflow-demo" element={<AutoWorkflowDemo />} />
-          
-          {/* 404 route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </Router>
+            {/* Legal pages */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+            
+            {/* Admin routes */}
+            <Route path="/admin/*" element={<Admin />} />
+            
+            {/* Demo routes */}
+            <Route path="/workflow-demo" element={<WorkflowDemo />} />
+            <Route path="/auto-workflow-demo" element={<AutoWorkflowDemo />} />
+            
+            {/* 404 route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </WishlistProvider>
     </ThemeProvider>
   );
 }
