@@ -246,41 +246,41 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     if (data && data.length > 0) {
       // Use a traditional for loop to avoid type recursion issues
       for (let i = 0; i < data.length; i++) {
-        // Create a properly typed SupabaseProduct object with explicit typing to avoid recursion
-        const dbProduct = data[i] as any;
+        // Explicitly type as any first to avoid the deep inference problem
+        const rawProduct = data[i] as any;
         
-        // Create a properly typed intermediate object
+        // Create explicitly typed SupabaseProduct object
         const supabaseProduct: SupabaseProduct = {
-          id: dbProduct.id,
-          name: dbProduct.name,
-          slug: dbProduct.slug,
-          description: dbProduct.description || null,
-          price: dbProduct.price,
-          sale_price: dbProduct.sale_price,
-          original_price: dbProduct.original_price,
-          rating: dbProduct.rating,
-          review_count: dbProduct.review_count,
-          image_url: dbProduct.image_url,
-          images: dbProduct.images,
-          in_stock: dbProduct.in_stock,
-          best_seller: dbProduct.best_seller,
-          featured: dbProduct.featured,
-          is_new: dbProduct.is_new,
-          category: dbProduct.category,
-          category_id: dbProduct.category_id,
-          subcategory: dbProduct.subcategory,
-          subcategory_slug: dbProduct.subcategory_slug,
-          specifications: dbProduct.specifications as Json,
-          attributes: dbProduct.attributes as Json,
-          features: dbProduct.features,
-          pros: dbProduct.pros,
-          cons: dbProduct.cons,
-          affiliate_url: dbProduct.affiliate_url,
-          asin: dbProduct.asin,
-          brand: dbProduct.brand,
-          availability: dbProduct.availability,
-          created_at: dbProduct.created_at,
-          updated_at: dbProduct.updated_at
+          id: rawProduct.id,
+          name: rawProduct.name,
+          slug: rawProduct.slug,
+          description: rawProduct.description || '',
+          price: rawProduct.price,
+          sale_price: rawProduct.sale_price,
+          original_price: rawProduct.original_price,
+          rating: rawProduct.rating,
+          review_count: rawProduct.review_count,
+          image_url: rawProduct.image_url,
+          images: rawProduct.images,
+          in_stock: rawProduct.in_stock,
+          best_seller: rawProduct.best_seller,
+          featured: rawProduct.featured,
+          is_new: rawProduct.is_new,
+          category: rawProduct.category,
+          category_id: rawProduct.category_id,
+          subcategory: rawProduct.subcategory,
+          subcategory_slug: rawProduct.subcategory_slug,
+          specifications: rawProduct.specifications as Json,
+          attributes: rawProduct.attributes as Json,
+          features: rawProduct.features,
+          pros: rawProduct.pros,
+          cons: rawProduct.cons,
+          affiliate_url: rawProduct.affiliate_url,
+          asin: rawProduct.asin,
+          brand: rawProduct.brand,
+          availability: rawProduct.availability,
+          created_at: rawProduct.created_at,
+          updated_at: rawProduct.updated_at
         };
         
         // Now map to Product type
