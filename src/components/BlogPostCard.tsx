@@ -1,30 +1,22 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BlogPost } from '@/services/blog';
 
 interface BlogPostCardProps {
-  post: {
-    id: number;
-    slug: string;
-    title: string;
-    excerpt: string;
-    image: string;
-    category: string;
-    date: string;
-    readTime: string;
-    author?: string;
-  };
+  post: BlogPost;
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   const isMobile = useIsMobile();
+  const readTime = post.readTime || `${Math.ceil(post.content.length / 1000)} min read`;
   
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md transition transform hover:shadow-xl h-full flex flex-col">
       <div className={`${isMobile ? 'h-36' : 'h-48'} bg-gray-200 relative overflow-hidden`}>
         <img 
-          src={post.image} 
+          src={post.image || post.coverImage || "https://placehold.co/600x400?text=No+Image"} 
           alt={post.title} 
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
         />
@@ -48,7 +40,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           <div className="flex text-gray-500 justify-between w-full">
             {post.author && <span></span>}
             <span>{post.date}</span>
-            <span>{post.readTime}</span>
+            <span>{readTime}</span>
           </div>
         </div>
       </div>

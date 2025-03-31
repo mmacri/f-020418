@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
@@ -5,12 +6,32 @@ import { getPublishedBlogPosts, BlogPost } from '@/services/blog';
 
 const BlogPostsSection: React.FC = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getPublishedBlogPosts().then((posts) => {
-      setBlogPosts(posts);
-    });
+    const fetchBlogPosts = async () => {
+      setIsLoading(true);
+      try {
+        const posts = await getPublishedBlogPosts();
+        // Get the 3 most recent posts
+        const recentPosts = [...posts].sort((a, b) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }).slice(0, 3);
+        
+        setBlogPosts(recentPosts);
+      } catch (error) {
+        console.error("Error fetching blog posts:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlogPosts();
   }, []);
+
+  if (isLoading || blogPosts.length === 0) {
+    return null; // Don't show the section if there are no posts or still loading
+  }
 
   return (
     <section className="py-16 bg-card">
@@ -24,20 +45,22 @@ const BlogPostsSection: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {blogPosts.map((post) => (
-            <div className="rounded-lg overflow-hidden shadow-md bg-background" key={post.id}>
+          {blogPosts.map(post => (
+            <div key={post.id} className="rounded-lg overflow-hidden shadow-md bg-background">
               <Link to={`/blog/${post.slug}`}>
                 <img 
-                  src={post.image} 
+                  src={post.image || post.coverImage || "https://placehold.co/600x400?text=No+Image"}
                   alt={post.title} 
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-2 text-foreground">{post.title}</h3>
                   <p className="text-muted-foreground mb-4">
-                    {post.description}
+                    {post.excerpt.length > 120 ? post.excerpt.substring(0, 120) + '...' : post.excerpt}
                   </p>
-                  <div className="text-sm text-muted-foreground">{post.date} • {post.readTime} min read</div>
+                  <div className="text-sm text-muted-foreground">
+                    {post.date} • {post.readTime || `${Math.ceil(post.content.length / 1000)} min read`}
+                  </div>
                 </div>
               </Link>
             </div>

@@ -11,6 +11,7 @@ const Blog = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [featuredPost, setFeaturedPost] = useState<BlogPost | null>(null);
 
   useEffect(() => {
     const fetchBlogPosts = async () => {
@@ -18,6 +19,10 @@ const Blog = () => {
       try {
         const posts = await getPublishedBlogPosts();
         setBlogPosts(posts);
+        
+        if (posts.length > 0) {
+          setFeaturedPost(posts[0]);
+        }
       } catch (error) {
         console.error("Error fetching blog posts:", error);
       } finally {
@@ -28,9 +33,11 @@ const Blog = () => {
     fetchBlogPosts();
   }, []);
 
-  // Filter posts based on category and search term
+  const categories = [...new Set(blogPosts.map(post => post.category))];
+
   const filteredPosts = blogPosts.filter(post => {
-    const matchesCategory = activeCategory === "all" || post.category.toLowerCase().replace(/\s+/g, '-') === activeCategory;
+    const matchesCategory = activeCategory === "all" || 
+                          post.category.toLowerCase().replace(/\s+/g, '-') === activeCategory;
     const matchesSearch = searchTerm === "" || 
                          post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
@@ -41,7 +48,6 @@ const Blog = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
-      {/* Hero Section */}
       <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4">Recovery Essentials Blog</h1>
@@ -49,7 +55,6 @@ const Blog = () => {
             Expert advice, tips, and science-backed information to help you optimize your recovery and performance.
           </p>
           
-          {/* Search Bar */}
           <div className="mt-6 max-w-lg mx-auto relative">
             <input 
               type="text" 
@@ -67,7 +72,6 @@ const Blog = () => {
         </div>
       </section>
 
-      {/* Category Navigation */}
       <section className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex overflow-x-auto py-4 -mx-4 px-4 whitespace-nowrap">
@@ -107,7 +111,6 @@ const Blog = () => {
         </div>
       </section>
 
-      {/* Featured Post */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-8">Featured Article</h2>
@@ -146,7 +149,6 @@ const Blog = () => {
         </div>
       </section>
 
-      {/* Blog Posts */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
@@ -167,7 +169,10 @@ const Blog = () => {
           ) : filteredPosts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredPosts.map((post) => (
-                <BlogPostCard key={post.id} post={post} />
+                <BlogPostCard 
+                  key={post.id} 
+                  post={post} 
+                />
               ))}
             </div>
           ) : (
@@ -177,7 +182,6 @@ const Blog = () => {
             </div>
           )}
 
-          {/* Load More Button */}
           <div className="text-center mt-12">
             <button className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
               Load More Articles
@@ -186,7 +190,6 @@ const Blog = () => {
         </div>
       </section>
 
-      {/* Newsletter callout */}
       <section className="py-16 bg-indigo-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Subscribe to Our Newsletter</h2>
