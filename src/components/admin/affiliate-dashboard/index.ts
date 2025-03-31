@@ -9,7 +9,9 @@ import DateRangeSelector from './DateRangeSelector';
 import ClearDataButton from './ClearDataButton';
 import TopProductsTable from './TopProductsTable';
 import TrafficSourcesChart from './TrafficSourcesChart';
-import { ChartDataItem, PeriodType, ChartViewType, AnalyticsSummary } from './types';
+
+// Use 'export type' for TypeScript interfaces/types to fix the isolatedModules error
+export type { ChartDataItem, PeriodType, ChartViewType, AnalyticsSummary } from './types';
 
 export {
   AffiliateDashboard,
@@ -21,10 +23,5 @@ export {
   DateRangeSelector,
   ClearDataButton,
   TopProductsTable,
-  TrafficSourcesChart,
-  // Types
-  ChartDataItem,
-  PeriodType,
-  ChartViewType,
-  AnalyticsSummary
+  TrafficSourcesChart
 };
