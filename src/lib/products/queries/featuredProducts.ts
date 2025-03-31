@@ -8,13 +8,17 @@ import { Product } from '@/services/products/types';
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Cast the query result to a simpler type to avoid deep type inference
-    const { data, error } = await supabase
+    // Use explicit type casting to avoid deep type inference issues
+    const query = supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit) as { data: any[] | null; error: any };
+      .limit(limit);
+    
+    // Execute the query with explicit typing
+    const result = await query;
+    const { data, error } = result as unknown as { data: any[] | null; error: any };
     
     if (error) {
       console.error('Error fetching featured products:', error);
