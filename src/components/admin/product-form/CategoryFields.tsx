@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,13 +8,17 @@ interface CategoryFieldsProps {
   subcategory: string;
   handleCategoryChange: (value: string) => void;
   handleSubcategoryChange: (value: string) => void;
+  categories?: any[];
+  subcategories?: any[];
 }
 
 const CategoryFields = ({
   categoryId,
   subcategory,
   handleCategoryChange,
-  handleSubcategoryChange
+  handleSubcategoryChange,
+  categories: propCategories,
+  subcategories: propSubcategories
 }: CategoryFieldsProps) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -24,6 +27,12 @@ const CategoryFields = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        if (propCategories && propCategories.length > 0) {
+          setCategories(propCategories);
+          setLoading(false);
+          return;
+        }
+        
         const result = await getNavigationCategories();
         setCategories(result);
         setLoading(false);
@@ -34,11 +43,15 @@ const CategoryFields = ({
     };
 
     fetchCategories();
-  }, []);
+  }, [propCategories]);
 
   useEffect(() => {
+    if (propSubcategories && propSubcategories.length > 0) {
+      setSubcategories(propSubcategories);
+      return;
+    }
+    
     if (categoryId && categories.length > 0) {
-      // Find selected category and get its subcategories
       const selectedCategory = categories.find(cat => cat.id.toString() === categoryId.toString());
       if (selectedCategory && selectedCategory.subcategories) {
         setSubcategories(selectedCategory.subcategories);
@@ -48,7 +61,7 @@ const CategoryFields = ({
     } else {
       setSubcategories([]);
     }
-  }, [categoryId, categories]);
+  }, [categoryId, categories, propSubcategories]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
