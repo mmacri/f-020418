@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,11 +26,9 @@ const ImageSettingsPanel: React.FC = () => {
   const { toast } = useToast();
   
   useEffect(() => {
-    // Load current settings
     const useLocal = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
     setUseLocalFallbacks(useLocal);
     
-    // Load current fallback URLs
     setProductFallbackUrl(localStorage.getItem('product_fallback_url') || imageUrls.PRODUCT_DEFAULT);
     setCategoryFallbackUrl(localStorage.getItem('category_fallback_url') || imageUrls.CATEGORY_DEFAULT);
     setBlogFallbackUrl(localStorage.getItem('blog_fallback_url') || 'https://ext.same-assets.com/1001010126/blog-placeholder.jpg');
@@ -39,7 +36,6 @@ const ImageSettingsPanel: React.FC = () => {
   }, []);
   
   const handleSaveSettings = () => {
-    // Save settings to localStorage
     localStorage.setItem(localStorageKeys.USE_LOCAL_FALLBACKS, useLocalFallbacks.toString());
     localStorage.setItem('product_fallback_url', productFallbackUrl);
     localStorage.setItem('category_fallback_url', categoryFallbackUrl);
@@ -54,14 +50,12 @@ const ImageSettingsPanel: React.FC = () => {
   };
   
   const handleResetDefaults = () => {
-    // Reset to defaults
     setUseLocalFallbacks(false);
     setProductFallbackUrl(imageUrls.PRODUCT_DEFAULT);
     setCategoryFallbackUrl(imageUrls.CATEGORY_DEFAULT);
     setBlogFallbackUrl('https://ext.same-assets.com/1001010126/blog-placeholder.jpg');
     setHeroFallbackUrl(imageUrls.HERO_DEFAULT);
     
-    // Save defaults to localStorage
     localStorage.setItem(localStorageKeys.USE_LOCAL_FALLBACKS, 'false');
     localStorage.setItem('product_fallback_url', imageUrls.PRODUCT_DEFAULT);
     localStorage.setItem('category_fallback_url', imageUrls.CATEGORY_DEFAULT);

@@ -1,233 +1,120 @@
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ImageWithFallback } from '@/lib/images';
-import { uploadFile } from '@/lib/file-upload';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { uploadFile } from '@/lib/file-upload';
+import { ImageWithFallback } from '@/lib/images';
 
-interface FileUploadWithPreviewProps {
-  currentImage?: string;
+export interface FileUploadWithPreviewProps {
   onFileChange: (url: string) => void;
-  bucket: 'product-images' | 'category-images' | 'blog-images';
+  currentImage?: string;
+  bucket: string;
   folder?: string;
   maxSize?: number; // in MB
   aspectRatio?: 'square' | 'landscape' | 'portrait';
-  className?: string; // Add missing className prop
+  className?: string; // Add className prop
 }
 
 const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
-  currentImage,
   onFileChange,
+  currentImage,
   bucket,
-  folder,
+  folder = 'uploads',
   maxSize = 2,
-  aspectRatio = 'square'
+  aspectRatio = 'square',
+  className = '',
 }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(currentImage || null);
   const [error, setError] = useState<string | null>(null);
-  const [uploadMethod, setUploadMethod] = useState<'upload' | 'url'>(currentImage ? 'url' : 'upload');
-  const [imageUrl, setImageUrl] = useState<string>(currentImage || '');
-  
+  const [preview, setPreview] = useState<string | null>(currentImage || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setError(null);
-    
     if (!file) return;
-    
-    // Validate file size
-    if (file.size > maxSize * 1024 * 1024) {
-      setError(`File size exceeds the ${maxSize}MB limit`);
-      return;
-    }
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Only image files are allowed');
-      return;
-    }
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-    
-    // Upload file
-    handleUpload(file);
-  };
 
-  const handleUpload = async (file: File) => {
-    setIsUploading(true);
+    // Check file size
+    if (file.size > maxSize * 1024 * 1024) {
+      setError(`File is too large. Maximum size is ${maxSize}MB.`);
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setError('Invalid file type. Please upload an image (JPEG, PNG, GIF, or WEBP).');
+      return;
+    }
+
     setError(null);
-    
+    setIsUploading(true);
+
     try {
+      // Create local preview
+      const localPreview = URL.createObjectURL(file);
+      setPreview(localPreview);
+
+      // Upload to storage
       const { url, error } = await uploadFile(file, {
         bucket,
         folder,
         fileTypes: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
         maxSize: maxSize * 1024 * 1024
       });
-      
+
       if (error) {
         setError(error);
+        URL.revokeObjectURL(localPreview);
+        setPreview(currentImage || null);
         return;
       }
-      
+
+      // Pass the URL back to the parent component
       onFileChange(url);
     } catch (err) {
       console.error('Upload failed:', err);
       setError('Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setImageUrl(e.target.value);
-  };
-
-  const handleUrlSubmit = () => {
-    if (!imageUrl) {
-      setError('Please enter an image URL');
-      return;
-    }
-    
-    // Simple URL validation
-    if (!imageUrl.match(/^https?:\/\/.+\..+/)) {
-      setError('Please enter a valid URL');
-      return;
-    }
-    
-    setPreview(imageUrl);
-    onFileChange(imageUrl);
-  };
-
-  const handleRemove = () => {
-    setPreview(null);
-    setImageUrl('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    onFileChange('');
-  };
-
-  const heightClass = 
-    aspectRatio === 'square' ? 'h-40' : 
-    aspectRatio === 'landscape' ? 'h-32' : 
-    'h-48';
+  const aspectRatioClass = 
+    aspectRatio === 'landscape' ? 'aspect-video' : 
+    aspectRatio === 'portrait' ? 'aspect-[3/4]' : 
+    'aspect-square';
 
   return (
-    <div className="space-y-4">
-      {/* Upload method selection */}
-      <RadioGroup 
-        value={uploadMethod} 
-        onValueChange={(value: 'upload' | 'url') => setUploadMethod(value)}
-        className="flex space-x-4 mb-4"
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="upload" id="upload" />
-          <Label htmlFor="upload">Upload File</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="url" id="url" />
-          <Label htmlFor="url">Image URL</Label>
-        </div>
-      </RadioGroup>
-      
-      {/* Upload file UI */}
-      {uploadMethod === 'upload' && (
-        <div className="space-y-4">
-          {!preview ? (
-            <div 
-              className={`border-2 border-dashed rounded-md flex flex-col items-center justify-center ${heightClass} p-4 hover:bg-gray-50 cursor-pointer`}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="h-10 w-10 text-gray-400 mb-2" />
-              <p className="text-sm text-gray-500">Click to upload an image</p>
-              <p className="text-xs text-gray-400 mt-1">Max size: {maxSize}MB</p>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-            </div>
-          ) : (
-            <div className="relative rounded-md overflow-hidden">
-              <img 
-                src={preview} 
-                alt="Preview" 
-                className={`w-full object-cover ${heightClass}`}
-              />
-              <Button
-                size="icon"
-                variant="destructive"
-                className="absolute top-2 right-2 h-7 w-7 rounded-full"
-                onClick={handleRemove}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+    <div className={`space-y-4 ${className}`}>
+      <div className="space-y-2">
+        <Label htmlFor="image-upload">Upload Image</Label>
+        <Input
+          ref={fileInputRef}
+          id="image-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          disabled={isUploading}
+        />
+        {error && <p className="text-sm text-red-500">{error}</p>}
+      </div>
+
+      {preview && (
+        <div className={`relative rounded-md overflow-hidden border bg-gray-50 ${aspectRatioClass}`}>
+          <ImageWithFallback
+            src={preview}
+            alt="Preview"
+            className="w-full h-full object-contain"
+          />
         </div>
       )}
-      
-      {/* URL input UI */}
-      {uploadMethod === 'url' && (
-        <div className="space-y-4">
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              placeholder="https://example.com/image.jpg"
-              value={imageUrl}
-              onChange={handleUrlChange}
-              className="flex-grow"
-            />
-            <Button onClick={handleUrlSubmit}>
-              Apply
-            </Button>
-          </div>
-          
-          {preview && (
-            <div className="relative rounded-md overflow-hidden">
-              <ImageWithFallback 
-                src={preview} 
-                alt="Preview" 
-                className={`w-full object-cover ${heightClass}`}
-              />
-              <Button
-                size="icon"
-                variant="destructive"
-                className="absolute top-2 right-2 h-7 w-7 rounded-full"
-                onClick={handleRemove}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Error message */}
-      {error && (
-        <p className="text-sm text-red-500 mt-2">{error}</p>
-      )}
-      
-      {/* Loading state */}
-      {isUploading && (
-        <div className="flex items-center justify-center py-2">
-          <div className="animate-spin h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full mr-2"></div>
-          <span className="text-sm text-gray-600">Uploading...</span>
-        </div>
-      )}
+
+      {isUploading && <p className="text-sm text-blue-500">Uploading...</p>}
     </div>
   );
 };
