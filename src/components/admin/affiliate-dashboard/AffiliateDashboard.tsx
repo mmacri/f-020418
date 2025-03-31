@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AffiliateStats from './AffiliateStats';
 import DashboardHeader from './DashboardHeader';
@@ -292,7 +293,7 @@ const AffiliateDashboard: React.FC = () => {
     let newTimeframe: 'week' | 'month' | 'all' = 'week';
     if (period === '7d') newTimeframe = 'week';
     else if (period === '30d') newTimeframe = 'month';
-    else newTimeframe = 'all';
+    else newTimeframe = 'all'; // This will handle both '90d' and 'all' periods
     
     setTimeframe(newTimeframe);
   };
