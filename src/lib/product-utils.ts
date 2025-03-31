@@ -203,11 +203,13 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
     if (productsData && productsData.length > 0) {
       for (let i = 0; i < productsData.length; i++) {
         const product = productsData[i];
-        const mappedProduct = mapSupabaseProductToProduct({
+        // Create a temporary variable with explicit type casting
+        const tempProduct: SupabaseProduct = {
           ...product,
           specifications: product.specifications as Json,
           attributes: product.attributes as Json
-        });
+        };
+        const mappedProduct = mapSupabaseProductToProduct(tempProduct);
         result.push(mappedProduct);
       }
     }
