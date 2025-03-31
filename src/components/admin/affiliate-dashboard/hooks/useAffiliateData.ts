@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChartDataItem } from '../types';
-import { calculateTotals } from '../utils';
+import { calculateTotals } from '../utils/calculators';
 import { processChartData, processSourceData, processTopProducts } from '../utils/dataProcessors';
 
 interface UseAffiliateDataProps {
