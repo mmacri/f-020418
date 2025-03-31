@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -20,13 +19,13 @@ const ClicksChart: React.FC<ClicksChartProps> = ({
   formatCurrency 
 }) => {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <div className="h-full">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <CardTitle>Affiliate Clicks Over Time</CardTitle>
-          <CardDescription>
+          <h3 className="text-lg font-medium">Affiliate Clicks Over Time</h3>
+          <p className="text-sm text-muted-foreground">
             Track how your affiliate links are performing
-          </CardDescription>
+          </p>
         </div>
         <div className="flex items-center space-x-2">
           <Select
@@ -43,8 +42,9 @@ const ClicksChart: React.FC<ClicksChartProps> = ({
             </SelectContent>
           </Select>
         </div>
-      </CardHeader>
-      <CardContent className="h-80">
+      </div>
+      
+      <div className="h-[calc(100%-60px)]">
         <ChartContainer 
           config={{
             clicks: {
@@ -85,8 +85,8 @@ const ClicksChart: React.FC<ClicksChartProps> = ({
             )}
           </LineChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
