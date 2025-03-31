@@ -44,8 +44,7 @@ export const generateSeoSuggestions = (post: BlogPost): { title: string; descrip
 };
 
 // Analyze readability of a blog post
-export const analyzeReadability = (post: BlogPost): { score: number; feedback: string[] } => {
-  const content = post.content || '';
+export const analyzeReadability = (content: string): { score: number; feedback: string[] } => {
   const words = content.split(/\s+/).length;
   const sentences = content.split(/[.!?]+/).length;
   const paragraphs = content.split(/\n\s*\n/).length;
@@ -78,18 +77,6 @@ export const analyzeReadability = (post: BlogPost): { score: number; feedback: s
   if (sentencesPerParagraph > 7) {
     feedback.push('Paragraphs are long. Consider breaking into smaller paragraphs for easier reading.');
     score -= 10;
-  }
-  
-  // Image check
-  if (!post.image && !post.coverImage && !post.image_url) {
-    feedback.push('No image found. Adding images can increase engagement and break up text.');
-    score -= 10;
-  }
-  
-  // Category check
-  if (!post.category) {
-    feedback.push('No category assigned. Categorizing your post helps with organization and SEO.');
-    score -= 5;
   }
   
   // Cap score between 0-100

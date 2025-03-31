@@ -55,7 +55,7 @@ const Blog = () => {
     
     // Filter by category
     const matchesCategory = activeCategory === "all" || 
-                          post.category?.toLowerCase().replace(/\s+/g, '-') === activeCategory;
+                          (post.category && post.category.toLowerCase().replace(/\s+/g, '-') === activeCategory);
     
     // Filter by search term
     const matchesSearch = searchTerm === "" || 

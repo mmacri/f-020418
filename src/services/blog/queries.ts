@@ -9,10 +9,7 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
     // Try to get from Supabase first
     const { data: supabasePosts, error } = await supabase
       .from('blog_posts')
-      .select(`
-        *,
-        blog_categories(name, slug)
-      `);
+      .select('*');
     
     if (error) {
       console.error("Error retrieving blog posts from Supabase:", error);
@@ -21,6 +18,18 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
     }
     
     if (supabasePosts && supabasePosts.length > 0) {
+      // Fetch categories to map category_id to category name
+      const { data: categories } = await supabase
+        .from('blog_categories')
+        .select('*');
+
+      const categoryMap = new Map();
+      if (categories) {
+        categories.forEach((cat: any) => {
+          categoryMap.set(cat.id, cat.name);
+        });
+      }
+
       return supabasePosts.map(post => ({
         id: post.id,
         title: post.title,
@@ -28,16 +37,23 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
         excerpt: post.excerpt || "",
         content: post.content || "",
         image: post.image_url || "",
-        category: post.blog_categories ? post.blog_categories.name : "General",
+        image_url: post.image_url || "",
+        category: categoryMap.get(post.category_id) || "General",
         category_id: post.category_id,
         published: post.published,
         author: post.author || "",
+        author_id: post.author_id,
         date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
         featured: post.featured || false,
-        scheduledDate: post.scheduled_for,
+        scheduledDate: post.scheduled_at,
+        scheduled_at: post.scheduled_at,
         createdAt: post.created_at,
-        updatedAt: post.updated_at
+        created_at: post.created_at,
+        updatedAt: post.updated_at,
+        updated_at: post.updated_at,
+        published_at: post.published_at
       }));
     }
     
@@ -59,10 +75,7 @@ export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
     // Try to get from Supabase first
     const { data: supabasePosts, error } = await supabase
       .from('blog_posts')
-      .select(`
-        *,
-        blog_categories(name, slug)
-      `)
+      .select('*')
       .eq('published', true);
     
     if (error) {
@@ -73,6 +86,18 @@ export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
     }
     
     if (supabasePosts && supabasePosts.length > 0) {
+      // Fetch categories to map category_id to category name
+      const { data: categories } = await supabase
+        .from('blog_categories')
+        .select('*');
+
+      const categoryMap = new Map();
+      if (categories) {
+        categories.forEach((cat: any) => {
+          categoryMap.set(cat.id, cat.name);
+        });
+      }
+      
       return supabasePosts.map(post => ({
         id: post.id,
         title: post.title,
@@ -80,15 +105,20 @@ export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
         excerpt: post.excerpt || "",
         content: post.content || "",
         image: post.image_url || "",
-        category: post.blog_categories ? post.blog_categories.name : "General",
+        image_url: post.image_url || "",
+        category: categoryMap.get(post.category_id) || "General",
         category_id: post.category_id,
         published: post.published,
         author: post.author || "",
+        author_id: post.author_id,
         date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
         featured: post.featured || false,
         createdAt: post.created_at,
-        updatedAt: post.updated_at
+        created_at: post.created_at,
+        updatedAt: post.updated_at,
+        updated_at: post.updated_at
       }));
     }
     
@@ -103,15 +133,12 @@ export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
 };
 
 // Get blog post by ID
-export const getBlogPostById = async (id: number | string): Promise<BlogPost | null> => {
+export const getBlogPostById = async (id: string): Promise<BlogPost | null> => {
   try {
     // Try to get from Supabase first
     const { data: post, error } = await supabase
       .from('blog_posts')
-      .select(`
-        *,
-        blog_categories(name, slug)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
     
@@ -119,10 +146,24 @@ export const getBlogPostById = async (id: number | string): Promise<BlogPost | n
       console.error(`Error retrieving blog post with ID ${id} from Supabase:`, error);
       // Fall back to localStorage
       const posts = await getBlogPosts();
-      return posts.find(post => post.id === id) || null;
+      return posts.find(post => String(post.id) === String(id)) || null;
     }
     
     if (post) {
+      // Get the category name
+      let categoryName = "General";
+      if (post.category_id) {
+        const { data: category } = await supabase
+          .from('blog_categories')
+          .select('name')
+          .eq('id', post.category_id)
+          .single();
+        
+        if (category) {
+          categoryName = category.name;
+        }
+      }
+      
       return {
         id: post.id,
         title: post.title,
@@ -130,21 +171,26 @@ export const getBlogPostById = async (id: number | string): Promise<BlogPost | n
         excerpt: post.excerpt || "",
         content: post.content || "",
         image: post.image_url || "",
-        category: post.blog_categories ? post.blog_categories.name : "General",
+        image_url: post.image_url || "",
+        category: categoryName,
         category_id: post.category_id,
         published: post.published,
         author: post.author || "",
+        author_id: post.author_id,
         date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
         featured: post.featured || false,
         createdAt: post.created_at,
-        updatedAt: post.updated_at
+        created_at: post.created_at,
+        updatedAt: post.updated_at,
+        updated_at: post.updated_at
       };
     }
     
     // Fall back to localStorage if no post found in Supabase
     const posts = await getBlogPosts();
-    return posts.find(post => post.id === id) || null;
+    return posts.find(post => String(post.id) === String(id)) || null;
   } catch (error) {
     console.error(`Error retrieving blog post with ID ${id}:`, error);
     return null;
@@ -157,10 +203,7 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
     // Try to get from Supabase first
     const { data: post, error } = await supabase
       .from('blog_posts')
-      .select(`
-        *,
-        blog_categories(name, slug)
-      `)
+      .select('*')
       .eq('slug', slug)
       .single();
     
@@ -172,6 +215,20 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
     }
     
     if (post) {
+      // Get the category name
+      let categoryName = "General";
+      if (post.category_id) {
+        const { data: category } = await supabase
+          .from('blog_categories')
+          .select('name')
+          .eq('id', post.category_id)
+          .single();
+        
+        if (category) {
+          categoryName = category.name;
+        }
+      }
+      
       return {
         id: post.id,
         title: post.title,
@@ -179,15 +236,20 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
         excerpt: post.excerpt || "",
         content: post.content || "",
         image: post.image_url || "",
-        category: post.blog_categories ? post.blog_categories.name : "General",
+        image_url: post.image_url || "",
+        category: categoryName,
         category_id: post.category_id,
         published: post.published,
         author: post.author || "",
+        author_id: post.author_id,
         date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
         featured: post.featured || false,
         createdAt: post.created_at,
-        updatedAt: post.updated_at
+        created_at: post.created_at,
+        updatedAt: post.updated_at,
+        updated_at: post.updated_at
       };
     }
     
@@ -213,7 +275,7 @@ export const searchBlogPosts = async (query: string): Promise<BlogPost[]> => {
       post.title.toLowerCase().includes(searchTerm) || 
       post.excerpt.toLowerCase().includes(searchTerm) ||
       post.content.toLowerCase().includes(searchTerm) ||
-      post.category.toLowerCase().includes(searchTerm) ||
+      (post.category && post.category.toLowerCase().includes(searchTerm)) ||
       (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
     );
   } catch (error) {
@@ -227,13 +289,10 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
   try {
     const { data: scheduledPosts, error } = await supabase
       .from('blog_posts')
-      .select(`
-        *,
-        blog_categories(name, slug)
-      `)
+      .select('*')
       .eq('published', false)
-      .not('scheduled_for', 'is', null)
-      .lt('scheduled_for', new Date().toISOString());
+      .not('scheduled_at', 'is', null)
+      .lt('scheduled_at', new Date().toISOString());
     
     if (error) {
       console.error("Error retrieving scheduled blog posts from Supabase:", error);
@@ -243,12 +302,24 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
       
       return posts.filter(post => 
         !post.published && 
-        post.scheduledDate && 
-        post.scheduledDate <= now
+        (post.scheduledDate || post.scheduled_at) && 
+        (post.scheduledDate <= now || post.scheduled_at <= now)
       );
     }
     
     if (scheduledPosts && scheduledPosts.length > 0) {
+      // Fetch categories to map category_id to category name
+      const { data: categories } = await supabase
+        .from('blog_categories')
+        .select('*');
+
+      const categoryMap = new Map();
+      if (categories) {
+        categories.forEach((cat: any) => {
+          categoryMap.set(cat.id, cat.name);
+        });
+      }
+      
       return scheduledPosts.map(post => ({
         id: post.id,
         title: post.title,
@@ -256,16 +327,22 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
         excerpt: post.excerpt || "",
         content: post.content || "",
         image: post.image_url || "",
-        category: post.blog_categories ? post.blog_categories.name : "General",
+        image_url: post.image_url || "",
+        category: categoryMap.get(post.category_id) || "General",
         category_id: post.category_id,
         published: post.published,
         author: post.author || "",
+        author_id: post.author_id,
         date: post.created_at ? new Date(post.created_at).toLocaleDateString() : "",
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
         featured: post.featured || false,
-        scheduledDate: post.scheduled_for,
+        scheduledDate: post.scheduled_at,
+        scheduled_at: post.scheduled_at,
         createdAt: post.created_at,
-        updatedAt: post.updated_at
+        created_at: post.created_at,
+        updatedAt: post.updated_at,
+        updated_at: post.updated_at
       }));
     }
     
@@ -289,7 +366,7 @@ export const getBlogCategories = async (): Promise<BlogCategory[]> => {
       return [];
     }
     
-    return categories;
+    return categories as BlogCategory[];
   } catch (error) {
     console.error("Error retrieving blog categories:", error);
     return [];

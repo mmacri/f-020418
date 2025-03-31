@@ -11,7 +11,8 @@ export {
   getBlogPostBySlug,
   getPostBySlug,
   searchBlogPosts,
-  getScheduledBlogPosts
+  getScheduledBlogPosts,
+  getBlogCategories
 } from './queries';
 
 // Re-export mutation functions
@@ -22,7 +23,10 @@ export {
   updatePost,
   deleteBlogPost,
   deletePost,
-  publishScheduledPosts
+  publishScheduledPosts,
+  addBlogCategory,
+  updateBlogCategory,
+  deleteBlogCategory
 } from './mutations';
 
 // Re-export analysis functions

@@ -40,17 +40,22 @@ const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({
   const [seoDescription, setSeoDescription] = useState(excerpt.substring(0, 160));
   const [seoKeywords, setSeoKeywords] = useState<string[]>(tags);
   const [readabilityScore, setReadabilityScore] = useState(0);
-  const [readingTime, setReadingTime] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [readabilityFeedback, setReadabilityFeedback] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('seo');
+  const [readingTime, setReadingTime] = useState('');
 
   useEffect(() => {
     // Re-analyze when content changes
     if (content) {
-      const { score, readingTime, suggestions } = analyzeReadability(content);
+      const { score, feedback } = analyzeReadability(content);
       setReadabilityScore(score);
-      setReadingTime(readingTime);
-      setSuggestions(suggestions);
+      setReadabilityFeedback(feedback);
+      
+      // Calculate reading time
+      const wordsPerMinute = 200;
+      const wordCount = content.split(/\s+/).length;
+      const minutes = Math.ceil(wordCount / wordsPerMinute);
+      setReadingTime(`${minutes} min read`);
     }
     
     // Generate SEO suggestions
@@ -60,11 +65,8 @@ const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({
       slug: '',
       excerpt,
       content,
-      image: '',
       category: '',
-      date: '',
       published: false,
-      tags,
       createdAt: '',
       updatedAt: ''
     });
@@ -176,9 +178,9 @@ const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({
             
             <div className="space-y-2">
               <label className="text-sm font-medium">Suggestions</label>
-              {suggestions.length > 0 ? (
+              {readabilityFeedback.length > 0 ? (
                 <div className="space-y-2">
-                  {suggestions.map((suggestion, index) => (
+                  {readabilityFeedback.map((suggestion, index) => (
                     <Alert key={index}>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>{suggestion}</AlertDescription>

@@ -20,9 +20,10 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
         category_id: postInput.category_id,
         published: postInput.published,
         author: postInput.author || '',
+        author_id: postInput.author_id,
         read_time: postInput.read_time || `${Math.ceil((postInput.content?.length || 0) / 1000)} min read`,
         featured: postInput.featured || false,
-        scheduled_for: postInput.scheduledDate || postInput.scheduled_for,
+        scheduled_at: postInput.scheduledDate || postInput.scheduled_at,
         published_at: postInput.published ? now : null,
         seo_title: postInput.seoTitle,
         seo_description: postInput.seoDescription
@@ -69,6 +70,20 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
       return newPost;
     }
     
+    // Get the category name if category_id is provided
+    let categoryName = "General";
+    if (post.category_id) {
+      const { data: category } = await supabase
+        .from('blog_categories')
+        .select('name')
+        .eq('id', post.category_id)
+        .single();
+      
+      if (category) {
+        categoryName = category.name;
+      }
+    }
+    
     return {
       id: post.id,
       title: post.title,
@@ -76,16 +91,22 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
       excerpt: post.excerpt,
       content: post.content,
       image: post.image_url,
-      category: "General", // Will need to be fetched separately if needed
+      image_url: post.image_url,
+      category: categoryName,
       category_id: post.category_id,
       published: post.published,
       author: post.author,
+      author_id: post.author_id,
       date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
       readTime: post.read_time,
+      read_time: post.read_time,
       featured: post.featured,
-      scheduledDate: post.scheduled_for,
+      scheduledDate: post.scheduled_at,
+      scheduled_at: post.scheduled_at,
       createdAt: post.created_at,
-      updatedAt: post.updated_at
+      created_at: post.created_at,
+      updatedAt: post.updated_at,
+      updated_at: post.updated_at
     };
   } catch (error) {
     console.error("Error adding blog post:", error);
@@ -97,7 +118,7 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
 export const createPost = addBlogPost;
 
 // Update an existing blog post
-export const updateBlogPost = async (id: number | string, postInput: Partial<BlogPostInput>): Promise<BlogPost> => {
+export const updateBlogPost = async (id: string, postInput: Partial<BlogPostInput>): Promise<BlogPost> => {
   try {
     // First try to update in Supabase
     const updateData: any = {
@@ -118,10 +139,11 @@ export const updateBlogPost = async (id: number | string, postInput: Partial<Blo
       }
     }
     if (postInput.author !== undefined) updateData.author = postInput.author;
+    if (postInput.author_id !== undefined) updateData.author_id = postInput.author_id;
     if (postInput.read_time !== undefined) updateData.read_time = postInput.read_time;
     if (postInput.featured !== undefined) updateData.featured = postInput.featured;
-    if (postInput.scheduledDate !== undefined || postInput.scheduled_for !== undefined) 
-      updateData.scheduled_for = postInput.scheduledDate || postInput.scheduled_for;
+    if (postInput.scheduledDate !== undefined || postInput.scheduled_at !== undefined) 
+      updateData.scheduled_at = postInput.scheduledDate || postInput.scheduled_at;
     if (postInput.seoTitle !== undefined) updateData.seo_title = postInput.seoTitle;
     if (postInput.seoDescription !== undefined) updateData.seo_description = postInput.seoDescription;
     
@@ -129,10 +151,7 @@ export const updateBlogPost = async (id: number | string, postInput: Partial<Blo
       .from('blog_posts')
       .update(updateData)
       .eq('id', id)
-      .select(`
-        *,
-        blog_categories(name, slug)
-      `)
+      .select('*')
       .single();
     
     if (error) {
@@ -140,7 +159,7 @@ export const updateBlogPost = async (id: number | string, postInput: Partial<Blo
       
       // Fall back to localStorage
       const posts = getBlogPostsFromStorage();
-      const postIndex = posts.findIndex(post => post.id === id);
+      const postIndex = posts.findIndex(post => String(post.id) === String(id));
       
       if (postIndex === -1) {
         throw new Error(`Blog post with ID ${id} not found`);
@@ -158,6 +177,20 @@ export const updateBlogPost = async (id: number | string, postInput: Partial<Blo
       return updatedPost;
     }
     
+    // Get the category name if category_id is provided
+    let categoryName = "General";
+    if (post.category_id) {
+      const { data: category } = await supabase
+        .from('blog_categories')
+        .select('name')
+        .eq('id', post.category_id)
+        .single();
+      
+      if (category) {
+        categoryName = category.name;
+      }
+    }
+    
     return {
       id: post.id,
       title: post.title,
@@ -165,16 +198,22 @@ export const updateBlogPost = async (id: number | string, postInput: Partial<Blo
       excerpt: post.excerpt,
       content: post.content,
       image: post.image_url,
-      category: post.blog_categories ? post.blog_categories.name : "General",
+      image_url: post.image_url,
+      category: categoryName,
       category_id: post.category_id,
       published: post.published,
       author: post.author,
+      author_id: post.author_id,
       date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
       readTime: post.read_time,
+      read_time: post.read_time,
       featured: post.featured,
-      scheduledDate: post.scheduled_for,
+      scheduledDate: post.scheduled_at,
+      scheduled_at: post.scheduled_at,
       createdAt: post.created_at,
-      updatedAt: post.updated_at
+      created_at: post.created_at,
+      updatedAt: post.updated_at,
+      updated_at: post.updated_at
     };
   } catch (error) {
     console.error(`Error updating blog post with ID ${id}:`, error);
@@ -186,7 +225,7 @@ export const updateBlogPost = async (id: number | string, postInput: Partial<Blo
 export const updatePost = updateBlogPost;
 
 // Delete a blog post
-export const deleteBlogPost = async (id: number | string): Promise<void> => {
+export const deleteBlogPost = async (id: string): Promise<void> => {
   try {
     // First try to delete from Supabase
     const { error } = await supabase
@@ -199,7 +238,7 @@ export const deleteBlogPost = async (id: number | string): Promise<void> => {
       
       // Fall back to localStorage
       const posts = getBlogPostsFromStorage();
-      const filteredPosts = posts.filter(post => post.id !== id);
+      const filteredPosts = posts.filter(post => String(post.id) !== String(id));
       
       if (filteredPosts.length === posts.length) {
         throw new Error(`Blog post with ID ${id} not found`);
@@ -230,8 +269,8 @@ export const publishScheduledPosts = async (): Promise<number> => {
         updated_at: now
       })
       .eq('published', false)
-      .not('scheduled_for', 'is', null)
-      .lt('scheduled_for', now)
+      .not('scheduled_at', 'is', null)
+      .lt('scheduled_at', now)
       .select();
     
     if (error) {
@@ -242,7 +281,9 @@ export const publishScheduledPosts = async (): Promise<number> => {
       let publishedCount = 0;
       
       const updatedPosts = posts.map(post => {
-        if (!post.published && post.scheduledDate && post.scheduledDate <= now) {
+        if (!post.published && (post.scheduledDate || post.scheduled_at) && 
+            ((post.scheduledDate && post.scheduledDate <= now) || 
+             (post.scheduled_at && post.scheduled_at <= now))) {
           publishedCount++;
           return {
             ...post,
@@ -285,7 +326,7 @@ export const addBlogCategory = async (category: Partial<BlogCategory>): Promise<
       throw new Error("Failed to add blog category");
     }
     
-    return data;
+    return data as BlogCategory;
   } catch (error) {
     console.error("Error adding blog category:", error);
     throw new Error("Failed to add blog category");
@@ -312,7 +353,7 @@ export const updateBlogCategory = async (id: string, category: Partial<BlogCateg
       throw new Error("Failed to update blog category");
     }
     
-    return data;
+    return data as BlogCategory;
   } catch (error) {
     console.error("Error updating blog category:", error);
     throw new Error("Failed to update blog category");

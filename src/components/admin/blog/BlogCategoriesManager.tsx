@@ -17,8 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Pencil, Trash2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { getBlogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } from '@/services/blog';
 import { BlogCategory } from '@/services/blog/types';
+import { getBlogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } from '@/services/blog/mutations';
 
 const BlogCategoriesManager = () => {
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -163,6 +163,7 @@ const BlogCategoriesManager = () => {
   );
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
