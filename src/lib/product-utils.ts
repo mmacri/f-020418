@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product, SupabaseProduct } from '@/services/products/types';
@@ -244,12 +243,13 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     if (data && data.length > 0) {
       for (let i = 0; i < data.length; i++) {
         const product = data[i];
-        // Use a temporary variable to store the mapped product to avoid direct recursion
+        // Create a temporary variable with explicit type casting
         const tempProduct: SupabaseProduct = {
           ...product,
           specifications: product.specifications as Json,
           attributes: product.attributes as Json
         };
+        // Use the explicitly typed variable to avoid recursion
         const mappedProduct = mapSupabaseProductToProduct(tempProduct);
         result.push(mappedProduct);
       }
