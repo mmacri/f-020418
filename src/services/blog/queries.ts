@@ -1,4 +1,3 @@
-
 import { BlogPost, BlogCategory, BlogTag, SupabaseBlogPostRow } from "./types";
 import { getBlogPostsFromStorage } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,11 +62,12 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
       }
 
       return supabasePosts.map(post => {
-        const categoryName = post.category_id && categoryMap.has(post.category_id) 
-          ? categoryMap.get(post.category_id) 
+        const postAsSupabaseBlogPostRow = post as SupabaseBlogPostRow;
+        const categoryName = postAsSupabaseBlogPostRow.category_id && categoryMap.has(postAsSupabaseBlogPostRow.category_id) 
+          ? categoryMap.get(postAsSupabaseBlogPostRow.category_id) 
           : "General";
           
-        return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
+        return mapSupabaseBlogPostToBlogPost(postAsSupabaseBlogPostRow, categoryName);
       });
     }
     
@@ -113,11 +113,12 @@ export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
       }
       
       return supabasePosts.map(post => {
-        const categoryName = post.category_id && categoryMap.has(post.category_id) 
-          ? categoryMap.get(post.category_id) 
+        const postAsSupabaseBlogPostRow = post as SupabaseBlogPostRow;
+        const categoryName = postAsSupabaseBlogPostRow.category_id && categoryMap.has(postAsSupabaseBlogPostRow.category_id) 
+          ? categoryMap.get(postAsSupabaseBlogPostRow.category_id) 
           : "General";
           
-        return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
+        return mapSupabaseBlogPostToBlogPost(postAsSupabaseBlogPostRow, categoryName);
       });
     }
     
@@ -149,13 +150,14 @@ export const getBlogPostById = async (id: string): Promise<BlogPost | null> => {
     }
     
     if (post) {
+      const postAsSupabaseBlogPostRow = post as SupabaseBlogPostRow;
       // Get the category name
       let categoryName = "General";
-      if (post.category_id) {
+      if (postAsSupabaseBlogPostRow.category_id) {
         const { data: category } = await supabase
           .from('categories')
           .select('name')
-          .eq('id', post.category_id)
+          .eq('id', postAsSupabaseBlogPostRow.category_id)
           .single();
         
         if (category) {
@@ -163,7 +165,7 @@ export const getBlogPostById = async (id: string): Promise<BlogPost | null> => {
         }
       }
       
-      return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
+      return mapSupabaseBlogPostToBlogPost(postAsSupabaseBlogPostRow, categoryName);
     }
     
     // Fall back to localStorage if no post found in Supabase
@@ -193,13 +195,14 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
     }
     
     if (post) {
+      const postAsSupabaseBlogPostRow = post as SupabaseBlogPostRow;
       // Get the category name
       let categoryName = "General";
-      if (post.category_id) {
+      if (postAsSupabaseBlogPostRow.category_id) {
         const { data: category } = await supabase
           .from('categories')
           .select('name')
-          .eq('id', post.category_id)
+          .eq('id', postAsSupabaseBlogPostRow.category_id)
           .single();
         
         if (category) {
@@ -207,7 +210,7 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
         }
       }
       
-      return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
+      return mapSupabaseBlogPostToBlogPost(postAsSupabaseBlogPostRow, categoryName);
     }
     
     // Fall back to localStorage if no post found in Supabase
@@ -279,11 +282,12 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
       }
       
       return scheduledPosts.map(post => {
-        const categoryName = post.category_id && categoryMap.has(post.category_id) 
-          ? categoryMap.get(post.category_id) 
+        const postAsSupabaseBlogPostRow = post as SupabaseBlogPostRow;
+        const categoryName = postAsSupabaseBlogPostRow.category_id && categoryMap.has(postAsSupabaseBlogPostRow.category_id) 
+          ? categoryMap.get(postAsSupabaseBlogPostRow.category_id) 
           : "General";
           
-        return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
+        return mapSupabaseBlogPostToBlogPost(postAsSupabaseBlogPostRow, categoryName);
       });
     }
     
