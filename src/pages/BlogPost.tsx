@@ -6,6 +6,80 @@ import Footer from "@/components/Footer";
 import VideoSection from "@/components/VideoSection";
 import { getBlogPostBySlug, BlogPost } from "@/services/blog";
 import { Loader2 } from "lucide-react";
+import { ImageWithFallback } from "@/lib/images";
+
+// Helper function to convert Markdown to HTML
+const markdownToHtml = (markdown: string): string => {
+  if (!markdown) return '';
+  
+  let html = markdown;
+  
+  // Convert headings
+  html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+  
+  // Convert bold text
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Convert italic text
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Convert links
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800">$1</a>');
+  
+  // Convert images
+  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="my-4 max-w-full h-auto rounded-lg shadow-sm" />');
+  
+  // Convert bullet lists (handle multi-level)
+  let inList = false;
+  const lines = html.split('\n');
+  
+  for (let i = 0; i < lines.length; i++) {
+    // Bullet list item
+    if (lines[i].match(/^- (.*$)/)) {
+      if (!inList) {
+        lines[i] = '<ul class="list-disc pl-6 my-4">' + lines[i].replace(/^- (.*)$/, '<li>$1</li>');
+        inList = true;
+      } else {
+        lines[i] = lines[i].replace(/^- (.*)$/, '<li>$1</li>');
+      }
+      
+      // Check if the next line is NOT a list item
+      if (i === lines.length - 1 || !lines[i + 1].match(/^- (.*$)/)) {
+        lines[i] += '</ul>';
+        inList = false;
+      }
+    }
+    // Numbered list item
+    else if (lines[i].match(/^\d+\. (.*$)/)) {
+      if (!inList) {
+        lines[i] = '<ol class="list-decimal pl-6 my-4">' + lines[i].replace(/^\d+\. (.*)$/, '<li>$1</li>');
+        inList = true;
+      } else {
+        lines[i] = lines[i].replace(/^\d+\. (.*)$/, '<li>$1</li>');
+      }
+      
+      // Check if the next line is NOT a list item
+      if (i === lines.length - 1 || !lines[i + 1].match(/^\d+\. (.*$)/)) {
+        lines[i] += '</ol>';
+        inList = false;
+      }
+    }
+  }
+  
+  // Convert back to string and handle paragraphs
+  html = lines.join('\n');
+  
+  // Convert paragraphs (any line that doesn't start with a tag)
+  html = html.replace(/^(?!<[a-z][a-z0-9]*>)(.*$)/gm, function(match) {
+    // Skip empty lines
+    if (match.trim() === '') return '';
+    return '<p class="mb-4">' + match + '</p>';
+  });
+  
+  return html;
+};
 
 const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -77,6 +151,8 @@ const BlogPostPage = () => {
 
   // Use the appropriate image URL
   const imageUrl = post.image || post.image_url || post.coverImage || "https://placehold.co/600x400?text=No+Image";
+  // Convert Markdown content to HTML
+  const contentHtml = markdownToHtml(post.content);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -106,7 +182,7 @@ const BlogPostPage = () => {
       {/* Featured Image */}
       <div className="container mx-auto px-4 -mt-8">
         <div className="max-w-3xl mx-auto">
-          <img 
+          <ImageWithFallback 
             src={imageUrl} 
             alt={post.title} 
             className="w-full h-auto rounded-lg shadow-xl"
@@ -118,7 +194,7 @@ const BlogPostPage = () => {
       <article className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
-            <div className="prose lg:prose-xl" dangerouslySetInnerHTML={{ __html: post.content || '' }} />
+            <div className="prose lg:prose-xl" dangerouslySetInnerHTML={{ __html: contentHtml }} />
             
             {/* Author Bio */}
             {post.author && (

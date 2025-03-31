@@ -29,6 +29,8 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Pencil, Trash2, Search, Calendar, FileText, Image } from 'lucide-react';
 import { format } from 'date-fns';
+import RichTextEditor from './blog/RichTextEditor';
+import BlogImageUploader from './blog/BlogImageUploader';
 
 const AdminBlogPosts = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -250,6 +252,21 @@ const AdminBlogPosts = () => {
     }
   };
 
+  const handleContentChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content: value
+    }));
+  };
+
+  const handleImageChange = (imageUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      image: imageUrl,
+      image_url: imageUrl
+    }));
+  };
+
   const filteredPosts = posts.filter(post =>
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -426,14 +443,22 @@ const AdminBlogPosts = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
-                  name="content"
-                  value={formData.content}
-                  onChange={handleInputChange}
-                  rows={8}
-                  required
-                />
+                <div className="border rounded-md p-2 bg-card">
+                  <RichTextEditor
+                    value={formData.content}
+                    onChange={handleContentChange}
+                    rows={12}
+                  />
+                </div>
+                <div className="flex justify-end mt-2">
+                  <BlogImageUploader
+                    onImageChange={handleImageChange}
+                    insertIntoEditor={(url) => {
+                      const imageMarkdown = `![Image](${url})`;
+                      handleContentChange(formData.content + (formData.content.endsWith('\n') ? '' : '\n') + imageMarkdown + '\n');
+                    }}
+                  />
+                </div>
               </div>
             </div>
             
@@ -519,18 +544,27 @@ const AdminBlogPosts = () => {
             
             <div className="space-y-4">
               <h3 className="text-lg font-medium flex items-center">
-                <Image className="mr-2 h-5 w-5" /> Media & Tags
+                <Image className="mr-2 h-5 w-5" /> Featured Image
               </h3>
               
               <div className="space-y-2">
-                <Label htmlFor="image">Featured Image URL</Label>
-                <Input
-                  id="image"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  placeholder="https://example.com/image.jpg"
-                />
+                <Label>Cover Image</Label>
+                <div className="flex flex-col space-y-4">
+                  <BlogImageUploader
+                    currentImage={formData.image || formData.image_url}
+                    onImageChange={handleImageChange}
+                  />
+                  
+                  {(formData.image || formData.image_url) && (
+                    <div className="aspect-video bg-muted/20 rounded-md overflow-hidden border">
+                      <ImageWithFallback
+                        src={formData.image || formData.image_url || ''}
+                        alt="Featured image"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="space-y-2">

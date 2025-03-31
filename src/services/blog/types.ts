@@ -88,12 +88,12 @@ export interface SupabaseBlogPostRow {
   excerpt: string;
   image_url: string;
   author_id: string;
+  category_id: string;
   published: boolean;
   published_at: string;
   scheduled_at: string;
   created_at: string;
   updated_at: string;
-  category_id: string;
   read_time: string;
   featured: boolean;
   seo_title: string;
