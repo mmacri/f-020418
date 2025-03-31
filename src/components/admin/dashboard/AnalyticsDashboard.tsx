@@ -24,14 +24,12 @@ import {
 import {
   Calendar
 } from "@/components/ui/calendar";
+import { DateRange } from "react-day-picker";
 
 const AnalyticsDashboard: React.FC = () => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [clearPeriod, setClearPeriod] = useState<'current' | 'all'>('current');
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined,
   });
@@ -58,15 +56,16 @@ const AnalyticsDashboard: React.FC = () => {
   const handleExportData = () => {
     try {
       // Create a simple CSV of the date range
-      const fileName = `analytics-export-${new Date().toISOString().split('T')[0]}`;
+      const baseFileName = `analytics-export-${new Date().toISOString().split('T')[0]}`;
+      let downloadFileName = baseFileName;
       
       let dateRangeText = '';
       if (dateRange.from && dateRange.to) {
         dateRangeText = `(${format(dateRange.from, 'MMM dd, yyyy')} to ${format(dateRange.to, 'MMM dd, yyyy')})`;
-        fileName += `-${format(dateRange.from, 'yyyy-MM-dd')}-to-${format(dateRange.to, 'yyyy-MM-dd')}`;
+        downloadFileName = `${baseFileName}-${format(dateRange.from, 'yyyy-MM-dd')}-to-${format(dateRange.to, 'yyyy-MM-dd')}`;
       } else {
         dateRangeText = '(All Time)';
-        fileName += '-all-time';
+        downloadFileName = `${baseFileName}-all-time`;
       }
       
       const csvData = [
@@ -83,7 +82,7 @@ const AnalyticsDashboard: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${fileName}.csv`;
+      a.download = `${downloadFileName}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -176,7 +175,7 @@ const AnalyticsDashboard: React.FC = () => {
           <Calendar
             mode="range"
             selected={dateRange}
-            onSelect={setDateRange}
+            onSelect={setDateRange as any}
             className="rounded-md border"
           />
         </CardContent>

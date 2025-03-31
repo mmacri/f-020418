@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { ChartDataItem } from './types';
 
@@ -95,7 +95,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Est. Revenue']} />
+              <RechartsTooltip formatter={(value) => [formatCurrency(Number(value)), 'Est. Revenue']} />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>

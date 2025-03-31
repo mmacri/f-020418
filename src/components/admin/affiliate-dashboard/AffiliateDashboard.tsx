@@ -82,13 +82,16 @@ const AffiliateDashboard: React.FC = () => {
     setIsAlertOpen(true);
   };
   
-  const confirmClearData = () => {
-    clearAnalyticsData();
-    loadAnalyticsData();
-    toast(clearPeriod === 'all' 
-        ? 'All analytics data has been cleared successfully.' 
-        : `Analytics data for the ${period === '7d' ? 'last 7 days' : period === '30d' ? 'last 30 days' : 'selected date range'} has been cleared.`);
-    setIsAlertOpen(false);
+  const confirmClearData = async () => {
+    try {
+      await clearAnalyticsData();
+      await loadAnalyticsData();
+      toast(clearPeriod === 'all' 
+          ? 'All analytics data has been cleared successfully.' 
+          : `Analytics data for the ${period === '7d' ? 'last 7 days' : period === '30d' ? 'last 30 days' : 'selected date range'} has been cleared.`);
+    } finally {
+      setIsAlertOpen(false);
+    }
   };
   
   const onExportData = (exportPeriod?: PeriodType | 'custom' | 'all') => {

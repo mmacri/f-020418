@@ -112,8 +112,8 @@ export const handleExportData = (
   dateRange: { from: Date | undefined; to: Date | undefined },
   isCustomDateRange: boolean,
   exportPeriod?: '7d' | '30d' | 'custom' | 'all'
-): void => {
-  if (!analyticsData) return;
+): string | undefined => {
+  if (!analyticsData) return undefined;
   
   try {
     let periodToExport = exportPeriod || period;
