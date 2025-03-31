@@ -73,12 +73,22 @@ export const getProductsBySubcategory = async (categorySlug: string, subcategory
       return [];
     }
     
-    // Map products to our Product type with proper type casting
-    return (products || []).map(product => mapSupabaseProductToProduct({
-      ...product,
-      specifications: product.specifications as Json,
-      attributes: product.attributes as Json
-    }));
+    // Use explicit for loop instead of map to avoid type recursion issues
+    const result: Product[] = [];
+    
+    if (products && products.length > 0) {
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+        const mappedProduct = mapSupabaseProductToProduct({
+          ...product,
+          specifications: product.specifications as Json,
+          attributes: product.attributes as Json
+        });
+        result.push(mappedProduct);
+      }
+    }
+    
+    return result;
   } catch (error) {
     console.error('Error in getProductsBySubcategory:', error);
     return [];
@@ -98,6 +108,10 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
     
     if (error) {
       console.error('Error fetching product by slug:', error);
+      return null;
+    }
+    
+    if (!data) {
       return null;
     }
     
@@ -133,11 +147,22 @@ export const getRelatedProducts = async (product: Product, limit = 4): Promise<P
       return [];
     }
     
-    return (data || []).map(product => mapSupabaseProductToProduct({
-      ...product,
-      specifications: product.specifications as Json,
-      attributes: product.attributes as Json
-    }));
+    // Use explicit for loop instead of map to avoid type recursion issues
+    const result: Product[] = [];
+    
+    if (data && data.length > 0) {
+      for (let i = 0; i < data.length; i++) {
+        const product = data[i];
+        const mappedProduct = mapSupabaseProductToProduct({
+          ...product,
+          specifications: product.specifications as Json,
+          attributes: product.attributes as Json
+        });
+        result.push(mappedProduct);
+      }
+    }
+    
+    return result;
   } catch (error) {
     console.error('Error in getRelatedProducts:', error);
     return [];
@@ -217,11 +242,13 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     if (data && data.length > 0) {
       for (let i = 0; i < data.length; i++) {
         const product = data[i];
-        const mappedProduct = mapSupabaseProductToProduct({
+        // Use a temporary variable to store the mapped product to avoid direct recursion
+        const tempProduct: SupabaseProduct = {
           ...product,
           specifications: product.specifications as Json,
           attributes: product.attributes as Json
-        });
+        };
+        const mappedProduct = mapSupabaseProductToProduct(tempProduct);
         result.push(mappedProduct);
       }
     }
