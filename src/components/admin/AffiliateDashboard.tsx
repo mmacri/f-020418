@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Card,
@@ -117,11 +116,7 @@ const AffiliateDashboard: React.FC = () => {
     } catch (error) {
       console.error("Error loading analytics data:", error);
       setError("Failed to load analytics data");
-      toast({
-        title: "Failed to load analytics data",
-        description: "Please try again later",
-        variant: "destructive"
-      });
+      toast("Failed to load analytics data. Please try again later");
     } finally {
       setIsLoading(false);
     }
@@ -135,12 +130,9 @@ const AffiliateDashboard: React.FC = () => {
   const confirmClearData = () => {
     clearAnalyticsData();
     loadAnalyticsData();
-    toast({
-      title: 'Data Cleared',
-      description: clearPeriod === 'all' 
+    toast(clearPeriod === 'all' 
         ? 'All analytics data has been cleared successfully.' 
-        : `Analytics data for the ${period === '7d' ? 'last 7 days' : period === '30d' ? 'last 30 days' : 'selected date range'} has been cleared.`,
-    });
+        : `Analytics data for the ${period === '7d' ? 'last 7 days' : period === '30d' ? 'last 30 days' : 'selected date range'} has been cleared.`);
     setIsAlertOpen(false);
   };
   
@@ -199,18 +191,26 @@ const AffiliateDashboard: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       
-      toast({
-        title: 'Export Successful',
-        description: `Analytics data has been exported to ${fileName}.csv.`,
-      });
+      toast(`Analytics data has been exported to ${fileName}.csv.`);
     } catch (error) {
       console.error('Error exporting data:', error);
-      toast({
-        title: 'Export Failed',
-        description: 'There was a problem exporting your data.',
-        variant: 'destructive',
-      });
+      toast('There was a problem exporting your data.');
     }
+  };
+  
+  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined }) => {
+    setDateRange(range);
+    setIsCustomDateRange(!!range.from && !!range.to);
+    
+    if (range.from && range.to) {
+      setPeriod('7d'); // Default, will be overridden by custom date range
+    }
+  };
+  
+  const handlePeriodChange = (newPeriod: '7d' | '30d' | 'all') => {
+    setPeriod(newPeriod);
+    setIsCustomDateRange(false);
+    setDateRange({ from: undefined, to: undefined });
   };
   
   const prepareChartData = () => {
@@ -309,23 +309,6 @@ const AffiliateDashboard: React.FC = () => {
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(amount);
-  };
-  
-  // Add the missing handler functions
-  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined }) => {
-    setDateRange(range);
-    setIsCustomDateRange(!!range.from && !!range.to);
-    
-    // If a full range is selected, update the period
-    if (range.from && range.to) {
-      setPeriod('7d'); // Default, will be overridden by custom date range
-    }
-  };
-  
-  const handlePeriodChange = (newPeriod: '7d' | '30d' | 'all') => {
-    setPeriod(newPeriod);
-    setIsCustomDateRange(false);
-    setDateRange({ from: undefined, to: undefined });
   };
   
   if (isLoading) {

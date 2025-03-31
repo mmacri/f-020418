@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AffiliateDashboard from './AffiliateDashboard';
@@ -124,17 +123,14 @@ const AdminDashboard = () => {
         growthRate: clearPeriod === 'all' ? '0%' : '0%'
       });
       
-      toast({
-        description: clearPeriod === 'all' 
+      toast(
+        clearPeriod === 'all' 
           ? 'All general statistics have been cleared.' 
-          : `Statistics for the ${timeframe === 'week' ? 'last week' : timeframe === 'month' ? 'last month' : 'last quarter'} have been cleared.`,
-      });
+          : `Statistics for the ${timeframe === 'week' ? 'last week' : timeframe === 'month' ? 'last month' : 'last quarter'} have been cleared.`
+      );
     } catch (error) {
       console.error('Error clearing stats:', error);
-      toast({
-        description: 'Failed to clear statistics. Please try again.',
-        variant: 'destructive'
-      });
+      toast("Failed to clear statistics. Please try again.");
     } finally {
       setIsClearStatsDialogOpen(false);
     }
@@ -182,15 +178,10 @@ const AdminDashboard = () => {
       a.click();
       document.body.removeChild(a);
       
-      toast({
-        description: `General statistics for ${periodName.toLowerCase()} have been exported successfully.`,
-      });
+      toast(`General statistics for ${periodName.toLowerCase()} have been exported successfully.`);
     } catch (error) {
       console.error('Error exporting general stats:', error);
-      toast({
-        description: 'There was a problem exporting your data.',
-        variant: 'destructive',
-      });
+      toast("There was a problem exporting your data.");
     }
   };
   
