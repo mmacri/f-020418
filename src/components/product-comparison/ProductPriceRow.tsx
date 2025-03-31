@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Product } from '@/services/productService';
-import { formatPrice } from '@/lib/product-utils';
+import { Product } from '@/services/products/types';
+import { formatPrice } from '@/lib/products/formatters';
 import ProductComparisonRow from './ProductComparisonRow';
 
 interface ProductPriceRowProps {
@@ -17,7 +17,7 @@ const ProductPriceRow: React.FC<ProductPriceRowProps> = ({ products, bestProduct
       cellRenderer={(product) => (
         <span className="font-bold text-indigo-600">{formatPrice(product.price)}</span>
       )}
-      bestProductId={bestProductId ? String(bestProductId) : null}
+      bestProductId={bestProductId}
     />
   );
 };

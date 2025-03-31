@@ -50,47 +50,46 @@ const ProductComparisonTable = ({
   };
 
   const specificationKeys = getCommonSpecificationKeys();
-  const bestProduct = highlightBestProduct ? products[0] : null;
+  const bestProductId = highlightBestProduct && products.length > 0 ? String(products[0].id) : null;
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <ProductTableHeader 
           products={products} 
-          bestProduct={bestProduct} 
+          bestProductId={bestProductId} 
         />
         
         <tbody>
           <ProductActionsRow 
             products={products} 
-            formatPrice={formatPrice} 
+            bestProductId={bestProductId} 
           />
           
           <ProductRatingRow 
             products={products} 
-            bestProduct={bestProduct} 
+            bestProductId={bestProductId} 
           />
           
           <ProductPriceRow 
             products={products} 
-            formatPrice={formatPrice} 
-            bestProduct={bestProduct} 
+            bestProductId={bestProductId} 
           />
           
           <ProductFeaturesRow 
             products={products} 
-            bestProduct={bestProduct} 
+            bestProductId={bestProductId} 
           />
           
           <ProductSpecsRows 
             products={products}
-            specificationKeys={specificationKeys} 
-            bestProduct={bestProduct} 
+            visibleSpecKeys={specificationKeys} 
+            bestProductId={bestProductId} 
           />
           
           <ProductProsRow 
             products={products} 
-            bestProduct={bestProduct} 
+            bestProductId={bestProductId} 
           />
         </tbody>
       </table>

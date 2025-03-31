@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { Product, getProducts } from '@/services/productService';
-import { getProductsByCategory } from '@/lib/product-utils';
+import { Product } from '@/services/products/types';
+import { getProducts } from '@/services/products';
+import { getProductsByCategory } from '@/lib/products';
 import { getCategoryBySlug } from '@/services/categoryService';
 
 interface UseProductComparisonProps {

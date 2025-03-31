@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Minus } from 'lucide-react';
-import { Product } from '@/services/productService';
+import { Product } from '@/services/products/types';
 import ProductComparisonRow from './ProductComparisonRow';
 
 interface ProductSpecsRowsProps {
