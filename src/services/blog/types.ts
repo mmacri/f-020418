@@ -88,7 +88,7 @@ export interface SupabaseBlogPostRow {
   excerpt: string;
   image_url: string;
   author_id: string;
-  category_id: string;  // This property is now properly included
+  category_id: string;  // This is properly included
   published: boolean;
   published_at: string;
   scheduled_at: string;
