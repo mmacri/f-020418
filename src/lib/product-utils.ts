@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
-import { Product } from '@/services/products/types';
+import { Product, SupabaseProduct } from '@/services/products/types';
 import { Json } from '@/integrations/supabase/types';
 
 /**
@@ -173,7 +172,7 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
     }
     
     // Map products to our Product type
-    return products.map(product => mapSupabaseProductToProduct({
+    return products.map((product: any) => mapSupabaseProductToProduct({
       ...product,
       specifications: product.specifications as Json,
       attributes: product.attributes as Json
@@ -201,7 +200,7 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       return [];
     }
     
-    return data.map(product => mapSupabaseProductToProduct({
+    return data.map((product: any) => mapSupabaseProductToProduct({
       ...product,
       specifications: product.specifications as Json,
       attributes: product.attributes as Json

@@ -91,7 +91,7 @@ const CategoryFields = ({
             </Button>
           </div>
           <Select
-            value={categoryId ? categoryId.toString() : "0"}
+            value={categoryId ? categoryId.toString() : "no-category"}
             onValueChange={handleCategoryChange}
             disabled={loading}
           >
@@ -99,7 +99,7 @@ const CategoryFields = ({
               <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0">None</SelectItem>
+              <SelectItem value="no-category">None</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
