@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product, SupabaseProduct } from '@/services/products/types';
@@ -226,13 +227,15 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Use a simple untyped fetch to break the type inference chain
-    const { data, error } = await supabase
+    // Break type inference using an explicit any cast
+    const response = await supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit) as { data: any[], error: any };
+      .limit(limit);
+    
+    const { data, error } = response;
     
     if (error) {
       console.error('Error fetching featured products:', error);
@@ -243,16 +246,50 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       return [];
     }
     
-    // Process each product individually using a simple for loop
+    // Use a simpler approach with manually created objects
     const result: Product[] = [];
     
-    for (let i = 0; i < data.length; i++) {
+    for (const item of data) {
       try {
-        // Create an intermediate product object with explicit type casting
+        // Create a completely new object with explicit typing to break any type reference chains
+        const rawProduct = {
+          id: item.id,
+          name: item.name,
+          slug: item.slug,
+          description: item.description,
+          price: item.price,
+          sale_price: item.sale_price,
+          original_price: item.original_price,
+          rating: item.rating,
+          review_count: item.review_count,
+          image_url: item.image_url,
+          images: item.images,
+          in_stock: item.in_stock,
+          best_seller: item.best_seller,
+          featured: item.featured,
+          is_new: item.is_new,
+          category: item.category,
+          category_id: item.category_id,
+          subcategory: item.subcategory,
+          subcategory_slug: item.subcategory_slug,
+          specifications: item.specifications,
+          attributes: item.attributes,
+          features: item.features,
+          pros: item.pros,
+          cons: item.cons,
+          affiliate_url: item.affiliate_url,
+          asin: item.asin,
+          brand: item.brand,
+          availability: item.availability,
+          created_at: item.created_at,
+          updated_at: item.updated_at
+        };
+        
+        // Explicitly create a SupabaseProduct with properly typed Json fields
         const supabaseProduct: SupabaseProduct = {
-          ...data[i],
-          specifications: data[i].specifications as Json,
-          attributes: data[i].attributes as Json
+          ...rawProduct,
+          specifications: rawProduct.specifications as Json,
+          attributes: rawProduct.attributes as Json
         };
         
         // Map to the final Product type
