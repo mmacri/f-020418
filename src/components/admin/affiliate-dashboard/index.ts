@@ -8,6 +8,8 @@ import AdvancedAnalytics from './AdvancedAnalytics';
 import DateRangeSelector from './DateRangeSelector';
 import ExportDataButton from './ExportDataButton';
 import ClearDataButton from './ClearDataButton';
+import DashboardHeader from './DashboardHeader';
+import DashboardTabs from './DashboardTabs';
 
 export {
   AffiliateDashboard,
@@ -18,5 +20,10 @@ export {
   AdvancedAnalytics,
   DateRangeSelector,
   ExportDataButton,
-  ClearDataButton
+  ClearDataButton,
+  DashboardHeader,
+  DashboardTabs
 };
+
+export * from './types';
+export * from './utils';
