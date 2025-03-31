@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -20,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Check, Info } from 'lucide-react';
+import { BlogPost } from '@/services/blog/types';
 
 interface SeoAnalyzerProps {
   title: string;
@@ -59,7 +59,7 @@ const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({
     }
     
     // Generate SEO suggestions
-    const { title: suggestedTitle, description, keywords } = generateSeoSuggestions({
+    const tempPost: BlogPost = {
       id: 0,
       title,
       slug: '',
@@ -69,7 +69,9 @@ const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({
       published: false,
       createdAt: '',
       updatedAt: ''
-    });
+    };
+    
+    const { title: suggestedTitle, description, keywords } = generateSeoSuggestions(tempPost);
     
     setSeoTitle(suggestedTitle);
     setSeoDescription(description);

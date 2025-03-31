@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Table, 
@@ -18,7 +17,14 @@ import { Loader2, PlusCircle, Pencil, Trash2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { BlogCategory } from '@/services/blog/types';
-import { getBlogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } from '@/services/blog/mutations';
+import { 
+  getBlogCategories 
+} from '@/services/blog/queries';
+import { 
+  addBlogCategory, 
+  updateBlogCategory, 
+  deleteBlogCategory 
+} from '@/services/blog/mutations';
 
 const BlogCategoriesManager = () => {
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -34,7 +40,6 @@ const BlogCategoriesManager = () => {
   });
   const { toast } = useToast();
 
-  // Fetch categories on component mount
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -88,7 +93,6 @@ const BlogCategoriesManager = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Ensure slug is created if empty
     let categorySlug = formData.slug;
     if (!categorySlug) {
       categorySlug = formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -96,7 +100,6 @@ const BlogCategoriesManager = () => {
     
     try {
       if (editingCategory) {
-        // Update existing category
         await updateBlogCategory(editingCategory.id, {
           name: formData.name,
           slug: categorySlug,
@@ -108,7 +111,6 @@ const BlogCategoriesManager = () => {
           description: `Category "${formData.name}" has been updated.`,
         });
       } else {
-        // Create new category
         await addBlogCategory({
           name: formData.name,
           slug: categorySlug,
@@ -171,7 +173,6 @@ const BlogCategoriesManager = () => {
     });
   };
 
-  // Count posts for each category
   const getCategoryPostCount = async (categoryId: string) => {
     const { count, error } = await supabase
       .from('blog_posts')

@@ -5,11 +5,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlogPostCard from "@/components/BlogPostCard";
 import { 
-  getPublishedBlogPosts, 
-  getBlogCategories,
+  getPublishedBlogPosts,
   BlogPost, 
   BlogCategory 
 } from "@/services/blog";
+import { getBlogCategories } from "@/services/blog/queries";
 import { Loader2 } from "lucide-react";
 
 const Blog = () => {

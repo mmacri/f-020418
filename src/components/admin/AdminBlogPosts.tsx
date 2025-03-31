@@ -1,16 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   getAllPosts, 
   createPost, 
   updatePost, 
   deletePost,
-  getBlogCategories,
   BlogPost,
   BlogPostInput,
   BlogCategory,
   generateSeoSuggestions
 } from '@/services/blog';
+import { getBlogCategories } from '@/services/blog/queries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -61,11 +60,9 @@ const AdminBlogPosts = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch categories first
       const categoriesData = await getBlogCategories();
       setCategories(categoriesData);
       
-      // Then fetch posts
       const postsData = await getAllPosts();
       setPosts(postsData);
     } catch (error) {
@@ -118,7 +115,6 @@ const AdminBlogPosts = () => {
     setEditingPost(null);
     const today = new Date().toISOString().split('T')[0];
     
-    // Default to first category if available
     const defaultCategoryId = categories.length > 0 ? categories[0].id : '';
     const defaultCategoryName = categories.length > 0 ? categories[0].name : 'General';
     
@@ -152,7 +148,7 @@ const AdminBlogPosts = () => {
       tags: post.tags || [],
       date: post.date || new Date().toISOString().split('T')[0],
       author: post.author || 'Admin',
-      scheduledDate: post.scheduledDate || post.scheduled_for || '',
+      scheduledDate: post.scheduledDate || post.scheduled_at || '',
       featured: post.featured || false
     });
     setIsDialogOpen(true);
@@ -167,7 +163,6 @@ const AdminBlogPosts = () => {
       return;
     }
 
-    // Create a temporary post object for the SEO generator
     const tempPost = {
       ...formData,
       id: 0,
@@ -196,7 +191,6 @@ const AdminBlogPosts = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Ensure slug is created if empty
     let postSlug = formData.slug;
     if (!postSlug) {
       postSlug = formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -209,7 +203,7 @@ const AdminBlogPosts = () => {
       };
       
       if (editingPost) {
-        await updatePost(editingPost.id, postData);
+        await updatePost(String(editingPost.id), postData);
         toast({
           title: 'Success',
           description: `Post "${formData.title}" has been updated.`,
@@ -239,7 +233,7 @@ const AdminBlogPosts = () => {
   const handleDeletePost = async (post: BlogPost) => {
     if (window.confirm(`Are you sure you want to delete "${post.title}"? This action cannot be undone.`)) {
       try {
-        await deletePost(post.id);
+        await deletePost(String(post.id));
         toast({
           title: 'Success',
           description: `Post "${post.title}" has been deleted.`,
@@ -388,7 +382,6 @@ const AdminBlogPosts = () => {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6 py-4">
-            {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium flex items-center">
                 <FileText className="mr-2 h-5 w-5" /> Basic Information
@@ -444,7 +437,6 @@ const AdminBlogPosts = () => {
               </div>
             </div>
             
-            {/* Publication Details */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium flex items-center">
                 <Calendar className="mr-2 h-5 w-5" /> Publication Details
@@ -525,7 +517,6 @@ const AdminBlogPosts = () => {
               </div>
             </div>
             
-            {/* Image and Tags */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium flex items-center">
                 <Image className="mr-2 h-5 w-5" /> Media & Tags
@@ -554,7 +545,6 @@ const AdminBlogPosts = () => {
               </div>
             </div>
             
-            {/* SEO Section */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">SEO Details</h3>

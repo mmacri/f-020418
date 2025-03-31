@@ -1,4 +1,3 @@
-
 import { BlogPost, BlogPostInput, BlogCategory, BlogTag } from "./types";
 import { getBlogPostsFromStorage, saveBlogPostsToStorage } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,7 +73,7 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
     let categoryName = "General";
     if (post.category_id) {
       const { data: category } = await supabase
-        .from('blog_categories')
+        .from('categories')
         .select('name')
         .eq('id', post.category_id)
         .single();
@@ -95,12 +94,12 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
       category: categoryName,
       category_id: post.category_id,
       published: post.published,
-      author: post.author,
+      author: post.author || '',
       author_id: post.author_id,
       date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
-      readTime: post.read_time,
-      read_time: post.read_time,
-      featured: post.featured,
+      readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+      read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+      featured: post.featured || false,
       scheduledDate: post.scheduled_at,
       scheduled_at: post.scheduled_at,
       createdAt: post.created_at,
@@ -181,7 +180,7 @@ export const updateBlogPost = async (id: string, postInput: Partial<BlogPostInpu
     let categoryName = "General";
     if (post.category_id) {
       const { data: category } = await supabase
-        .from('blog_categories')
+        .from('categories')
         .select('name')
         .eq('id', post.category_id)
         .single();
@@ -312,7 +311,7 @@ export const publishScheduledPosts = async (): Promise<number> => {
 export const addBlogCategory = async (category: Partial<BlogCategory>): Promise<BlogCategory> => {
   try {
     const { data, error } = await supabase
-      .from('blog_categories')
+      .from('categories')
       .insert({
         name: category.name,
         slug: category.slug,
@@ -326,7 +325,14 @@ export const addBlogCategory = async (category: Partial<BlogCategory>): Promise<
       throw new Error("Failed to add blog category");
     }
     
-    return data as BlogCategory;
+    return {
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
   } catch (error) {
     console.error("Error adding blog category:", error);
     throw new Error("Failed to add blog category");
@@ -337,7 +343,7 @@ export const addBlogCategory = async (category: Partial<BlogCategory>): Promise<
 export const updateBlogCategory = async (id: string, category: Partial<BlogCategory>): Promise<BlogCategory> => {
   try {
     const { data, error } = await supabase
-      .from('blog_categories')
+      .from('categories')
       .update({
         name: category.name,
         slug: category.slug,
@@ -353,7 +359,14 @@ export const updateBlogCategory = async (id: string, category: Partial<BlogCateg
       throw new Error("Failed to update blog category");
     }
     
-    return data as BlogCategory;
+    return {
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
   } catch (error) {
     console.error("Error updating blog category:", error);
     throw new Error("Failed to update blog category");
@@ -364,7 +377,7 @@ export const updateBlogCategory = async (id: string, category: Partial<BlogCateg
 export const deleteBlogCategory = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('blog_categories')
+      .from('categories')
       .delete()
       .eq('id', id);
     

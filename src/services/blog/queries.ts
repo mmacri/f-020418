@@ -1,4 +1,3 @@
-
 import { BlogPost, BlogCategory, BlogTag } from "./types";
 import { getBlogPostsFromStorage } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -262,24 +261,24 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
   }
 };
 
-// Alias for getBlogPostBySlug to match the imported function name
+// Alias for getBlogPostBySlug to match the imported function names
 export const getPostBySlug = getBlogPostBySlug;
 
 // Search blog posts
-export const searchBlogPosts = async (query: string): Promise<BlogPost[]> => {
+export const searchBlogPosts = async (searchTerm: string): Promise<BlogPost[]> => {
   try {
     const posts = await getPublishedBlogPosts();
-    const searchTerm = query.toLowerCase().trim();
+    const query = searchTerm.toLowerCase().trim();
     
     return posts.filter(post => 
-      post.title.toLowerCase().includes(searchTerm) || 
-      post.excerpt.toLowerCase().includes(searchTerm) ||
-      post.content.toLowerCase().includes(searchTerm) ||
-      (post.category && post.category.toLowerCase().includes(searchTerm)) ||
-      (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+      post.title.toLowerCase().includes(query) || 
+      post.excerpt.toLowerCase().includes(query) ||
+      post.content.toLowerCase().includes(query) ||
+      (post.category && post.category.toLowerCase().includes(query)) ||
+      (post.tags && post.tags.some(tag => tag.toLowerCase().includes(query)))
     );
   } catch (error) {
-    console.error(`Error searching blog posts for "${query}":`, error);
+    console.error(`Error searching blog posts for "${searchTerm}":`, error);
     return [];
   }
 };
@@ -356,17 +355,24 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
 // Get blog categories
 export const getBlogCategories = async (): Promise<BlogCategory[]> => {
   try {
-    const { data: categories, error } = await supabase
+    const { data, error } = await supabase
       .from('blog_categories')
       .select('*')
       .order('name');
     
     if (error) {
-      console.error("Error retrieving blog categories:", error);
+      console.error("Error retrieving blog categories from Supabase:", error);
       return [];
     }
     
-    return categories as BlogCategory[];
+    return data.map(category => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      created_at: category.created_at,
+      updated_at: category.updated_at
+    })) as BlogCategory[];
   } catch (error) {
     console.error("Error retrieving blog categories:", error);
     return [];
