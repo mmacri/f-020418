@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   Card,
@@ -19,7 +20,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { 
@@ -84,7 +85,6 @@ const AffiliateDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [clearPeriod, setClearPeriod] = useState<'current' | 'all'>('current');
-  const { toast } = useToast();
   
   useEffect(() => {
     loadAnalyticsData();
@@ -150,36 +150,36 @@ const AffiliateDashboard: React.FC = () => {
     try {
       let periodToExport = exportPeriod || period;
       let fileName = `affiliate-analytics-${new Date().toISOString().split('T')[0]}`;
-      let dateRange = '';
+      let dateRangeText = '';
       
       if (exportPeriod) {
         if (exportPeriod === '7d') {
           fileName += '-last-7-days';
-          dateRange = '(Last 7 Days)';
+          dateRangeText = '(Last 7 Days)';
         } else if (exportPeriod === '30d') {
           fileName += '-last-30-days';
-          dateRange = '(Last 30 Days)';
+          dateRangeText = '(Last 30 Days)';
         } else if (exportPeriod === 'custom' && dateRange.from && dateRange.to) {
           fileName += `-${format(dateRange.from, 'yyyy-MM-dd')}-to-${format(dateRange.to, 'yyyy-MM-dd')}`;
-          dateRange = `(${format(dateRange.from, 'MMM dd, yyyy')} to ${format(dateRange.to, 'MMM dd, yyyy')})`;
+          dateRangeText = `(${format(dateRange.from, 'MMM dd, yyyy')} to ${format(dateRange.to, 'MMM dd, yyyy')})`;
         } else if (exportPeriod === 'all') {
           fileName += '-all-time';
-          dateRange = '(All Time)';
+          dateRangeText = '(All Time)';
         }
       } else {
         if (period === '7d') {
-          dateRange = '(Last 7 Days)';
+          dateRangeText = '(Last 7 Days)';
         } else if (period === '30d') {
-          dateRange = '(Last 30 Days)';
+          dateRangeText = '(Last 30 Days)';
         } else if (isCustomDateRange && dateRange.from && dateRange.to) {
-          dateRange = `(${format(dateRange.from, 'MMM dd, yyyy')} to ${format(dateRange.to, 'MMM dd, yyyy')})`;
+          dateRangeText = `(${format(dateRange.from, 'MMM dd, yyyy')} to ${format(dateRange.to, 'MMM dd, yyyy')})`;
         } else {
-          dateRange = '(All Time)';
+          dateRangeText = '(All Time)';
         }
       }
       
       const csvData = [
-        [`Affiliate Analytics Export ${dateRange}`],
+        [`Affiliate Analytics Export ${dateRangeText}`],
         ['Date', 'Clicks', 'Estimated Conversions', 'Estimated Revenue'],
         ...Object.entries(analyticsData.clicksByDay || {}).map(([date, clicks]) => {
           const conversions = clicks * 0.029; // Using average conversion rate
@@ -311,6 +311,23 @@ const AffiliateDashboard: React.FC = () => {
     }).format(amount);
   };
   
+  // Add the missing handler functions
+  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined }) => {
+    setDateRange(range);
+    setIsCustomDateRange(!!range.from && !!range.to);
+    
+    // If a full range is selected, update the period
+    if (range.from && range.to) {
+      setPeriod('7d'); // Default, will be overridden by custom date range
+    }
+  };
+  
+  const handlePeriodChange = (newPeriod: '7d' | '30d' | 'all') => {
+    setPeriod(newPeriod);
+    setIsCustomDateRange(false);
+    setDateRange({ from: undefined, to: undefined });
+  };
+  
   if (isLoading) {
     return (
       <div className="p-6 flex items-center justify-center">
@@ -383,7 +400,7 @@ const AffiliateDashboard: React.FC = () => {
             </PopoverTrigger>
             <PopoverContent align="end" className="w-48">
               <div className="flex flex-col space-y-1">
-                <Button variant="ghost" size="sm" onClick={() => handleExportData('current')} className="justify-start">
+                <Button variant="ghost" size="sm" onClick={() => handleExportData(period)} className="justify-start">
                   Current Period
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleExportData('7d')} className="justify-start">
@@ -518,6 +535,7 @@ const AffiliateDashboard: React.FC = () => {
                 selected={dateRange}
                 onSelect={handleDateRangeChange}
                 numberOfMonths={2}
+                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
