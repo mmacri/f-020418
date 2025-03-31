@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useDashboard } from './DashboardContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,10 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
+
+interface CountResult {
+  count: number;
+}
 
 const GeneralStats: React.FC = () => {
   const { timeframe, setTimeframe, isLoading, setIsLoading } = useDashboard();
@@ -52,58 +56,53 @@ const GeneralStats: React.FC = () => {
       }
       
       // Fetch users
-      const { data: currentUsers, error: usersError } = await supabase
+      const { data: currentUsersData, error: usersError } = await supabase
         .from('profiles')
-        .select('count', { count: 'exact' })
-        .gte('created_at', startDate.toISOString());
+        .select('count', { count: 'exact' });
       
-      const { data: previousUsers } = await supabase
+      const { data: previousUsersData } = await supabase
         .from('profiles')
         .select('count', { count: 'exact' })
         .gte('created_at', previousStartDate.toISOString())
         .lt('created_at', startDate.toISOString());
       
       // Fetch products
-      const { data: currentProducts, error: productsError } = await supabase
+      const { data: currentProductsData, error: productsError } = await supabase
         .from('products')
-        .select('count', { count: 'exact' })
-        .gte('created_at', startDate.toISOString());
+        .select('count', { count: 'exact' });
       
-      const { data: previousProducts } = await supabase
+      const { data: previousProductsData } = await supabase
         .from('products')
         .select('count', { count: 'exact' })
         .gte('created_at', previousStartDate.toISOString())
         .lt('created_at', startDate.toISOString());
       
       // Fetch blog posts
-      const { data: currentBlogPosts, error: blogError } = await supabase
+      const { data: currentBlogPostsData, error: blogError } = await supabase
         .from('blog_posts')
         .select('count', { count: 'exact' })
         .eq('published', true)
         .gte('created_at', startDate.toISOString());
       
-      const { data: previousBlogPosts } = await supabase
+      const { data: previousBlogPostsData } = await supabase
         .from('blog_posts')
         .select('count', { count: 'exact' })
         .eq('published', true)
         .gte('created_at', previousStartDate.toISOString())
         .lt('created_at', startDate.toISOString());
       
+      // Parse count results safely
+      const currentUsers = currentUsersData ? (currentUsersData as unknown as CountResult).count : 0;
+      const previousUsers = previousUsersData ? (previousUsersData as unknown as CountResult).count : 0;
+      const currentProducts = currentProductsData ? (currentProductsData as unknown as CountResult).count : 0;
+      const previousProducts = previousProductsData ? (previousProductsData as unknown as CountResult).count : 0;
+      const currentBlogPosts = currentBlogPostsData ? (currentBlogPostsData as unknown as CountResult).count : 0;
+      const previousBlogPosts = previousBlogPostsData ? (previousBlogPostsData as unknown as CountResult).count : 0;
+      
       // Calculate growth percentages
-      const userGrowth = calculateGrowth(
-        currentUsers?.count || 0,
-        previousUsers?.count || 0
-      );
-      
-      const productGrowth = calculateGrowth(
-        currentProducts?.count || 0,
-        previousProducts?.count || 0
-      );
-      
-      const blogGrowth = calculateGrowth(
-        currentBlogPosts?.count || 0,
-        previousBlogPosts?.count || 0
-      );
+      const userGrowth = calculateGrowth(currentUsers, previousUsers);
+      const productGrowth = calculateGrowth(currentProducts, previousProducts);
+      const blogGrowth = calculateGrowth(currentBlogPosts, previousBlogPosts);
       
       // Get total counts (all time)
       const { data: totalUsersData } = await supabase
@@ -119,10 +118,14 @@ const GeneralStats: React.FC = () => {
         .select('count', { count: 'exact' })
         .eq('published', true);
       
+      const totalUsers = totalUsersData ? (totalUsersData as unknown as CountResult).count : 0;
+      const totalProducts = totalProductsData ? (totalProductsData as unknown as CountResult).count : 0;
+      const totalBlogPosts = totalBlogPostsData ? (totalBlogPostsData as unknown as CountResult).count : 0;
+      
       setStats({
-        totalUsers: totalUsersData?.count || 0,
-        activeProducts: totalProductsData?.count || 0,
-        blogPosts: totalBlogPostsData?.count || 0,
+        totalUsers,
+        activeProducts: totalProducts,
+        blogPosts: totalBlogPosts,
         userGrowth,
         productGrowth,
         blogGrowth

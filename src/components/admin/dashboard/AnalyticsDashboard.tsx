@@ -2,7 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bar, BarChart, Line, LineChart, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { 
+  Bar, BarChart, Line, LineChart, PieChart, Pie, Cell, ResponsiveContainer, 
+  CartesianGrid, XAxis, YAxis, Tooltip 
+} from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

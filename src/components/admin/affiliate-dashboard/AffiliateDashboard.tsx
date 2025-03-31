@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AffiliateStats from './AffiliateStats';
 import DashboardHeader from './DashboardHeader';
@@ -39,7 +38,6 @@ const AffiliateDashboard: React.FC = () => {
   const fetchRealData = async () => {
     setIsLoading(true);
     try {
-      // Determine date range based on timeframe
       const endDate = new Date();
       const startDate = new Date();
       if (timeframe === 'week') {
@@ -50,7 +48,6 @@ const AffiliateDashboard: React.FC = () => {
         startDate.setDate(endDate.getDate() - 90);
       }
 
-      // Fetch analytics events from Supabase
       const { data: eventsData, error } = await supabase
         .from('analytics_events')
         .select('*')
@@ -65,7 +62,6 @@ const AffiliateDashboard: React.FC = () => {
         return;
       }
 
-      // Process data for charts
       const processedChartData = processChartData(eventsData || [], startDate, endDate);
       const processedSourceData = processSourceData(eventsData || []);
       const processedTopProducts = processTopProducts(eventsData || []);
@@ -74,7 +70,6 @@ const AffiliateDashboard: React.FC = () => {
       setSourceData(processedSourceData);
       setTopProducts(processedTopProducts);
       
-      // Calculate totals
       const calculatedTotals = calculateTotals(processedChartData);
       setTotals(calculatedTotals);
     } catch (error) {
@@ -85,12 +80,10 @@ const AffiliateDashboard: React.FC = () => {
     }
   };
 
-  // Process raw events data into chart data format
   const processChartData = (events: any[], startDate: Date, endDate: Date): ChartDataItem[] => {
     const result: ChartDataItem[] = [];
     const dateMap: Record<string, { clicks: number, conversions: number, revenue: number }> = {};
     
-    // Initialize all dates in the range
     const currentDate = new Date(startDate);
     while (currentDate <= endDate) {
       const dateString = currentDate.toISOString().split('T')[0];
@@ -98,20 +91,17 @@ const AffiliateDashboard: React.FC = () => {
       currentDate.setDate(currentDate.getDate() + 1);
     }
     
-    // Populate with actual data
     events.forEach(event => {
       if (!event.data) return;
       
       const date = new Date(event.created_at).toISOString().split('T')[0];
       if (dateMap[date]) {
         dateMap[date].clicks += 1;
-        // Estimate conversions and revenue based on industry averages
-        dateMap[date].conversions += 0.029; // ~2.9% conversion rate
-        dateMap[date].revenue += 1.25; // Average revenue per click
+        dateMap[date].conversions += 0.029;
+        dateMap[date].revenue += 1.25;
       }
     });
     
-    // Convert to array format
     Object.entries(dateMap).forEach(([date, metrics]) => {
       result.push({
         date,
@@ -121,11 +111,9 @@ const AffiliateDashboard: React.FC = () => {
       });
     });
     
-    // Sort by date
     return result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
-  // Process raw events data into source data format
   const processSourceData = (events: any[]): {name: string; value: number}[] => {
     const sourceCounts: Record<string, number> = {};
     
@@ -142,7 +130,6 @@ const AffiliateDashboard: React.FC = () => {
     }));
   };
 
-  // Process raw events data into top products format
   const processTopProducts = (events: any[]): any[] => {
     const productCounts: Record<string, {
       id: string;
@@ -169,8 +156,8 @@ const AffiliateDashboard: React.FC = () => {
       }
       
       productCounts[productId].clicks += 1;
-      productCounts[productId].conversions += 0.029; // ~2.9% conversion rate
-      productCounts[productId].revenue += 1.25; // Average revenue per click
+      productCounts[productId].conversions += 0.029;
+      productCounts[productId].revenue += 1.25;
     });
     
     return Object.values(productCounts)
@@ -191,7 +178,6 @@ const AffiliateDashboard: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Determine date range for data clearing
       let startDate: Date | undefined;
       const endDate = new Date();
       
@@ -202,11 +188,10 @@ const AffiliateDashboard: React.FC = () => {
         } else if (timeframe === 'month') {
           startDate.setDate(endDate.getDate() - 30);
         } else {
-          startDate = undefined; // Clear all data
+          startDate = undefined;
         }
       }
       
-      // Delete real analytics data from Supabase
       let query = supabase
         .from('analytics_events')
         .delete()
@@ -225,7 +210,7 @@ const AffiliateDashboard: React.FC = () => {
         toast.error('Failed to clear analytics data');
       } else {
         toast.success(`${clearPeriod === 'all' ? 'All' : 'Current period'} analytics data cleared successfully`);
-        fetchRealData(); // Refresh data
+        fetchRealData();
       }
     } catch (error) {
       console.error('Error in handleConfirmClear:', error);
@@ -242,10 +227,8 @@ const AffiliateDashboard: React.FC = () => {
       const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
       const filename = `affiliate-data-${exportPeriod}-${timestamp}.csv`;
       
-      // Generate CSV data from current dataset
       const csvData = exportAnalyticsData(chartData, sourceData, topProducts);
       
-      // Create and download file
       const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8' });
       saveAs(blob, filename);
       
@@ -260,16 +243,14 @@ const AffiliateDashboard: React.FC = () => {
     setDateRange(range);
     setIsCustomDateRange(true);
     
-    // If both dates are specified, fetch data for that range
     if (range.from && range.to) {
       fetchCustomDateRangeData(range.from, range.to);
     }
   };
-  
+
   const fetchCustomDateRangeData = async (from: Date, to: Date) => {
     setIsLoading(true);
     try {
-      // Adjust to to the end of the day
       const endDate = new Date(to);
       endDate.setHours(23, 59, 59, 999);
       
@@ -308,11 +289,10 @@ const AffiliateDashboard: React.FC = () => {
     setCurrentPeriod(period);
     setIsCustomDateRange(false);
     
-    // Map period to timeframe
     let newTimeframe: 'week' | 'month' | 'all' = 'week';
     if (period === '7d') newTimeframe = 'week';
     else if (period === '30d') newTimeframe = 'month';
-    else if (period === '90d' || period === 'all') newTimeframe = 'all';
+    else if (period === '90d') newTimeframe = 'all';
     
     setTimeframe(newTimeframe);
   };
@@ -350,8 +330,6 @@ const AffiliateDashboard: React.FC = () => {
           clicksBySource: {}
         }}
         calculateGrowth={(metric) => {
-          // In a real app, we would calculate growth by comparing current period to previous
-          // For now, return a realistic but random growth percentage
           return Math.floor(Math.random() * 10) - 3;
         }}
         formatCurrency={formatCurrency}
