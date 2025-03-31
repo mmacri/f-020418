@@ -1,6 +1,11 @@
 
 import React, { useState } from 'react';
 import { localStorageKeys, imageUrls } from '@/lib/constants';
+import { 
+  getProductImageUrl,
+  getProductImages,
+  createProductImageUrl 
+} from './images/productImageUtils';
 
 interface ImageWithFallbackProps {
   src: string;
@@ -68,4 +73,11 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       onLoad={handleLoad}
     />
   );
+};
+
+// Re-export utility functions
+export { 
+  getProductImageUrl,
+  getProductImages,
+  createProductImageUrl 
 };
