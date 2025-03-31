@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getCategoryBySlug } from '@/services/categoryService';
-import { getProductsByCategory } from '@/services/productApi';
+import { getProductsByCategory } from '@/services/products/productApi';
 import { Product } from '@/services/products/types';
 import ProductCard from '@/components/ProductCard';
 import Breadcrumbs from '@/components/Breadcrumbs';
