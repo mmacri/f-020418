@@ -227,6 +227,40 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
+    // Define type for the raw database result to avoid TypeScript inference issues
+    type ProductRow = {
+      id: string;
+      name: string;
+      slug: string;
+      description?: string;
+      price?: number;
+      sale_price?: number;
+      original_price?: number;
+      rating?: number;
+      review_count?: number;
+      image_url?: string;
+      images?: any[];
+      in_stock?: boolean;
+      best_seller?: boolean;
+      featured?: boolean;
+      is_new?: boolean;
+      category?: string;
+      category_id?: string;
+      subcategory?: string;
+      subcategory_slug?: string;
+      specifications?: Json;
+      attributes?: Json;
+      features?: string[];
+      pros?: string[];
+      cons?: string[];
+      affiliate_url?: string;
+      asin?: string;
+      brand?: string;
+      availability?: boolean;
+      created_at?: string;
+      updated_at?: string;
+    };
+    
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -246,8 +280,8 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     if (data && data.length > 0) {
       // Use a traditional for loop to avoid type recursion issues
       for (let i = 0; i < data.length; i++) {
-        // Explicitly type as any first to avoid the deep inference problem
-        const rawProduct = data[i] as any;
+        // Explicitly cast to our intermediate type to avoid deep type inference
+        const rawProduct = data[i] as unknown as ProductRow;
         
         // Create explicitly typed SupabaseProduct object
         const supabaseProduct: SupabaseProduct = {
