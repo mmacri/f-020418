@@ -1,32 +1,41 @@
 
 import { BlogPost, BlogPostInput } from "./types";
 import { getBlogPostsFromStorage, saveBlogPostsToStorage } from "./utils";
-import { getScheduledBlogPosts } from "./queries";
 
-// Add blog post
-export const addBlogPost = async (post: BlogPostInput): Promise<BlogPost> => {
+// Add a new blog post
+export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> => {
   try {
     const posts = getBlogPostsFromStorage();
-    const now = new Date().toISOString();
     
-    // Set default values for optional fields
+    // Generate a unique ID for the new post
+    const newId = posts.length > 0 
+      ? Math.max(...posts.map(post => typeof post.id === 'number' ? post.id : 0)) + 1 
+      : 1;
+    
     const newPost: BlogPost = {
-      ...post,
-      id: posts.length ? Math.max(...posts.map(p => p.id)) + 1 : 1,
-      category: post.category || "Uncategorized",
-      image: post.image || post.coverImage || "",
-      coverImage: post.coverImage || post.image || "",
-      date: post.date || now.split('T')[0],
-      author: post.author || "Admin",
-      tags: post.tags || [],
-      seoTitle: post.seoTitle || post.title,
-      seoDescription: post.seoDescription || post.excerpt.substring(0, 160),
-      seoKeywords: post.seoKeywords || post.tags || [],
-      createdAt: now,
-      updatedAt: now
+      id: newId,
+      title: postInput.title,
+      slug: postInput.slug,
+      excerpt: postInput.excerpt,
+      content: postInput.content,
+      category: postInput.category || 'General',
+      image: postInput.image || '',
+      coverImage: postInput.coverImage || '',
+      published: postInput.published,
+      author: postInput.author || '',
+      date: postInput.date || new Date().toLocaleDateString(),
+      tags: postInput.tags || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      scheduledDate: postInput.scheduledDate,
+      seoTitle: postInput.seoTitle,
+      seoDescription: postInput.seoDescription,
+      seoKeywords: postInput.seoKeywords,
+      readTime: postInput.readTime
     };
     
-    saveBlogPostsToStorage([...posts, newPost]);
+    posts.push(newPost);
+    saveBlogPostsToStorage(posts);
     
     return newPost;
   } catch (error) {
@@ -38,19 +47,19 @@ export const addBlogPost = async (post: BlogPostInput): Promise<BlogPost> => {
 // Alias for addBlogPost to match the imported function name
 export const createPost = addBlogPost;
 
-// Update blog post
-export const updateBlogPost = async (id: number, postData: Partial<BlogPost>): Promise<BlogPost | null> => {
+// Update an existing blog post
+export const updateBlogPost = async (id: number, postInput: Partial<BlogPostInput>): Promise<BlogPost> => {
   try {
     const posts = getBlogPostsFromStorage();
     const postIndex = posts.findIndex(post => post.id === id);
     
     if (postIndex === -1) {
-      return null;
+      throw new Error(`Blog post with ID ${id} not found`);
     }
     
     const updatedPost = {
       ...posts[postIndex],
-      ...postData,
+      ...postInput,
       updatedAt: new Date().toISOString()
     };
     
@@ -67,18 +76,17 @@ export const updateBlogPost = async (id: number, postData: Partial<BlogPost>): P
 // Alias for updateBlogPost to match the imported function name
 export const updatePost = updateBlogPost;
 
-// Delete blog post
-export const deleteBlogPost = async (id: number): Promise<boolean> => {
+// Delete a blog post
+export const deleteBlogPost = async (id: number): Promise<void> => {
   try {
     const posts = getBlogPostsFromStorage();
     const filteredPosts = posts.filter(post => post.id !== id);
     
     if (filteredPosts.length === posts.length) {
-      return false;
+      throw new Error(`Blog post with ID ${id} not found`);
     }
     
     saveBlogPostsToStorage(filteredPosts);
-    return true;
   } catch (error) {
     console.error(`Error deleting blog post with ID ${id}:`, error);
     throw new Error("Failed to delete blog post");
@@ -88,23 +96,32 @@ export const deleteBlogPost = async (id: number): Promise<boolean> => {
 // Alias for deleteBlogPost to match the imported function name
 export const deletePost = deleteBlogPost;
 
-// Publish scheduled blog posts that are due
+// Publish scheduled posts
 export const publishScheduledPosts = async (): Promise<number> => {
   try {
-    const scheduledPosts = await getScheduledBlogPosts();
+    const posts = getBlogPostsFromStorage();
+    const now = new Date().toISOString();
     let publishedCount = 0;
     
-    for (const post of scheduledPosts) {
-      await updateBlogPost(post.id, { 
-        published: true,
-        date: new Date().toISOString().split('T')[0]
-      });
-      publishedCount++;
+    const updatedPosts = posts.map(post => {
+      if (!post.published && post.scheduledDate && post.scheduledDate <= now) {
+        publishedCount++;
+        return {
+          ...post,
+          published: true,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return post;
+    });
+    
+    if (publishedCount > 0) {
+      saveBlogPostsToStorage(updatedPosts);
     }
     
     return publishedCount;
   } catch (error) {
-    console.error("Error publishing scheduled blog posts:", error);
+    console.error("Error publishing scheduled posts:", error);
     return 0;
   }
 };

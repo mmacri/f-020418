@@ -5,7 +5,17 @@ import { getBlogPostsFromStorage } from "./utils";
 // Get all blog posts
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
   try {
-    return getBlogPostsFromStorage();
+    const posts = getBlogPostsFromStorage();
+    
+    // Ensure posts have all required fields
+    return posts.map(post => ({
+      ...post,
+      excerpt: post.excerpt || "",
+      content: post.content || "",
+      category: post.category || "General",
+      date: post.date || new Date(post.createdAt).toLocaleDateString(),
+      readTime: post.readTime || `${Math.ceil((post.content?.length || 0) / 1000)} min read`
+    }));
   } catch (error) {
     console.error("Error retrieving blog posts:", error);
     return [];

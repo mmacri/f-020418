@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
@@ -21,7 +22,9 @@ const Blog = () => {
         setBlogPosts(posts);
         
         if (posts.length > 0) {
-          setFeaturedPost(posts[0]);
+          // Set the first post as featured or find one marked as featured
+          const featured = posts.find(post => post.attributes?.featured) || posts[0];
+          setFeaturedPost(featured);
         }
       } catch (error) {
         console.error("Error fetching blog posts:", error);
@@ -33,6 +36,7 @@ const Blog = () => {
     fetchBlogPosts();
   }, []);
 
+  // Extract unique categories from all posts
   const categories = [...new Set(blogPosts.map(post => post.category))];
 
   const filteredPosts = blogPosts.filter(post => {
@@ -83,71 +87,66 @@ const Blog = () => {
             >
               All Categories
             </button>
-            <button
-              onClick={() => setActiveCategory("recovery-science")}
-              className={`px-4 py-2 mx-2 rounded-md font-medium ${
-                activeCategory === "recovery-science" ? "bg-indigo-600 text-white" : "text-gray-700 hover:text-indigo-600"
-              }`}
-            >
-              Recovery Science
-            </button>
-            <button
-              onClick={() => setActiveCategory("techniques")}
-              className={`px-4 py-2 mx-2 rounded-md font-medium ${
-                activeCategory === "techniques" ? "bg-indigo-600 text-white" : "text-gray-700 hover:text-indigo-600"
-              }`}
-            >
-              Techniques
-            </button>
-            <button
-              onClick={() => setActiveCategory("running-recovery")}
-              className={`px-4 py-2 mx-2 rounded-md font-medium ${
-                activeCategory === "running-recovery" ? "bg-indigo-600 text-white" : "text-gray-700 hover:text-indigo-600"
-              }`}
-            >
-              Running Recovery
-            </button>
+            
+            {/* Generate category buttons dynamically from available categories */}
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category.toLowerCase().replace(/\s+/g, '-'))}
+                className={`px-4 py-2 mx-2 rounded-md font-medium ${
+                  activeCategory === category.toLowerCase().replace(/\s+/g, '-') 
+                    ? "bg-indigo-600 text-white" 
+                    : "text-gray-700 hover:text-indigo-600"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-8">Featured Article</h2>
+      {featuredPost && (
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-8">Featured Article</h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-3">
-              <Link to="/blog/foam-rolling-guide" className="block overflow-hidden rounded-lg shadow-lg h-full">
-                <img 
-                  src="https://ext.same-assets.com/1001010124/foam-roller-guide.jpg" 
-                  alt="The Ultimate Guide to Foam Rolling for Recovery" 
-                  className="w-full h-80 object-cover"
-                />
-              </Link>
-            </div>
-            <div className="lg:col-span-2 flex flex-col">
-              <div className="mb-4">
-                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Techniques</span>
-                <span className="text-gray-500 text-sm ml-2">July 8, 2023</span>
-              </div>
-              <h3 className="text-2xl font-bold mb-4">
-                <Link to="/blog/foam-rolling-guide" className="text-gray-900 hover:text-indigo-600">
-                  The Ultimate Guide to Foam Rolling for Recovery
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+              <div className="lg:col-span-3">
+                <Link to={`/blog/${featuredPost.slug}`} className="block overflow-hidden rounded-lg shadow-lg h-full">
+                  <img 
+                    src={featuredPost.image || featuredPost.coverImage || "https://placehold.co/600x400?text=No+Image"} 
+                    alt={featuredPost.title} 
+                    className="w-full h-80 object-cover"
+                  />
                 </Link>
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Learn how to effectively use foam rollers to enhance muscle recovery, improve mobility, and prevent injuries.
-              </p>
-              <Link to="/blog/foam-rolling-guide" className="text-indigo-600 hover:text-indigo-800 font-medium mt-auto inline-flex items-center">
-                Read More
-                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                </svg>
-              </Link>
+              </div>
+              <div className="lg:col-span-2 flex flex-col">
+                <div className="mb-4">
+                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                    {featuredPost.category}
+                  </span>
+                  <span className="text-gray-500 text-sm ml-2">{featuredPost.date}</span>
+                </div>
+                <h3 className="text-2xl font-bold mb-4">
+                  <Link to={`/blog/${featuredPost.slug}`} className="text-gray-900 hover:text-indigo-600">
+                    {featuredPost.title}
+                  </Link>
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {featuredPost.excerpt}
+                </p>
+                <Link to={`/blog/${featuredPost.slug}`} className="text-indigo-600 hover:text-indigo-800 font-medium mt-auto inline-flex items-center">
+                  Read More
+                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                  </svg>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -178,15 +177,9 @@ const Blog = () => {
           ) : (
             <div className="text-center py-12">
               <h3 className="text-xl font-medium text-gray-600 mb-4">No articles found</h3>
-              <p className="text-gray-500">Try adjusting your search or category filters</p>
+              <p className="text-gray-500">Try adjusting your search or category filters, or add articles via the admin dashboard</p>
             </div>
           )}
-
-          <div className="text-center mt-12">
-            <button className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-              Load More Articles
-            </button>
-          </div>
         </div>
       </section>
 

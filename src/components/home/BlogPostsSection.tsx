@@ -56,7 +56,9 @@ const BlogPostsSection: React.FC = () => {
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-2 text-foreground">{post.title}</h3>
                   <p className="text-muted-foreground mb-4">
-                    {post.excerpt.length > 120 ? post.excerpt.substring(0, 120) + '...' : post.excerpt}
+                    {post.excerpt && post.excerpt.length > 120 
+                      ? post.excerpt.substring(0, 120) + '...' 
+                      : post.excerpt}
                   </p>
                   <div className="text-sm text-muted-foreground">
                     {post.date} • {post.readTime || `${Math.ceil(post.content.length / 1000)} min read`}

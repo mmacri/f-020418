@@ -10,6 +10,7 @@ interface BlogPostCardProps {
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   const isMobile = useIsMobile();
+  // Calculate read time if not provided
   const readTime = post.readTime || `${Math.ceil(post.content.length / 1000)} min read`;
   
   return (
@@ -20,9 +21,11 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           alt={post.title} 
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
         />
-        <span className="absolute top-4 left-4 bg-indigo-600 text-white text-xs py-1 px-2 rounded-md">
-          {post.category}
-        </span>
+        {post.category && (
+          <span className="absolute top-4 left-4 bg-indigo-600 text-white text-xs py-1 px-2 rounded-md">
+            {post.category}
+          </span>
+        )}
       </div>
       <div className="p-4 md:p-6 flex flex-col flex-grow">
         <h3 className="font-bold text-lg md:text-xl mb-2">
