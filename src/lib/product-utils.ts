@@ -162,7 +162,7 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
     }
     
     // Get products with matching category ID
-    const { data: products, error: productsError } = await supabase
+    const { data: productsData, error: productsError } = await supabase
       .from('products')
       .select('*')
       .eq('category_id', categoryData.id);
@@ -172,17 +172,21 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
       return [];
     }
     
-    // Map products to our Product type using explicit any type to avoid recursive type issues
+    // Use explicit loop with type assertion to avoid type recursion
     const result: Product[] = [];
-    if (products) {
-      for (const product of products) {
-        result.push(mapSupabaseProductToProduct({
+    
+    if (productsData && productsData.length > 0) {
+      for (let i = 0; i < productsData.length; i++) {
+        const product = productsData[i];
+        const mappedProduct = mapSupabaseProductToProduct({
           ...product,
           specifications: product.specifications as Json,
           attributes: product.attributes as Json
-        }));
+        });
+        result.push(mappedProduct);
       }
     }
+    
     return result;
   } catch (error) {
     console.error('Error in getProductsByCategory:', error);
@@ -207,17 +211,21 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       return [];
     }
     
-    // Use explicit loop instead of map to avoid type recursion issues
+    // Use explicit loop with indices to avoid type recursion issues
     const result: Product[] = [];
-    if (data) {
-      for (const product of data) {
-        result.push(mapSupabaseProductToProduct({
+    
+    if (data && data.length > 0) {
+      for (let i = 0; i < data.length; i++) {
+        const product = data[i];
+        const mappedProduct = mapSupabaseProductToProduct({
           ...product,
           specifications: product.specifications as Json,
           attributes: product.attributes as Json
-        }));
+        });
+        result.push(mappedProduct);
       }
     }
+    
     return result;
   } catch (error) {
     console.error('Error in getFeaturedProducts:', error);
