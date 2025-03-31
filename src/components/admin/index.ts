@@ -15,6 +15,7 @@ import EmptyProductsState from './EmptyProductsState';
 import ProductForm from './ProductForm';
 import { DashboardTabs, GeneralStats, AnalyticsDashboard } from './dashboard';
 import { AffiliateDashboard } from './affiliate-dashboard';
+import AdminCategories from './AdminCategories';
 
 export {
   AdminDashboard,
@@ -34,5 +35,6 @@ export {
   DashboardTabs,
   GeneralStats,
   AnalyticsDashboard,
-  AffiliateDashboard
+  AffiliateDashboard,
+  AdminCategories
 };
