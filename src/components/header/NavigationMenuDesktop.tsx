@@ -29,7 +29,7 @@ export const NavigationMenuDesktop = ({ categories }: NavigationMenuDesktopProps
     <NavigationMenu className="hidden md:flex">
       <NavigationMenuList>
         <NavigationMenuItem>
-          <Link to="/" legacyBehavior passHref>
+          <Link to="/">
             <NavigationMenuLink className={cn(
               navigationMenuTriggerStyle(),
               isActive("/") ? "bg-accent text-accent-foreground" : ""
@@ -84,7 +84,7 @@ export const NavigationMenuDesktop = ({ categories }: NavigationMenuDesktopProps
                 </NavigationMenuContent>
               </>
             ) : (
-              <Link to={`/categories/${category.slug}`} legacyBehavior passHref>
+              <Link to={`/categories/${category.slug}`}>
                 <NavigationMenuLink className={cn(
                   navigationMenuTriggerStyle(),
                   isActive(`/categories/${category.slug}`) ? "bg-accent text-accent-foreground" : ""
@@ -97,7 +97,7 @@ export const NavigationMenuDesktop = ({ categories }: NavigationMenuDesktopProps
         ))}
         
         <NavigationMenuItem>
-          <Link to="/blog" legacyBehavior passHref>
+          <Link to="/blog">
             <NavigationMenuLink className={cn(
               navigationMenuTriggerStyle(),
               isActive("/blog") ? "bg-accent text-accent-foreground" : ""

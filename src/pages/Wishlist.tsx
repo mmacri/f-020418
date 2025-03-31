@@ -1,8 +1,9 @@
+
 import React from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Trash2, ShoppingCart } from 'lucide-react';
+import { Trash2, ExternalLink } from 'lucide-react';
 import { useWishlist } from '@/hooks/useWishlist';
 import { Link } from 'react-router-dom';
 import { ImageWithFallback } from '@/lib/images';
@@ -17,22 +18,22 @@ const Wishlist = () => {
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">My Wishlist</h1>
+          <h1 className="text-3xl font-bold mb-6">My Bookmarks</h1>
           
           {isLoading ? (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
               <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading your wishlist...</p>
+              <p className="text-gray-600 dark:text-gray-400">Loading your bookmarks...</p>
             </div>
           ) : wishlistItems.length === 0 ? (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
-              <h2 className="text-xl font-medium mb-4">Your wishlist is empty</h2>
+              <h2 className="text-xl font-medium mb-4">Your bookmarks list is empty</h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Browse our products and add items to your wishlist for easy access later.
+                Browse our products and bookmark items for easy access later.
               </p>
               <Link to="/">
                 <Button>
-                  Continue Shopping
+                  Browse Products
                 </Button>
               </Link>
             </div>
@@ -40,7 +41,7 @@ const Wishlist = () => {
             <>
               <div className="flex justify-between items-center mb-6">
                 <p className="text-gray-600 dark:text-gray-400">
-                  {wishlistItems.length} item{wishlistItems.length !== 1 ? 's' : ''} in your wishlist
+                  {wishlistItems.length} item{wishlistItems.length !== 1 ? 's' : ''} in your bookmarks
                 </p>
                 <Button
                   variant="outline"
@@ -49,7 +50,7 @@ const Wishlist = () => {
                   className="text-sm"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Clear Wishlist
+                  Clear Bookmarks
                 </Button>
               </div>
               
@@ -95,7 +96,7 @@ const Wishlist = () => {
                               }
                               className="bg-amber-500 hover:bg-amber-600"
                             >
-                              <ShoppingCart className="h-4 w-4 mr-2" />
+                              <ExternalLink className="h-4 w-4 mr-2" />
                               View on Amazon
                             </Button>
                           )}

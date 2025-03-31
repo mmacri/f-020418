@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, HeartOff } from 'lucide-react';
+import { Bookmark, BookmarkX } from 'lucide-react';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useAuthentication } from '@/hooks/useAuthentication';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +26,7 @@ const SaveForLater = ({ productId, productName, className, variant = 'outline' }
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      toast.error("Please login to save products to your wishlist");
+      toast.error("Please login to bookmark products");
       navigate('/login', { state: { from: window.location.pathname } });
       return;
     }
@@ -48,13 +48,13 @@ const SaveForLater = ({ productId, productName, className, variant = 'outline' }
     >
       {saved ? (
         <>
-          <HeartOff className="h-4 w-4 mr-2" />
-          Remove from Wishlist
+          <BookmarkX className="h-4 w-4 mr-2" />
+          Remove Bookmark
         </>
       ) : (
         <>
-          <Heart className="h-4 w-4 mr-2" />
-          Save for Later
+          <Bookmark className="h-4 w-4 mr-2" />
+          Bookmark
         </>
       )}
     </Button>
