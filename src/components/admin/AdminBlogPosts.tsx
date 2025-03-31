@@ -31,6 +31,7 @@ import { Loader2, PlusCircle, Pencil, Trash2, Search, Calendar, FileText, Image 
 import { format } from 'date-fns';
 import RichTextEditor from './blog/RichTextEditor';
 import BlogImageUploader from './blog/BlogImageUploader';
+import { ImageWithFallback } from '@/lib/images';
 
 const AdminBlogPosts = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
