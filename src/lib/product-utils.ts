@@ -246,10 +246,10 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     if (data && data.length > 0) {
       // Use a traditional for loop to avoid type recursion issues
       for (let i = 0; i < data.length; i++) {
-        // Cast the database result to any to avoid type errors
+        // Create a properly typed SupabaseProduct object with explicit typing to avoid recursion
         const dbProduct = data[i] as any;
         
-        // Create a properly typed SupabaseProduct object
+        // Create a properly typed intermediate object
         const supabaseProduct: SupabaseProduct = {
           id: dbProduct.id,
           name: dbProduct.name,
