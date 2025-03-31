@@ -16,6 +16,8 @@ import ProductForm from './ProductForm';
 import { DashboardTabs, GeneralStats, AnalyticsDashboard } from './dashboard';
 import { AffiliateDashboard } from './affiliate-dashboard';
 import AdminCategories from './AdminCategories';
+import BlogCategoriesManager from './blog/BlogCategoriesManager';
+import BlogCommentsManager from './blog/BlogCommentsManager';
 
 export {
   AdminDashboard,
@@ -36,5 +38,7 @@ export {
   GeneralStats,
   AnalyticsDashboard,
   AffiliateDashboard,
-  AdminCategories
+  AdminCategories,
+  BlogCategoriesManager,
+  BlogCommentsManager
 };

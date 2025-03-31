@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminBlogPosts from './AdminBlogPosts';
+import BlogCategoriesManager from './blog/BlogCategoriesManager';
+import BlogCommentsManager from './blog/BlogCommentsManager';
 import { Card, CardContent } from '@/components/ui/card';
 
 const AdminBlog = () => {
@@ -23,15 +25,11 @@ const AdminBlog = () => {
             </TabsContent>
             
             <TabsContent value="categories">
-              <div className="py-10 text-center text-muted-foreground">
-                <p>Blog categories management coming soon.</p>
-              </div>
+              <BlogCategoriesManager />
             </TabsContent>
             
             <TabsContent value="comments">
-              <div className="py-10 text-center text-muted-foreground">
-                <p>Blog comments management coming soon.</p>
-              </div>
+              <BlogCommentsManager />
             </TabsContent>
           </Tabs>
         </CardContent>
