@@ -1,16 +1,26 @@
 
 // Re-export everything from the new location for backward compatibility
-export * from './imageUtils';
-export * from './imageErrorHandlers';
+// Re-export specific items from imageUtils to avoid ambiguity
+export { 
+  parseImageUrl,
+  validateImageDimensions,
+  validateImageSize
+} from './imageUtils';
+
+// Export from imageErrorHandlers
+export { 
+  handleImageError,
+  logImageError,
+  generatePlaceholderBackground
+} from './imageErrorHandlers';
+
+// Re-export product image utilities
 export { 
   getProductImageUrl,
   getProductImages,
   createProductImageUrl,
   extractImageUrl
 } from './productImageUtils';
-// Explicitly re-export ImageWithFallback to avoid ambiguity
-export { ImageWithFallback } from './ImageWithFallback';
 
-// Explicitly handle the ambiguity by only exporting one version of handleImageError
-// We'll use the one from imageErrorHandlers.ts as it seems to be the primary implementation
-// export { handleImageError } from './imageErrorHandlers';
+// Explicitly re-export ImageWithFallback
+export { ImageWithFallback } from './ImageWithFallback';
