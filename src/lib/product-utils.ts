@@ -244,45 +244,47 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     
     // Only process if we have data
     if (data && data.length > 0) {
-      // Use a traditional for loop with index to avoid type recursion
+      // Use a traditional for loop to avoid type recursion issues
       for (let i = 0; i < data.length; i++) {
-        const product = data[i] as any;
+        // Explicitly cast each product to avoid deep type inference
+        const dbProduct = data[i];
         
-        // Type casting and explicit typing to avoid deep type inference
-        const mappedProduct = mapSupabaseProductToProduct({
-          id: product.id,
-          name: product.name,
-          slug: product.slug,
-          description: product.description,
-          price: product.price,
-          sale_price: product.sale_price,
-          original_price: product.original_price,
-          rating: product.rating,
-          review_count: product.review_count,
-          image_url: product.image_url,
-          images: product.images,
-          in_stock: product.in_stock,
-          best_seller: product.best_seller,
-          featured: product.featured,
-          is_new: product.is_new,
-          category: product.category,
-          category_id: product.category_id,
-          subcategory: product.subcategory,
-          subcategory_slug: product.subcategory_slug,
-          specifications: product.specifications as Json,
-          attributes: product.attributes as Json,
-          features: product.features,
-          pros: product.pros,
-          cons: product.cons,
-          affiliate_url: product.affiliate_url,
-          asin: product.asin,
-          brand: product.brand,
-          availability: product.availability,
-          created_at: product.created_at,
-          updated_at: product.updated_at
-        });
+        // Create an explicitly typed SupabaseProduct object
+        const supabaseProduct: SupabaseProduct = {
+          id: dbProduct.id,
+          name: dbProduct.name,
+          slug: dbProduct.slug,
+          description: dbProduct.description,
+          price: dbProduct.price,
+          sale_price: dbProduct.sale_price,
+          original_price: dbProduct.original_price,
+          rating: dbProduct.rating,
+          review_count: dbProduct.review_count,
+          image_url: dbProduct.image_url,
+          images: dbProduct.images,
+          in_stock: dbProduct.in_stock,
+          best_seller: dbProduct.best_seller,
+          featured: dbProduct.featured,
+          is_new: dbProduct.is_new,
+          category: dbProduct.category,
+          category_id: dbProduct.category_id,
+          subcategory: dbProduct.subcategory,
+          subcategory_slug: dbProduct.subcategory_slug,
+          specifications: dbProduct.specifications as Json,
+          attributes: dbProduct.attributes as Json,
+          features: dbProduct.features,
+          pros: dbProduct.pros,
+          cons: dbProduct.cons,
+          affiliate_url: dbProduct.affiliate_url,
+          asin: dbProduct.asin,
+          brand: dbProduct.brand,
+          availability: dbProduct.availability,
+          created_at: dbProduct.created_at,
+          updated_at: dbProduct.updated_at
+        };
         
-        // Add to result array
+        // Now map to Product type
+        const mappedProduct = mapSupabaseProductToProduct(supabaseProduct);
         result.push(mappedProduct);
       }
     }
