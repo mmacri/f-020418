@@ -198,19 +198,19 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
       return [];
     }
     
-    // Use explicit loop with type assertion to avoid type recursion
+    // Use explicit loop instead of map to avoid type recursion issues
     const result: Product[] = [];
     
     if (productsData && productsData.length > 0) {
       for (let i = 0; i < productsData.length; i++) {
         const product = productsData[i];
-        // Create a temporary variable with explicit type casting
-        const tempProduct: SupabaseProduct = {
+        // Create a typed intermediate object to avoid recursion
+        const typedProduct: SupabaseProduct = {
           ...product,
           specifications: product.specifications as Json,
           attributes: product.attributes as Json
         };
-        const mappedProduct = mapSupabaseProductToProduct(tempProduct);
+        const mappedProduct = mapSupabaseProductToProduct(typedProduct);
         result.push(mappedProduct);
       }
     }
@@ -239,20 +239,19 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       return [];
     }
     
-    // Use explicit loop with indices to avoid type recursion issues
+    // Use explicit for loop with proper typing to avoid type recursion
     const result: Product[] = [];
     
     if (data && data.length > 0) {
       for (let i = 0; i < data.length; i++) {
-        const product = data[i];
-        // Create a temporary variable with explicit type casting
-        const tempProduct: SupabaseProduct = {
-          ...product,
-          specifications: product.specifications as Json,
-          attributes: product.attributes as Json
+        // Create a typed intermediate variable with explicit type casting
+        const typedProduct: SupabaseProduct = {
+          ...data[i],
+          specifications: data[i].specifications as Json,
+          attributes: data[i].attributes as Json
         };
         // Use the explicitly typed variable to avoid recursion
-        const mappedProduct = mapSupabaseProductToProduct(tempProduct);
+        const mappedProduct = mapSupabaseProductToProduct(typedProduct);
         result.push(mappedProduct);
       }
     }
