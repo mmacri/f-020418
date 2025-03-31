@@ -4,7 +4,8 @@ import { localStorageKeys, imageUrls } from '@/lib/constants';
 import { 
   getProductImageUrl,
   getProductImages,
-  createProductImageUrl 
+  createProductImageUrl,
+  extractImageUrl
 } from './images/productImageUtils';
 
 interface ImageWithFallbackProps {
@@ -79,5 +80,6 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 export { 
   getProductImageUrl,
   getProductImages,
-  createProductImageUrl 
+  createProductImageUrl,
+  extractImageUrl
 };

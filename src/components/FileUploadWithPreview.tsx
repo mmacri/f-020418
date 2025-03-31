@@ -15,6 +15,7 @@ interface FileUploadWithPreviewProps {
   folder?: string;
   maxSize?: number; // in MB
   aspectRatio?: 'square' | 'landscape' | 'portrait';
+  className?: string; // Add missing className prop
 }
 
 const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({

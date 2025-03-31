@@ -7,12 +7,8 @@ export {
   generatePlaceholderBackground 
 } from './imageErrorHandlers';
 export { 
-  parseImageUrl,
-  validateImageDimensions,
-  validateImageSize
-} from './imageUtils';
-export { 
   getProductImageUrl,
   getProductImages,
-  createProductImageUrl
+  createProductImageUrl,
+  extractImageUrl
 } from './productImageUtils';

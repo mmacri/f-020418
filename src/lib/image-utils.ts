@@ -5,6 +5,6 @@ export * from './images';
 export { 
   getProductImageUrl,
   getProductImages,
-  createProductImageUrl 
+  createProductImageUrl,
+  extractImageUrl
 } from './images/productImageUtils';
-export { extractImageUrl } from '@/services/products/mappers';

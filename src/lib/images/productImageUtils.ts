@@ -2,6 +2,24 @@
 import { imageUrls } from '@/lib/constants';
 
 /**
+ * Extracts image URL from various possible sources
+ */
+export const extractImageUrl = (image: any): string => {
+  if (!image) return imageUrls.PRODUCT_DEFAULT;
+  
+  if (typeof image === 'string') return image;
+  
+  if (typeof image === 'object') {
+    if (image.url) return image.url;
+    if (image.src) return image.src;
+    if (image.imageUrl) return image.imageUrl;
+    if (image.path) return image.path;
+  }
+  
+  return imageUrls.PRODUCT_DEFAULT;
+};
+
+/**
  * Gets the product image URL or returns a fallback
  */
 export const getProductImageUrl = (product: any): string => {

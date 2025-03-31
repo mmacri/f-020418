@@ -39,6 +39,40 @@ export const handleImageError = (
 };
 
 /**
+ * Logs image errors for debugging and analytics
+ */
+export const logImageError = (
+  imageUrl: string,
+  errorType: 'load' | 'decode' | 'timeout' | 'unknown' = 'unknown'
+): void => {
+  console.error(`Image error (${errorType}): ${imageUrl}`);
+  
+  // Could implement more advanced error logging here
+  // e.g., sending to an analytics service
+};
+
+/**
+ * Generates a placeholder background with a random color
+ */
+export const generatePlaceholderBackground = (seed?: string): string => {
+  // Generate a deterministic color based on the seed if provided
+  if (seed) {
+    // Simple hash function to generate a number from a string
+    const hashCode = seed.split('').reduce((acc, char) => {
+      return ((acc << 5) - acc) + char.charCodeAt(0);
+    }, 0);
+    
+    // Use the hash to generate HSL color values
+    const hue = Math.abs(hashCode) % 360;
+    return `hsl(${hue}, 70%, 80%)`;
+  }
+  
+  // Random pastel color if no seed is provided
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue}, 70%, 80%)`;
+};
+
+/**
  * Applies object-fit and object-position to ensure the image fits correctly
  */
 export const applyImageFit = (
