@@ -78,3 +78,25 @@ export interface BlogPostTag {
   post_id: string;
   tag_id: string;
 }
+
+// Define the actual Supabase database row structure
+export interface SupabaseBlogPostRow {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  image_url: string;
+  author_id: string;
+  published: boolean;
+  published_at: string;
+  scheduled_at: string;
+  created_at: string;
+  updated_at: string;
+  category_id?: string;
+  read_time?: string;
+  featured?: boolean;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string[];
+}

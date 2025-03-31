@@ -1,7 +1,39 @@
 
-import { BlogPost, BlogCategory, BlogTag } from "./types";
+import { BlogPost, BlogCategory, BlogTag, SupabaseBlogPostRow } from "./types";
 import { getBlogPostsFromStorage } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
+
+// Helper function to map Supabase row to BlogPost
+const mapSupabaseBlogPostToBlogPost = (post: SupabaseBlogPostRow, categoryName: string = "General"): BlogPost => {
+  return {
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt || "",
+    content: post.content || "",
+    image: post.image_url || "",
+    image_url: post.image_url || "",
+    category: categoryName,
+    category_id: post.category_id,
+    published: post.published,
+    author: post.author_id || "",
+    author_id: post.author_id,
+    date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
+    readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+    read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+    featured: post.featured || false,
+    scheduledDate: post.scheduled_at,
+    scheduled_at: post.scheduled_at,
+    createdAt: post.created_at,
+    created_at: post.created_at,
+    updatedAt: post.updated_at,
+    updated_at: post.updated_at,
+    published_at: post.published_at,
+    seoTitle: post.seo_title,
+    seoDescription: post.seo_description,
+    seoKeywords: post.seo_keywords
+  };
+};
 
 // Get all blog posts
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
@@ -30,31 +62,13 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
         });
       }
 
-      return supabasePosts.map(post => ({
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        excerpt: post.excerpt || "",
-        content: post.content || "",
-        image: post.image_url || "",
-        image_url: post.image_url || "",
-        category: post.category_id ? categoryMap.get(post.category_id) || "General" : "General",
-        category_id: post.category_id,
-        published: post.published,
-        author: post.author_id || "",
-        author_id: post.author_id,
-        date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
-        readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        featured: post.featured || false,
-        scheduledDate: post.scheduled_at,
-        scheduled_at: post.scheduled_at,
-        createdAt: post.created_at,
-        created_at: post.created_at,
-        updatedAt: post.updated_at,
-        updated_at: post.updated_at,
-        published_at: post.published_at
-      }));
+      return supabasePosts.map(post => {
+        const categoryName = post.category_id && categoryMap.has(post.category_id) 
+          ? categoryMap.get(post.category_id) 
+          : "General";
+          
+        return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
+      });
     }
     
     // Fall back to localStorage if no posts found in Supabase
@@ -98,28 +112,13 @@ export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
         });
       }
       
-      return supabasePosts.map(post => ({
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        excerpt: post.excerpt || "",
-        content: post.content || "",
-        image: post.image_url || "",
-        image_url: post.image_url || "",
-        category: post.category_id ? categoryMap.get(post.category_id) || "General" : "General",
-        category_id: post.category_id,
-        published: post.published,
-        author: post.author_id || "",
-        author_id: post.author_id,
-        date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
-        readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        featured: post.featured || false,
-        createdAt: post.created_at,
-        created_at: post.created_at,
-        updatedAt: post.updated_at,
-        updated_at: post.updated_at
-      }));
+      return supabasePosts.map(post => {
+        const categoryName = post.category_id && categoryMap.has(post.category_id) 
+          ? categoryMap.get(post.category_id) 
+          : "General";
+          
+        return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
+      });
     }
     
     // Fall back to localStorage if no posts found in Supabase
@@ -164,28 +163,7 @@ export const getBlogPostById = async (id: string): Promise<BlogPost | null> => {
         }
       }
       
-      return {
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        excerpt: post.excerpt || "",
-        content: post.content || "",
-        image: post.image_url || "",
-        image_url: post.image_url || "",
-        category: categoryName,
-        category_id: post.category_id,
-        published: post.published,
-        author: post.author_id || "",
-        author_id: post.author_id,
-        date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
-        readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        featured: post.featured || false,
-        createdAt: post.created_at,
-        created_at: post.created_at,
-        updatedAt: post.updated_at,
-        updated_at: post.updated_at
-      };
+      return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
     }
     
     // Fall back to localStorage if no post found in Supabase
@@ -229,28 +207,7 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
         }
       }
       
-      return {
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        excerpt: post.excerpt || "",
-        content: post.content || "",
-        image: post.image_url || "",
-        image_url: post.image_url || "",
-        category: categoryName,
-        category_id: post.category_id,
-        published: post.published,
-        author: post.author_id || "",
-        author_id: post.author_id,
-        date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
-        readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        featured: post.featured || false,
-        createdAt: post.created_at,
-        created_at: post.created_at,
-        updatedAt: post.updated_at,
-        updated_at: post.updated_at
-      };
+      return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
     }
     
     // Fall back to localStorage if no post found in Supabase
@@ -321,30 +278,13 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
         });
       }
       
-      return scheduledPosts.map(post => ({
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        excerpt: post.excerpt || "",
-        content: post.content || "",
-        image: post.image_url || "",
-        image_url: post.image_url || "",
-        category: post.category_id ? categoryMap.get(post.category_id) || "General" : "General",
-        category_id: post.category_id,
-        published: post.published,
-        author: post.author_id || "",
-        author_id: post.author_id,
-        date: post.created_at ? new Date(post.created_at).toLocaleDateString() : "",
-        readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-        featured: post.featured || false,
-        scheduledDate: post.scheduled_at,
-        scheduled_at: post.scheduled_at,
-        createdAt: post.created_at,
-        created_at: post.created_at,
-        updatedAt: post.updated_at,
-        updated_at: post.updated_at
-      }));
+      return scheduledPosts.map(post => {
+        const categoryName = post.category_id && categoryMap.has(post.category_id) 
+          ? categoryMap.get(post.category_id) 
+          : "General";
+          
+        return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
+      });
     }
     
     return [];
@@ -374,7 +314,7 @@ export const getBlogCategories = async (): Promise<BlogCategory[]> => {
       description: category.description,
       created_at: category.created_at,
       updated_at: category.updated_at
-    })) as BlogCategory[];
+    }));
   } catch (error) {
     console.error("Error retrieving blog categories:", error);
     return [];

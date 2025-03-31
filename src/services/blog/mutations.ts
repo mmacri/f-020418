@@ -1,5 +1,5 @@
 
-import { BlogPost, BlogPostInput, BlogCategory } from "./types";
+import { BlogPost, BlogPostInput, BlogCategory, SupabaseBlogPostRow } from "./types";
 import { getBlogPostsFromStorage, saveBlogPostsToStorage } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -88,34 +88,44 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
       }
     }
     
-    return {
-      id: post.id,
-      title: post.title,
-      slug: post.slug,
-      excerpt: post.excerpt,
-      content: post.content,
-      image: post.image_url,
-      image_url: post.image_url,
-      category: categoryName,
-      category_id: post.category_id,
-      published: post.published,
-      author: post.author_id || '',
-      author_id: post.author_id,
-      date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
-      readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-      read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-      featured: post.featured || false,
-      scheduledDate: post.scheduled_at,
-      scheduled_at: post.scheduled_at,
-      createdAt: post.created_at,
-      created_at: post.created_at,
-      updatedAt: post.updated_at,
-      updated_at: post.updated_at
-    };
+    // Map the Supabase row to our BlogPost interface
+    return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
   } catch (error) {
     console.error("Error adding blog post:", error);
     throw new Error("Failed to add blog post");
   }
+};
+
+// Helper function to map Supabase row to BlogPost
+const mapSupabaseBlogPostToBlogPost = (post: SupabaseBlogPostRow, categoryName: string = "General"): BlogPost => {
+  return {
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
+    image: post.image_url,
+    image_url: post.image_url,
+    category: categoryName,
+    category_id: post.category_id,
+    published: post.published,
+    author: post.author_id || '',
+    author_id: post.author_id,
+    date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
+    readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+    read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+    featured: post.featured || false,
+    scheduledDate: post.scheduled_at,
+    scheduled_at: post.scheduled_at,
+    createdAt: post.created_at,
+    created_at: post.created_at,
+    updatedAt: post.updated_at,
+    updated_at: post.updated_at,
+    published_at: post.published_at,
+    seoTitle: post.seo_title,
+    seoDescription: post.seo_description,
+    seoKeywords: post.seo_keywords
+  };
 };
 
 // Alias for addBlogPost to match the imported function name
@@ -194,30 +204,8 @@ export const updateBlogPost = async (id: string, postInput: Partial<BlogPostInpu
       }
     }
     
-    return {
-      id: post.id,
-      title: post.title,
-      slug: post.slug,
-      excerpt: post.excerpt,
-      content: post.content,
-      image: post.image_url,
-      image_url: post.image_url,
-      category: categoryName,
-      category_id: post.category_id,
-      published: post.published,
-      author: post.author_id || '',
-      author_id: post.author_id,
-      date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
-      readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-      read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
-      featured: post.featured || false,
-      scheduledDate: post.scheduled_at,
-      scheduled_at: post.scheduled_at,
-      createdAt: post.created_at,
-      created_at: post.created_at,
-      updatedAt: post.updated_at,
-      updated_at: post.updated_at
-    };
+    // Map the Supabase row to our BlogPost interface
+    return mapSupabaseBlogPostToBlogPost(post as any, categoryName);
   } catch (error) {
     console.error(`Error updating blog post with ID ${id}:`, error);
     throw new Error("Failed to update blog post");

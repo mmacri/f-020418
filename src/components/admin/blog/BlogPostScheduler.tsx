@@ -16,7 +16,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarCheck, CalendarX, Clock, RefreshCcw } from 'lucide-react';
 
