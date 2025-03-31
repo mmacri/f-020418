@@ -2,24 +2,25 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
-import CategoryHero from '@/components/CategoryHero';
 import { getCategoryBySlug } from '@/services/categoryService';
-import { getProductsByCategory } from '@/lib/product-utils';
-import { generateCategoryBreadcrumbs } from '@/lib/category-utils';
-import Breadcrumbs from '@/components/Breadcrumbs';
+import { getProductsByCategory } from '@/services/productApi';
+import { Product } from '@/services/products/types';
 import ProductCard from '@/components/ProductCard';
-import { Loader2, ArrowRight } from 'lucide-react';
+import Breadcrumbs from '@/components/Breadcrumbs';
+import { generateCategoryBreadcrumbs } from '@/lib/category-utils';
+import { Loader2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { trackAffiliateClick } from '@/lib/analytics-utils';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ImageWithFallback } from '@/lib/images';
+import { imageUrls } from '@/lib/constants';
 import { supabase } from '@/integrations/supabase/client';
 
 const CategoryPage = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
+  const [category, setCategory] = useState<any>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [categoryData, setCategoryData] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<any[]>([]);
 
   useEffect(() => {
@@ -27,37 +28,32 @@ const CategoryPage = () => {
       if (!categorySlug) return;
       
       setIsLoading(true);
+      setError(null);
+      
       try {
         // Get category data
-        const data = await getCategoryBySlug(categorySlug);
-        setCategoryData(data);
+        const categoryData = await getCategoryBySlug(categorySlug);
+        setCategory(categoryData);
         
-        if (data) {
+        if (categoryData) {
           // Generate breadcrumbs
-          const crumbs = generateCategoryBreadcrumbs(data);
+          const crumbs = generateCategoryBreadcrumbs(categoryData);
           setBreadcrumbs(crumbs);
           
           // Get products for this category
           const categoryProducts = await getProductsByCategory(categorySlug);
           setProducts(categoryProducts);
           
-          // Get featured products (highest rated)
-          const featured = [...categoryProducts]
-            .sort((a, b) => b.rating - a.rating)
-            .slice(0, 3);
-          setFeaturedProducts(featured);
-          
           // Track page view for analytics
           try {
-            // Record analytics for category page view
             const { data: analyticsData } = await supabase
               .from('analytics_events')
               .insert({
                 event_type: 'category_view',
                 page_url: window.location.href,
                 data: {
-                  categoryId: data.id,
-                  categoryName: data.name,
+                  categoryId: categoryData.id,
+                  categoryName: categoryData.name,
                   timestamp: Date.now()
                 }
               })
@@ -68,8 +64,9 @@ const CategoryPage = () => {
             console.error('Error tracking category view:', analyticsError);
           }
         }
-      } catch (error) {
-        console.error('Error loading category data:', error);
+      } catch (err) {
+        console.error('Error loading category data:', err);
+        setError('Failed to load category. Please try again later.');
       } finally {
         setIsLoading(false);
       }
@@ -77,19 +74,6 @@ const CategoryPage = () => {
     
     fetchData();
   }, [categorySlug]);
-
-  // Handle affiliate link clicks
-  const handleProductClick = (product: any) => {
-    if (product.affiliateUrl) {
-      trackAffiliateClick(
-        product.id,
-        product.name,
-        product.affiliateUrl,
-        `category_${categorySlug}`,
-        product.asin
-      );
-    }
-  };
 
   if (isLoading) {
     return (
@@ -102,12 +86,13 @@ const CategoryPage = () => {
     );
   }
 
-  if (!categoryData) {
+  if (error || !category) {
     return (
       <MainLayout>
         <div className="min-h-screen flex flex-col items-center justify-center">
           <h1 className="text-2xl font-bold">Category not found</h1>
-          <p className="mt-2">The category you're looking for doesn't exist.</p>
+          <p className="mt-2">The category you're looking for doesn't exist or an error occurred.</p>
+          <p className="text-red-500">{error}</p>
         </div>
       </MainLayout>
     );
@@ -122,76 +107,58 @@ const CategoryPage = () => {
         </div>
       </div>
       
-      {/* Category Hero */}
-      <CategoryHero 
-        categorySlug={categorySlug || ''}
-        description={categoryData.description}
-        backgroundImage={categoryData.imageUrl}
-        subcategories={categoryData.subcategories || []}
-        category={categoryData}
-      />
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+        <div className="absolute inset-0 overflow-hidden opacity-20">
+          <ImageWithFallback
+            src={category.imageUrl}
+            alt={category.name}
+            className="w-full h-full object-cover"
+            fallbackSrc={imageUrls.CATEGORY_DEFAULT}
+            type="category"
+          />
+        </div>
+        <div className="relative container mx-auto px-4 py-16">
+          <h1 className="text-4xl font-bold mb-4">{category.name}</h1>
+          <p className="text-xl opacity-90 max-w-2xl">
+            {category.description || `Browse our selection of ${category.name.toLowerCase()} to find the perfect recovery tools for your needs.`}
+          </p>
+        </div>
+      </div>
       
-      {/* Featured Products Section */}
-      {featuredProducts.length > 0 && (
-        <section className="py-16 bg-gray-50">
+      {/* Subcategories */}
+      {category.subcategories && category.subcategories.length > 0 && (
+        <section className="py-12 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold mb-2 text-center">
-              Featured {categoryData.name}
-            </h2>
-            <p className="text-center text-gray-600 mb-8">
-              Our top-rated {categoryData.name.toLowerCase()} recommended by experts and loved by customers
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {featuredProducts.map(product => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product} 
-                  featured={true} 
-                  onClick={() => handleProductClick(product)}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-      
-      {/* Subcategories Section */}
-      {categoryData.subcategories && categoryData.subcategories.length > 0 && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold mb-2 text-center">
-              Browse {categoryData.name} by Category
-            </h2>
-            <p className="text-center text-gray-600 mb-8">
-              Find the perfect {categoryData.name.toLowerCase()} for your specific needs
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categoryData.subcategories.map(subcategory => (
-                <Card key={subcategory.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <h2 className="text-2xl font-bold mb-8">Browse {category.name} by Subcategory</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {category.subcategories.map((subcategory: any) => (
+                <Card key={subcategory.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-0">
                     <Link 
-                      to={`/categories/${categorySlug}/${subcategory.slug}`}
+                      to={`/categories/${category.slug}/${subcategory.slug}`}
                       className="block"
                     >
-                      <div className="relative h-48 overflow-hidden">
-                        <img 
-                          src={subcategory.imageUrl || '/placeholder.svg'} 
-                          alt={subcategory.name} 
+                      <div className="h-40 relative overflow-hidden">
+                        <ImageWithFallback
+                          src={subcategory.imageUrl}
+                          alt={subcategory.name}
                           className="w-full h-full object-cover"
+                          fallbackSrc={imageUrls.CATEGORY_DEFAULT}
+                          type="category"
                         />
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                          <h3 className="text-white text-xl font-bold">{subcategory.name}</h3>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+                          <div className="p-4 text-white">
+                            <h3 className="text-xl font-bold">{subcategory.name}</h3>
+                          </div>
                         </div>
                       </div>
-                      <div className="p-4">
-                        <p className="text-gray-600 mb-4 line-clamp-2">
-                          {subcategory.description || `Explore our selection of ${subcategory.name} products.`}
+                      <div className="p-4 flex justify-between items-center">
+                        <p className="text-sm text-gray-600">
+                          {subcategory.description?.substring(0, 60) || `Explore our ${subcategory.name} collection`}
+                          {subcategory.description?.length > 60 ? '...' : ''}
                         </p>
-                        <Button variant="outline" size="sm" className="w-full">
-                          View Products <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
+                        <ChevronRight className="h-5 w-5 text-indigo-600" />
                       </div>
                     </Link>
                   </CardContent>
@@ -202,45 +169,28 @@ const CategoryPage = () => {
         </section>
       )}
       
-      {/* All Products Grid */}
-      <section className="py-16 bg-gray-50">
+      {/* Products */}
+      <section className="py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8 text-center">
-            All {categoryData.name} Products
-          </h2>
+          <h2 className="text-2xl font-bold mb-8">All {category.name} Products</h2>
           
           {products.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {products.map(product => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product} 
-                  onClick={() => handleProductClick(product)}
-                />
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No products found in this category.</p>
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <h3 className="text-xl font-medium text-gray-700 mb-2">No products found</h3>
+              <p className="text-gray-500 mb-6">
+                There are currently no products in this category.
+              </p>
+              <Button asChild>
+                <Link to="/categories">Browse Other Categories</Link>
+              </Button>
             </div>
           )}
-        </div>
-      </section>
-      
-      {/* Category Comparison CTA */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Compare {categoryData.name}
-          </h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Not sure which {categoryData.name.toLowerCase()} is right for you? Use our comparison tool to see features side by side.
-          </p>
-          <Button asChild size="lg">
-            <Link to={`/product-comparison/${categorySlug}`}>
-              Compare Top {categoryData.name}
-            </Link>
-          </Button>
         </div>
       </section>
     </MainLayout>

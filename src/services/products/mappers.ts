@@ -1,21 +1,32 @@
-
 import { Product, SupabaseProduct } from './types';
 
 /**
- * Extract image URL from various image formats
- * This handles different ways images might be stored (string URL or object with URL property)
+ * Extract image URL from different image formats
  */
-export const extractImageUrl = (imageObj: string | { url: string } | undefined): string => {
-  if (!imageObj) return '';
+export const extractImageUrl = (image: any): string => {
+  if (!image) return '';
   
-  if (typeof imageObj === 'string') {
-    return imageObj;
+  // If image is a string, return it directly
+  if (typeof image === 'string') {
+    return image;
   }
   
-  if (typeof imageObj === 'object' && 'url' in imageObj) {
-    return imageObj.url;
+  // If image is an object with url property
+  if (image.url) {
+    return image.url;
   }
   
+  // If image is an object with src property
+  if (image.src) {
+    return image.src;
+  }
+  
+  // If image is a legacy format where the object itself is the URL
+  if (typeof image === 'object' && Object.keys(image).length === 0) {
+    return '/placeholder.svg';
+  }
+  
+  // Return empty string if no format matches
   return '';
 };
 

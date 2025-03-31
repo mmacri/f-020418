@@ -14,6 +14,7 @@ import Search from "@/pages/Search";
 import Newsletter from "@/pages/Newsletter";
 import ProductDetail from "@/pages/ProductDetail";
 import CategoryPage from "@/pages/CategoryPage";
+import AllCategoriesPage from "@/pages/AllCategoriesPage";
 import SubcategoryPage from "@/pages/SubcategoryPage";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Terms from "@/pages/Terms";
@@ -57,6 +58,7 @@ function App() {
           <Route path="/products/:slug" element={<ProductDetail />} />
           
           {/* Category routes */}
+          <Route path="/categories" element={<AllCategoriesPage />} />
           <Route path="/categories/:categorySlug" element={<CategoryPage />} />
           <Route path="/categories/:categorySlug/:subSlug" element={<SubcategoryPage />} />
 

@@ -5,10 +5,12 @@ import { ArrowRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { localStorageKeys, imageUrls } from '@/lib/constants';
 import { ImageWithFallback } from '@/lib/images';
+import FileUploadWithPreview from '@/components/FileUploadWithPreview';
 
 const HeroSection: React.FC = () => {
   const [heroImageUrl, setHeroImageUrl] = useState<string>(imageUrls.HERO_DEFAULT);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
+  const [showUploader, setShowUploader] = useState<boolean>(false);
   
   useEffect(() => {
     // Try to load the hero image from localStorage
@@ -20,6 +22,14 @@ const HeroSection: React.FC = () => {
     // Log for debugging
     console.log('Hero image loaded:', savedImage || imageUrls.HERO_DEFAULT);
   }, []);
+
+  const handleImageUpload = (url: string) => {
+    if (url) {
+      setHeroImageUrl(url);
+      localStorage.setItem(localStorageKeys.HERO_IMAGE, url);
+      setShowUploader(false);
+    }
+  };
 
   return (
     <section className="relative bg-gradient-to-r from-indigo-700 to-purple-700 text-white py-24">
@@ -55,6 +65,31 @@ const HeroSection: React.FC = () => {
                 </Link>
               </Button>
             </div>
+            
+            {/* Admin only: Quick hero image edit button */}
+            <div className="mt-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-white/70 hover:text-white border border-white/20"
+                onClick={() => setShowUploader(!showUploader)}
+              >
+                {showUploader ? 'Cancel' : 'Change Hero Image'}
+              </Button>
+            </div>
+            
+            {showUploader && (
+              <div className="mt-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg">
+                <FileUploadWithPreview
+                  onFileChange={handleImageUpload}
+                  currentImage={heroImageUrl !== imageUrls.HERO_DEFAULT ? heroImageUrl : undefined}
+                  bucket="product-images"
+                  folder="hero"
+                  maxSize={5}
+                  aspectRatio="landscape"
+                />
+              </div>
+            )}
           </div>
           <div className="md:w-1/2 relative rounded-lg shadow-xl overflow-hidden bg-white/10 p-1">
             <ImageWithFallback 
