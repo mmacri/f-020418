@@ -2,6 +2,24 @@
 import { Product, SupabaseProduct } from './types';
 
 /**
+ * Extract image URL from various image formats
+ * This handles different ways images might be stored (string URL or object with URL property)
+ */
+export const extractImageUrl = (imageObj: string | { url: string } | undefined): string => {
+  if (!imageObj) return '';
+  
+  if (typeof imageObj === 'string') {
+    return imageObj;
+  }
+  
+  if (typeof imageObj === 'object' && 'url' in imageObj) {
+    return imageObj.url;
+  }
+  
+  return '';
+};
+
+/**
  * Map a Product object to a SupabaseProduct object
  */
 export const mapProductToSupabaseProduct = (product: Partial<Product>): Partial<SupabaseProduct> => {

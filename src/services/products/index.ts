@@ -3,4 +3,4 @@
 export * from './types';
 export * from './productApi';
 export * from './productOperations';
-export { extractImageUrl } from './mappers';
+export { mapProductToSupabaseProduct, mapSupabaseProductToProduct, extractImageUrl } from './mappers';
