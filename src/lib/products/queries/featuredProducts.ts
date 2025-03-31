@@ -8,13 +8,19 @@ import { Product } from '@/services/products/types';
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Completely break the type chain by using any
-    const { data, error } = await supabase
+    // Completely break the type chain by using explicit any type and direct casting
+    const response = await supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit) as any;
+      .limit(limit);
+    
+    // Cast response to avoid TypeScript inference issues
+    const { data, error } = response as unknown as { 
+      data: any[] | null; 
+      error: any | null 
+    };
       
     if (error) {
       console.error('Error fetching featured products:', error);
