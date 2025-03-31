@@ -19,6 +19,7 @@ import AdminCategories from './AdminCategories';
 import BlogCategoriesManager from './blog/BlogCategoriesManager';
 import BlogCommentsManager from './blog/BlogCommentsManager';
 import BlogSettingsPanel from './blog/BlogSettingsPanel';
+import { ProfileSettings, PasswordSettings, PreferencesSettings } from './settings';
 
 export {
   AdminDashboard,
@@ -42,5 +43,8 @@ export {
   AdminCategories,
   BlogCategoriesManager,
   BlogCommentsManager,
-  BlogSettingsPanel
+  BlogSettingsPanel,
+  ProfileSettings,
+  PasswordSettings,
+  PreferencesSettings
 };
