@@ -7,6 +7,7 @@ import {
   createProductImageUrl,
   extractImageUrl
 } from './images/productImageUtils';
+import { handleImageError } from './images/imageErrorHandlers';
 
 interface ImageWithFallbackProps {
   src: string;
