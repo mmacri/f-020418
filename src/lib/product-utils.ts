@@ -226,18 +226,13 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Use a variable to store the query separately
-    const query = supabase
+    // Break the type chain completely by using a simpler approach
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit);
-    
-    // Execute the query without any type checking
-    // Using any here is necessary to break the deep type recursion
-    const response: any = await query;
-    const { data, error } = response;
+      .limit(limit) as unknown as { data: any[], error: any };
     
     if (error) {
       console.error('Error fetching featured products:', error);
@@ -254,9 +249,9 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     for (const item of data) {
       try {
         // Create a simple intermediate object without nested types
-        const rawProduct = item as Record<string, any>;
+        const rawProduct: Record<string, any> = item;
         
-        // Manually construct the product with explicit types to avoid inference issues
+        // Manually construct the product with explicit types
         const supabaseProduct: SupabaseProduct = {
           id: rawProduct.id,
           name: rawProduct.name,
@@ -277,9 +272,9 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
           category_id: rawProduct.category_id,
           subcategory: rawProduct.subcategory,
           subcategory_slug: rawProduct.subcategory_slug,
-          // Use explicit double casting with any as intermediate step
-          specifications: (rawProduct.specifications as any) as Json,
-          attributes: (rawProduct.attributes as any) as Json,
+          // Break the deep type inference with explicit casting
+          specifications: rawProduct.specifications as unknown as Json,
+          attributes: rawProduct.attributes as unknown as Json,
           features: rawProduct.features,
           pros: rawProduct.pros,
           cons: rawProduct.cons,
