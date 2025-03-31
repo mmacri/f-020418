@@ -13,6 +13,7 @@ import ProductsTable from './ProductsTable';
 import ProductsLoadingState from './ProductsLoadingState';
 import EmptyProductsState from './EmptyProductsState';
 import ProductForm from './ProductForm';
+import { DashboardTabs, GeneralStats } from './dashboard';
 
 export {
   AdminDashboard,
@@ -28,5 +29,7 @@ export {
   ProductsTable,
   ProductsLoadingState,
   EmptyProductsState,
-  ProductForm
+  ProductForm,
+  DashboardTabs,
+  GeneralStats
 };
