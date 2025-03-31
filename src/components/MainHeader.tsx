@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { getCurrentUser, logout } from "@/services/authService";
 import { getNavigationCategories } from "@/services/categoryService";
 import { Category } from "@/services/categoryService";
-import { Logo } from "@/components/header/Logo";
-import { NavigationMenuDesktop } from "@/components/header/NavigationMenuDesktop";
-import { MobileMenu } from "@/components/header/MobileMenu";
-import { HeaderActions } from "@/components/header/HeaderActions";
+import { 
+  Logo, 
+  NavigationMenuDesktop, 
+  MobileMenu, 
+  HeaderActions 
+} from "@/components/header";
 
 const MainHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
