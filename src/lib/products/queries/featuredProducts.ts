@@ -8,13 +8,17 @@ import { Product } from '@/services/products/types';
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Avoid type issues by using an untyped query approach
-    const { data, error } = await (supabase
+    // Perform the query with explicit type handling to avoid deep inference issues
+    const response = await supabase
       .from('products')
       .select('*')
-      .eq('attributes->bestSeller', 'true') // Using the JSON path syntax for nested attributes
+      .eq('attributes->bestSeller', 'true')
       .order('rating', { ascending: false })
-      .limit(limit) as any);
+      .limit(limit);
+    
+    // Explicitly handle the response data without relying on complex typing
+    const data = response.data;
+    const error = response.error;
     
     if (error) {
       console.error('Error fetching featured products:', error);
