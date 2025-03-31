@@ -1,97 +1,71 @@
 
 import React, { useState } from 'react';
-import { handleImageError } from './imageErrorHandlers';
-import { imageUrls } from '@/lib/constants';
+import { localStorageKeys, imageUrls } from '@/lib/constants';
 
-export interface ImageWithFallbackProps {
+interface ImageWithFallbackProps {
   src: string;
   alt: string;
-  fallbackSrc?: string;
   className?: string;
-  width?: number | string;
-  height?: number | string;
-  loading?: 'lazy' | 'eager';
+  fallbackSrc?: string;
+  type?: 'product' | 'category' | 'hero' | 'blog';
   disableCacheBusting?: boolean;
   onLoad?: () => void;
-  type?: 'product' | 'category' | 'blog' | 'avatar' | 'subcategory' | 'hero'; // Added hero type
 }
 
 export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   src,
   alt,
-  fallbackSrc,
   className = '',
-  width,
-  height,
-  loading = 'lazy',
-  disableCacheBusting = false,
+  fallbackSrc,
+  type = 'product',
+  disableCacheBusting = true,
   onLoad,
-  type,
-  ...props
 }) => {
-  const [hasError, setHasError] = useState(false);
-
-  // Determine appropriate fallback based on image type
-  const getFallbackSrc = () => {
-    if (fallbackSrc) return fallbackSrc;
-    
-    if (type) {
-      switch (type) {
-        case 'product':
-          return imageUrls.PRODUCT_DEFAULT;
-        case 'category':
-        case 'subcategory':
-          return imageUrls.CATEGORY_DEFAULT;
-        case 'blog':
-          return imageUrls.BLOG_DEFAULT;
-        case 'avatar':
-          return imageUrls.AVATAR_DEFAULT;
-        case 'hero':
-          return imageUrls.HERO_DEFAULT;
-        default:
-          return imageUrls.PLACEHOLDER;
-      }
-    }
-    
-    return imageUrls.PLACEHOLDER;
+  const [error, setError] = useState(false);
+  const defaultFallback = type === 'hero' 
+    ? imageUrls.HERO_DEFAULT 
+    : type === 'category' 
+      ? imageUrls.CATEGORY_DEFAULT 
+      : imageUrls.PLACEHOLDER;
+  
+  // Use provided fallback or default based on type
+  const fallback = fallbackSrc || defaultFallback;
+  
+  // Check if we should use local fallback images
+  const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
+  const localFallback = '/placeholder.svg';
+  
+  // If error occurred, use fallback
+  const imageSrc = error 
+    ? (useLocalFallback ? localFallback : fallback) 
+    : src || fallback;
+  
+  // Add cache busting parameter if enabled
+  const finalSrc = disableCacheBusting 
+    ? imageSrc 
+    : `${imageSrc}${imageSrc.includes('?') ? '&' : '?'}t=${Date.now()}`;
+  
+  // Determine object-fit based on type
+  const objectFitClass = type === 'hero' 
+    ? 'object-cover w-full h-full' 
+    : 'object-contain';
+  
+  const handleError = () => {
+    console.log(`Image failed to load: ${src}. Using fallback.`);
+    setError(true);
   };
-
-  // Handle image loading error
-  const onError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    if (!hasError) {
-      setHasError(true);
-      handleImageError(e, getFallbackSrc());
-    }
-  };
-
-  // Handle image load success
+  
   const handleLoad = () => {
-    if (onLoad) {
-      onLoad();
-    }
+    if (onLoad) onLoad();
   };
-
-  // Add cache busting to remote URLs if needed
-  const getImageUrl = (url: string) => {
-    if (disableCacheBusting || !url || url.startsWith('/') || url.startsWith('data:')) {
-      return url;
-    }
-    // Add timestamp as cache buster
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}t=${Date.now()}`;
-  };
-
+  
   return (
     <img
-      src={hasError ? getFallbackSrc() : getImageUrl(src)}
+      src={finalSrc}
       alt={alt}
-      className={className}
-      width={width}
-      height={height}
-      loading={loading}
-      onError={onError}
+      className={`${objectFitClass} ${className}`}
+      onError={handleError}
       onLoad={handleLoad}
-      {...props}
     />
   );
 };

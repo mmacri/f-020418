@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Edit, Trash2, ArrowUpRight, Layers, Plus } from 'lucide-react';
-import { ImageWithFallback } from '@/lib/images/ImageWithFallback';
+import { ImageWithFallback } from '@/lib/images';
 import { imageUrls } from '@/lib/constants';
 import { SubcategoryList } from '@/components/admin';
 
@@ -75,7 +74,7 @@ const CategoryCard = ({
             alt={category.name}
             className="w-full h-full object-cover" 
             fallbackSrc={imageUrls.CATEGORY_DEFAULT}
-            type="category" // Using the updated ImageWithFallback component with type support
+            type="category"
           />
         </div>
         

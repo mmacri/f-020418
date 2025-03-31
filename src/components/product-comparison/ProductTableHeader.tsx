@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { TableHead, TableRow } from '@/components/ui/table';
 import { Product } from '@/services/productService';
-import { getProductImageUrl } from '@/lib/images';
+import { getProductImageUrl, ImageWithFallback } from '@/lib/images';
 
 interface ProductTableHeaderProps {
   products: Product[];
@@ -26,10 +26,11 @@ const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({ products, bestP
               </div>
             )}
             <div className="h-24 flex items-center justify-center">
-              <img 
+              <ImageWithFallback 
                 src={getProductImageUrl(String(product.id))}
                 alt={product.name} 
                 className="max-h-full max-w-full object-contain" 
+                type="product"
               />
             </div>
             <Link to={`/products/${product.slug}`} className="font-bold hover:text-indigo-600 text-sm">
