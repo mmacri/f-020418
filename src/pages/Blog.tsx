@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
@@ -22,9 +21,8 @@ const Blog = () => {
         setBlogPosts(posts);
         
         if (posts.length > 0) {
-          // Set the first post as featured or find one marked as featured
-          const featured = posts.find(post => post.attributes?.featured) || posts[0];
-          setFeaturedPost(featured);
+          // Simply set the first post as featured, or use another selection logic
+          setFeaturedPost(posts[0]);
         }
       } catch (error) {
         console.error("Error fetching blog posts:", error);
