@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   getScheduledBlogPosts, 
@@ -47,7 +48,7 @@ const BlogPostScheduler = () => {
 
   const handlePublishNow = async (post: BlogPost) => {
     try {
-      await updateBlogPost(post.id, { 
+      await updateBlogPost(String(post.id), { 
         published: true,
         scheduledDate: null,
         date: new Date().toISOString().split('T')[0]
@@ -69,7 +70,7 @@ const BlogPostScheduler = () => {
 
   const handleCancelSchedule = async (post: BlogPost) => {
     try {
-      await updateBlogPost(post.id, { scheduledDate: null });
+      await updateBlogPost(String(post.id), { scheduledDate: null });
       toast({
         title: "Success",
         description: `Schedule for post "${post.title}" has been cancelled.`,
@@ -144,7 +145,7 @@ const BlogPostScheduler = () => {
                 <TableRow key={post.id}>
                   <TableCell className="font-medium">{post.title}</TableCell>
                   <TableCell>
-                    {format(parseISO(post.scheduledDate || ''), 'MMM d, yyyy h:mm aa')}
+                    {post.scheduledDate && format(new Date(post.scheduledDate), 'MMM d, yyyy h:mm aa')}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">

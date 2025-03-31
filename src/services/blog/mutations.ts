@@ -1,4 +1,5 @@
-import { BlogPost, BlogPostInput, BlogCategory, BlogTag } from "./types";
+
+import { BlogPost, BlogPostInput, BlogCategory } from "./types";
 import { getBlogPostsFromStorage, saveBlogPostsToStorage } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,7 +19,6 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
         image_url: postInput.image || postInput.image_url || '',
         category_id: postInput.category_id,
         published: postInput.published,
-        author: postInput.author || '',
         author_id: postInput.author_id,
         read_time: postInput.read_time || `${Math.ceil((postInput.content?.length || 0) / 1000)} min read`,
         featured: postInput.featured || false,
@@ -48,19 +48,24 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
         excerpt: postInput.excerpt,
         content: postInput.content,
         category: postInput.category || 'General',
+        category_id: postInput.category_id,
         image: postInput.image || '',
         coverImage: postInput.coverImage || '',
         published: postInput.published,
         author: postInput.author || '',
+        author_id: postInput.author_id,
         date: postInput.date || new Date().toLocaleDateString(),
         tags: postInput.tags || [],
         createdAt: now,
         updatedAt: now,
         scheduledDate: postInput.scheduledDate,
+        scheduled_at: postInput.scheduledDate,
         seoTitle: postInput.seoTitle,
         seoDescription: postInput.seoDescription,
         seoKeywords: postInput.seoKeywords,
-        readTime: postInput.read_time
+        readTime: postInput.read_time,
+        read_time: postInput.read_time,
+        featured: postInput.featured
       };
       
       posts.push(newPost);
@@ -94,7 +99,7 @@ export const addBlogPost = async (postInput: BlogPostInput): Promise<BlogPost> =
       category: categoryName,
       category_id: post.category_id,
       published: post.published,
-      author: post.author || '',
+      author: post.author_id || '',
       author_id: post.author_id,
       date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
       readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
@@ -137,7 +142,6 @@ export const updateBlogPost = async (id: string, postInput: Partial<BlogPostInpu
         updateData.published_at = new Date().toISOString();
       }
     }
-    if (postInput.author !== undefined) updateData.author = postInput.author;
     if (postInput.author_id !== undefined) updateData.author_id = postInput.author_id;
     if (postInput.read_time !== undefined) updateData.read_time = postInput.read_time;
     if (postInput.featured !== undefined) updateData.featured = postInput.featured;
@@ -201,12 +205,12 @@ export const updateBlogPost = async (id: string, postInput: Partial<BlogPostInpu
       category: categoryName,
       category_id: post.category_id,
       published: post.published,
-      author: post.author,
+      author: post.author_id || '',
       author_id: post.author_id,
       date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
-      readTime: post.read_time,
-      read_time: post.read_time,
-      featured: post.featured,
+      readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+      read_time: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
+      featured: post.featured || false,
       scheduledDate: post.scheduled_at,
       scheduled_at: post.scheduled_at,
       createdAt: post.created_at,

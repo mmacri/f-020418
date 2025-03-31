@@ -1,3 +1,4 @@
+
 import { BlogPost, BlogCategory, BlogTag } from "./types";
 import { getBlogPostsFromStorage } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,8 +20,8 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
     if (supabasePosts && supabasePosts.length > 0) {
       // Fetch categories to map category_id to category name
       const { data: categories } = await supabase
-        .from('blog_categories')
-        .select('*');
+        .from('categories')
+        .select('id, name');
 
       const categoryMap = new Map();
       if (categories) {
@@ -37,10 +38,10 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
         content: post.content || "",
         image: post.image_url || "",
         image_url: post.image_url || "",
-        category: categoryMap.get(post.category_id) || "General",
+        category: post.category_id ? categoryMap.get(post.category_id) || "General" : "General",
         category_id: post.category_id,
         published: post.published,
-        author: post.author || "",
+        author: post.author_id || "",
         author_id: post.author_id,
         date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
@@ -87,8 +88,8 @@ export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
     if (supabasePosts && supabasePosts.length > 0) {
       // Fetch categories to map category_id to category name
       const { data: categories } = await supabase
-        .from('blog_categories')
-        .select('*');
+        .from('categories')
+        .select('id, name');
 
       const categoryMap = new Map();
       if (categories) {
@@ -105,10 +106,10 @@ export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
         content: post.content || "",
         image: post.image_url || "",
         image_url: post.image_url || "",
-        category: categoryMap.get(post.category_id) || "General",
+        category: post.category_id ? categoryMap.get(post.category_id) || "General" : "General",
         category_id: post.category_id,
         published: post.published,
-        author: post.author || "",
+        author: post.author_id || "",
         author_id: post.author_id,
         date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
@@ -153,7 +154,7 @@ export const getBlogPostById = async (id: string): Promise<BlogPost | null> => {
       let categoryName = "General";
       if (post.category_id) {
         const { data: category } = await supabase
-          .from('blog_categories')
+          .from('categories')
           .select('name')
           .eq('id', post.category_id)
           .single();
@@ -174,7 +175,7 @@ export const getBlogPostById = async (id: string): Promise<BlogPost | null> => {
         category: categoryName,
         category_id: post.category_id,
         published: post.published,
-        author: post.author || "",
+        author: post.author_id || "",
         author_id: post.author_id,
         date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
@@ -218,7 +219,7 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
       let categoryName = "General";
       if (post.category_id) {
         const { data: category } = await supabase
-          .from('blog_categories')
+          .from('categories')
           .select('name')
           .eq('id', post.category_id)
           .single();
@@ -239,7 +240,7 @@ export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> 
         category: categoryName,
         category_id: post.category_id,
         published: post.published,
-        author: post.author || "",
+        author: post.author_id || "",
         author_id: post.author_id,
         date: post.published_at ? new Date(post.published_at).toLocaleDateString() : new Date(post.created_at).toLocaleDateString(),
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
@@ -302,15 +303,16 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
       return posts.filter(post => 
         !post.published && 
         (post.scheduledDate || post.scheduled_at) && 
-        (post.scheduledDate <= now || post.scheduled_at <= now)
+        ((post.scheduledDate && post.scheduledDate <= now) || 
+         (post.scheduled_at && post.scheduled_at <= now))
       );
     }
     
     if (scheduledPosts && scheduledPosts.length > 0) {
       // Fetch categories to map category_id to category name
       const { data: categories } = await supabase
-        .from('blog_categories')
-        .select('*');
+        .from('categories')
+        .select('id, name');
 
       const categoryMap = new Map();
       if (categories) {
@@ -327,10 +329,10 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
         content: post.content || "",
         image: post.image_url || "",
         image_url: post.image_url || "",
-        category: categoryMap.get(post.category_id) || "General",
+        category: post.category_id ? categoryMap.get(post.category_id) || "General" : "General",
         category_id: post.category_id,
         published: post.published,
-        author: post.author || "",
+        author: post.author_id || "",
         author_id: post.author_id,
         date: post.created_at ? new Date(post.created_at).toLocaleDateString() : "",
         readTime: post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
@@ -356,7 +358,7 @@ export const getScheduledBlogPosts = async (): Promise<BlogPost[]> => {
 export const getBlogCategories = async (): Promise<BlogCategory[]> => {
   try {
     const { data, error } = await supabase
-      .from('blog_categories')
+      .from('categories')
       .select('*')
       .order('name');
     

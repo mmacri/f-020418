@@ -1,3 +1,4 @@
+
 import { localStorageKeys } from "@/lib/constants";
 import { BlogPost } from "./types";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,8 +55,8 @@ export const migrateBlogPostsToSupabase = async (): Promise<void> => {
     
     // Get existing categories or create default ones
     const { data: categories, error: categoriesError } = await supabase
-      .from('blog_categories')
-      .select('*');
+      .from('categories')
+      .select('id, name, slug');
     
     if (categoriesError) {
       console.error("Error fetching categories:", categoriesError);
@@ -97,7 +98,7 @@ export const migrateBlogPostsToSupabase = async (): Promise<void> => {
         // If category doesn't exist yet, create it
         if (!categoryId) {
           const { data: newCategory, error: createCategoryError } = await supabase
-            .from('blog_categories')
+            .from('categories')
             .insert({
               name: post.category,
               slug: post.category.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
@@ -126,7 +127,7 @@ export const migrateBlogPostsToSupabase = async (): Promise<void> => {
           image_url: post.image || post.coverImage || '',
           category_id: categoryId,
           published: post.published,
-          author: post.author || '',
+          author_id: post.author_id || '',
           read_time: post.readTime || post.read_time || `${Math.ceil((post.content?.length || 0) / 1000)} min read`,
           featured: post.featured || false,
           created_at: post.createdAt || post.created_at,
@@ -179,7 +180,7 @@ export const initializeDemoBlogPosts = async (): Promise<void> => {
     
     for (const category of categories) {
       const { data, error } = await supabase
-        .from('blog_categories')
+        .from('categories')
         .select('id')
         .eq('slug', category.slug)
         .maybeSingle();
@@ -195,7 +196,7 @@ export const initializeDemoBlogPosts = async (): Promise<void> => {
         categoryId = data.id;
       } else {
         const { data: newCategory, error: insertError } = await supabase
-          .from('blog_categories')
+          .from('categories')
           .insert(category)
           .select()
           .single();

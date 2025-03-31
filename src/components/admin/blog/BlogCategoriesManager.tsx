@@ -1,38 +1,46 @@
+
 import React, { useState, useEffect } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Pencil, Trash2, Search } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import { BlogCategory } from '@/services/blog/types';
+import { Edit, Trash2, Plus, Loader2 } from 'lucide-react';
 import { 
-  getBlogCategories 
-} from '@/services/blog/queries';
-import { 
+  getBlogCategories, 
   addBlogCategory, 
   updateBlogCategory, 
-  deleteBlogCategory 
-} from '@/services/blog/mutations';
+  deleteBlogCategory,
+  BlogCategory
+} from '@/services/blog';
 
 const BlogCategoriesManager = () => {
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [editingCategory, setEditingCategory] = useState<BlogCategory | null>(null);
+  const [currentCategory, setCurrentCategory] = useState<BlogCategory | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -47,13 +55,13 @@ const BlogCategoriesManager = () => {
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      const categoriesData = await getBlogCategories();
-      setCategories(categoriesData);
+      const fetchedCategories = await getBlogCategories();
+      setCategories(fetchedCategories);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load blog categories. Please try again.',
+        description: 'Failed to load categories. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -67,10 +75,18 @@ const BlogCategoriesManager = () => {
       ...prev,
       [name]: value
     }));
+
+    // Auto-generate slug from name if slug field hasn't been manually edited
+    if (name === 'name' && !formData.slug) {
+      setFormData(prev => ({
+        ...prev,
+        slug: value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      }));
+    }
   };
 
-  const handleCreateCategory = () => {
-    setEditingCategory(null);
+  const handleAddCategory = () => {
+    setCurrentCategory(null);
     setFormData({
       name: '',
       slug: '',
@@ -80,7 +96,7 @@ const BlogCategoriesManager = () => {
   };
 
   const handleEditCategory = (category: BlogCategory) => {
-    setEditingCategory(category);
+    setCurrentCategory(category);
     setFormData({
       name: category.name,
       slug: category.slug,
@@ -89,34 +105,66 @@ const BlogCategoriesManager = () => {
     setIsDialogOpen(true);
   };
 
+  const handleDeleteCategory = async (category: BlogCategory) => {
+    if (window.confirm(`Are you sure you want to delete the category "${category.name}"? This action cannot be undone.`)) {
+      try {
+        await deleteBlogCategory(category.id);
+        toast({
+          title: 'Success',
+          description: `Category "${category.name}" has been deleted.`,
+        });
+        fetchCategories();
+      } catch (error) {
+        console.error('Error deleting category:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to delete category. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const validateForm = (): boolean => {
+    if (!formData.name.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Category name is required.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    if (!formData.slug.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Category slug is required.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setIsSubmitting(true);
     
-    let categorySlug = formData.slug;
-    if (!categorySlug) {
-      categorySlug = formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    }
-    
     try {
-      if (editingCategory) {
-        await updateBlogCategory(editingCategory.id, {
-          name: formData.name,
-          slug: categorySlug,
-          description: formData.description
-        });
-        
+      if (currentCategory) {
+        // Update existing category
+        await updateBlogCategory(currentCategory.id, formData);
         toast({
           title: 'Success',
           description: `Category "${formData.name}" has been updated.`,
         });
       } else {
-        await addBlogCategory({
-          name: formData.name,
-          slug: categorySlug,
-          description: formData.description
-        });
-        
+        // Add new category
+        await addBlogCategory(formData);
         toast({
           title: 'Success',
           description: `Category "${formData.name}" has been created.`,
@@ -137,121 +185,48 @@ const BlogCategoriesManager = () => {
     }
   };
 
-  const handleDeleteCategory = async (category: BlogCategory) => {
-    if (window.confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) {
-      try {
-        await deleteBlogCategory(category.id);
-        
-        toast({
-          title: 'Success',
-          description: `Category "${category.name}" has been deleted.`,
-        });
-        
-        fetchCategories();
-      } catch (error) {
-        console.error('Error deleting category:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to delete category. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    }
-  };
-
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const getCategoryPostCount = async (categoryId: string) => {
-    const { count, error } = await supabase
-      .from('blog_posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('category_id', categoryId);
-    
-    if (error) {
-      console.error(`Error getting post count for category ${categoryId}:`, error);
-      return 0;
-    }
-    
-    return count || 0;
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        <h2 className="text-3xl font-bold text-foreground">Blog Categories</h2>
-        <div className="flex w-full sm:w-auto space-x-2">
-          <div className="relative flex-grow sm:flex-grow-0 sm:min-w-[300px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search categories..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Blog Categories</CardTitle>
+        <Button onClick={handleAddCategory} size="sm" className="h-8">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Category
+        </Button>
+      </CardHeader>
+      
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-          <Button 
-            onClick={handleCreateCategory}
-            size="default"
-            className="whitespace-nowrap"
-          >
-            <PlusCircle className="h-4 w-4 mr-2" /> Add Category
-          </Button>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : filteredCategories.length === 0 ? (
-        <Card className="border border-border shadow-sm bg-card">
-          <CardContent className="pt-6 text-center py-12">
-            <p className="mb-6 text-foreground text-lg">
-              {searchTerm ? 'No categories match your search.' : 'No categories found. Create your first category to get started.'}
-            </p>
-            {!searchTerm && (
-              <Button 
-                onClick={handleCreateCategory}
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                <PlusCircle className="h-5 w-5 mr-2" /> Add Category
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="border rounded-md">
+        ) : categories.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 mb-4">No categories found. Create your first category to get started.</p>
+            <Button onClick={handleAddCategory}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Category
+            </Button>
+          </div>
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Slug</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
+            
             <TableBody>
-              {filteredCategories.map((category) => (
+              {categories.map((category) => (
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell>{category.slug}</TableCell>
-                  <TableCell>{category.description ? (category.description.length > 50 ? category.description.substring(0, 50) + '...' : category.description) : '-'}</TableCell>
-                  <TableCell>{category.created_at ? formatDate(category.created_at) : '-'}</TableCell>
+                  <TableCell className="text-gray-500">{category.slug}</TableCell>
+                  <TableCell className="truncate max-w-[200px]">
+                    {category.description || "-"}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button
@@ -259,7 +234,7 @@ const BlogCategoriesManager = () => {
                         size="sm"
                         onClick={() => handleEditCategory(category)}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="destructive"
@@ -274,73 +249,79 @@ const BlogCategoriesManager = () => {
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+        )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>{editingCategory ? 'Edit Category' : 'Create New Category'}</DialogTitle>
-            <DialogDescription>
-              {editingCategory 
-                ? 'Update the category details below.' 
-                : 'Add the details for your new blog category.'}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Category Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {currentCategory ? 'Edit Category' : 'Add Category'}
+              </DialogTitle>
+              <DialogDescription>
+                {currentCategory
+                  ? 'Edit the details of this category.'
+                  : 'Create a new category for organizing blog posts.'}
+              </DialogDescription>
+            </DialogHeader>
             
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input
-                id="slug"
-                name="slug"
-                value={formData.slug}
-                onChange={handleInputChange}
-                placeholder="auto-generated-if-left-empty"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={3}
-                placeholder="Brief description of this category"
-              />
-            </div>
-            
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsDialogOpen(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editingCategory ? 'Update' : 'Create'} Category
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+            <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="slug">Slug</Label>
+                <Input
+                  id="slug"
+                  name="slug"
+                  value={formData.slug}
+                  onChange={handleInputChange}
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  Used in URLs, e.g., /blog/category/your-slug
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {currentCategory ? 'Update' : 'Create'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
   );
 };
 

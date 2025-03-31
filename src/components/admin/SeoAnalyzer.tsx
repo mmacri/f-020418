@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -11,7 +12,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from '@/components/ui/tabs';
-import { analyzeReadability, generateSeoSuggestions } from '@/services/blog';
+import { analyzeReadability, generateSeoSuggestions } from '@/services/blog/analysis';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,15 +48,10 @@ const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({
   useEffect(() => {
     // Re-analyze when content changes
     if (content) {
-      const { score, feedback } = analyzeReadability(content);
-      setReadabilityScore(score);
-      setReadabilityFeedback(feedback);
-      
-      // Calculate reading time
-      const wordsPerMinute = 200;
-      const wordCount = content.split(/\s+/).length;
-      const minutes = Math.ceil(wordCount / wordsPerMinute);
-      setReadingTime(`${minutes} min read`);
+      const readabilityResult = analyzeReadability(content);
+      setReadabilityScore(readabilityResult.score);
+      setReadabilityFeedback(readabilityResult.feedback);
+      setReadingTime(readabilityResult.readingTime);
     }
     
     // Generate SEO suggestions
