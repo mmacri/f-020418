@@ -1,45 +1,25 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product } from '@/services/products/types';
 
 /**
  * Get featured products
  */
-export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
+export const getFeaturedProducts = async (): Promise<Product[]> => {
   try {
-    // Perform a simplified query to avoid TypeScript deep inference issues
-    const response = await supabase
+    // Use simpler query with explicit path access
+    const { data, error } = await supabase
       .from('products')
       .select('*')
-      .eq('attributes->bestSeller', 'true')
-      .order('rating', { ascending: false })
-      .limit(limit);
-    
-    // Explicitly handle the response data
-    if (response.error) {
-      console.error('Error fetching featured products:', response.error);
+      .filter('attributes->>bestSeller', 'eq', 'true')
+      .limit(4);
+
+    if (error) {
+      console.error('Error fetching featured products:', error);
       return [];
     }
-    
-    if (!response.data || response.data.length === 0) {
-      return [];
-    }
-    
-    // Process each product individually with explicit typing
-    const products: Product[] = [];
-    
-    for (const item of response.data) {
-      try {
-        // Map to final Product type
-        const product = mapSupabaseProductToProduct(item);
-        products.push(product);
-      } catch (err) {
-        console.error('Error processing product:', err);
-      }
-    }
-    
-    return products;
+
+    return data as Product[];
   } catch (error) {
     console.error('Error in getFeaturedProducts:', error);
     return [];
