@@ -291,13 +291,20 @@ const AffiliateDashboard: React.FC = () => {
     setIsCustomDateRange(false);
     
     let newTimeframe: 'week' | 'month' | 'all';
-    if (period === '7d') {
-      newTimeframe = 'week';
-    } else if (period === '30d') {
-      newTimeframe = 'month';
-    } else {
-      // Handle both '90d' and 'all' with the 'all' timeframe
-      newTimeframe = 'all';
+    
+    switch (period) {
+      case '7d':
+        newTimeframe = 'week';
+        break;
+      case '30d':
+        newTimeframe = 'month';
+        break;
+      case '90d':
+      case 'all':
+        newTimeframe = 'all';
+        break;
+      default:
+        newTimeframe = 'week';
     }
     
     setTimeframe(newTimeframe);
