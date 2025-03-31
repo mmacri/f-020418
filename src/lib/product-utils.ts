@@ -226,13 +226,16 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Break the type inference by using `any` at the Supabase client call level
-    const { data, error } = await (supabase
+    // Explicitly type the query to "any" to break the type inference chain
+    const query = supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit) as any);
+      .limit(limit);
+    
+    // Cast the query to any to break type inference
+    const { data, error } = await (query as any);
     
     if (error) {
       console.error('Error fetching featured products:', error);
@@ -243,13 +246,16 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       return [];
     }
     
-    // Process each product individually to avoid complex type inference
+    // Process each product individually with explicit typing
     const result: Product[] = [];
     
-    for (const rawProduct of data) {
+    for (const item of data) {
       try {
-        // Create a completely isolated typed object without relying on TS inference
-        const productData = {
+        // Create a simple intermediate object without nested types
+        const rawProduct = item as Record<string, any>;
+        
+        // Manually construct the product with explicit types to avoid inference issues
+        const supabaseProduct: SupabaseProduct = {
           id: rawProduct.id,
           name: rawProduct.name,
           slug: rawProduct.slug,
@@ -269,6 +275,9 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
           category_id: rawProduct.category_id,
           subcategory: rawProduct.subcategory,
           subcategory_slug: rawProduct.subcategory_slug,
+          // Use explicit double casting to break the type inference chain
+          specifications: (rawProduct.specifications as any) as Json,
+          attributes: (rawProduct.attributes as any) as Json,
           features: rawProduct.features,
           pros: rawProduct.pros,
           cons: rawProduct.cons,
@@ -280,43 +289,7 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
           updated_at: rawProduct.updated_at
         };
         
-        // Manually construct a SupabaseProduct with explicit typing
-        // This breaks any possible type recursion by creating a fresh object
-        const supabaseProduct: SupabaseProduct = {
-          id: productData.id,
-          name: productData.name,
-          slug: productData.slug,
-          description: productData.description,
-          price: productData.price,
-          sale_price: productData.sale_price,
-          original_price: productData.original_price,
-          rating: productData.rating,
-          review_count: productData.review_count,
-          image_url: productData.image_url,
-          images: productData.images,
-          in_stock: productData.in_stock,
-          best_seller: productData.best_seller,
-          featured: productData.featured,
-          is_new: productData.is_new,
-          category: productData.category,
-          category_id: productData.category_id,
-          subcategory: productData.subcategory,
-          subcategory_slug: productData.subcategory_slug,
-          // Use double casting to completely break type inference chain
-          specifications: rawProduct.specifications as any as Json,
-          attributes: rawProduct.attributes as any as Json,
-          features: productData.features,
-          pros: productData.pros,
-          cons: productData.cons,
-          affiliate_url: productData.affiliate_url,
-          asin: productData.asin,
-          brand: productData.brand,
-          availability: productData.availability,
-          created_at: productData.created_at,
-          updated_at: productData.updated_at
-        };
-        
-        // Map to the final Product type
+        // Map to final Product type
         const product = mapSupabaseProductToProduct(supabaseProduct);
         result.push(product);
       } catch (err) {
