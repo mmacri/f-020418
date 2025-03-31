@@ -1,16 +1,18 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ShoppingCart } from 'lucide-react';
+import { ArrowRight, ShoppingCart, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { localStorageKeys, imageUrls } from '@/lib/constants';
 import { ImageWithFallback } from '@/lib/images';
 import FileUploadWithPreview from '@/components/FileUploadWithPreview';
+import { uploadFile } from '@/lib/file-upload';
 
 const HeroSection: React.FC = () => {
   const [heroImageUrl, setHeroImageUrl] = useState<string>(imageUrls.HERO_DEFAULT);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const [showUploader, setShowUploader] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   
   useEffect(() => {
     // Try to load the hero image from localStorage
@@ -28,6 +30,31 @@ const HeroSection: React.FC = () => {
       setHeroImageUrl(url);
       localStorage.setItem(localStorageKeys.HERO_IMAGE, url);
       setShowUploader(false);
+    }
+  };
+  
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+    
+    setIsUploading(true);
+    try {
+      const { url, error } = await uploadFile(file, {
+        bucket: 'product-images',
+        folder: 'hero',
+        fileTypes: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        maxSize: 5 * 1024 * 1024 // 5MB
+      });
+      
+      if (error) {
+        console.error('Error uploading hero image:', error);
+        return;
+      }
+      
+      handleImageUpload(url);
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -48,9 +75,9 @@ const HeroSection: React.FC = () => {
                 className="bg-white text-indigo-700 hover:bg-gray-100 font-semibold border border-white shadow-md"
                 asChild
               >
-                <Link to="/categories">
+                <Link to="/products">
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  Shop All Categories
+                  Shop All Products
                 </Link>
               </Button>
               <Button 
@@ -66,7 +93,7 @@ const HeroSection: React.FC = () => {
               </Button>
             </div>
             
-            {/* Admin only: Quick hero image edit button */}
+            {/* Hero image upload controls */}
             <div className="mt-4">
               <Button 
                 variant="ghost" 

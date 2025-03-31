@@ -1,126 +1,95 @@
 
-import { parseImageUrl } from './imageUtils';
 import { imageUrls } from '@/lib/constants';
 
 /**
- * Extract string URL from possibly complex image object
+ * Gets the product image URL or returns a fallback
  */
-export const extractImageUrl = (imageObj: string | { url: string } | undefined): string => {
-  if (!imageObj) return imageUrls.PRODUCT_DEFAULT;
+export const getProductImageUrl = (product: any): string => {
+  if (!product) return imageUrls.PLACEHOLDER;
   
-  if (typeof imageObj === 'string') {
-    return imageObj;
+  // Try to get image from different possible sources
+  if (product.imageUrl) return product.imageUrl;
+  if (product.image_url) return product.image_url;
+  
+  // If product has images array, use the first one
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    const firstImage = product.images[0];
+    // Handle both string and object formats
+    if (typeof firstImage === 'string') return firstImage;
+    if (typeof firstImage === 'object' && firstImage.url) return firstImage.url;
+    if (typeof firstImage === 'object' && firstImage.src) return firstImage.src;
   }
   
-  if (typeof imageObj === 'object' && 'url' in imageObj) {
-    return imageObj.url;
-  }
-  
+  // Return default placeholder if no image is found
   return imageUrls.PRODUCT_DEFAULT;
 };
 
 /**
- * Get a properly formatted product image URL with enhanced error handling
- */
-export const getProductImageUrl = (product: any, index: number = 0): string => {
-  if (!product) return imageUrls.PRODUCT_DEFAULT;
-
-  try {
-    // Check if product has images array
-    if (product?.images && Array.isArray(product.images) && product.images.length > index) {
-      const imageObj = product.images[index];
-      const imageUrl = parseImageUrl(extractImageUrl(imageObj));
-      return imageUrl || imageUrls.PRODUCT_DEFAULT;
-    }
-    
-    // Check for legacy imageUrl field
-    if (index === 0 && product?.imageUrl) {
-      const imageUrl = parseImageUrl(product.imageUrl);
-      return imageUrl || imageUrls.PRODUCT_DEFAULT;
-    }
-    
-    // Check for additionalImages for legacy support
-    if (index > 0 && product?.additionalImages && Array.isArray(product.additionalImages)) {
-      const additionalIndex = index - 1;
-      if (additionalIndex < product.additionalImages.length) {
-        const imageObj = product.additionalImages[additionalIndex];
-        const imageUrl = parseImageUrl(extractImageUrl(imageObj));
-        return imageUrl || imageUrls.PRODUCT_DEFAULT;
-      }
-    }
-  } catch (error) {
-    console.error('Error getting product image URL:', error);
-  }
-  
-  // Return default product image
-  return imageUrls.PRODUCT_DEFAULT;
-};
-
-/**
- * Safely get multiple product images with fallbacks and enhanced error handling
+ * Gets an array of product images
  */
 export const getProductImages = (product: any): string[] => {
-  if (!product) return [imageUrls.PRODUCT_DEFAULT];
+  if (!product) return [imageUrls.PLACEHOLDER];
   
-  try {
-    const images: string[] = [];
-    
-    // First add main image
-    if (product.imageUrl) {
-      const mainImage = parseImageUrl(product.imageUrl);
-      if (mainImage) images.push(mainImage);
-    }
-    
-    // Then add images from the images array if available
-    if (product.images && Array.isArray(product.images)) {
-      product.images.forEach((img: string | { url: string }) => {
-        const imgUrl = extractImageUrl(img);
-        const parsedImg = parseImageUrl(imgUrl);
-        if (parsedImg && !images.includes(parsedImg)) {
-          images.push(parsedImg);
-        }
-      });
-    } 
-    // Fall back to additionalImages for legacy support
-    else if (product.additionalImages && Array.isArray(product.additionalImages)) {
-      product.additionalImages.forEach((img: string | { url: string }) => {
-        const imgUrl = extractImageUrl(img);
-        const parsedImg = parseImageUrl(imgUrl);
-        if (parsedImg && !images.includes(parsedImg)) {
-          images.push(parsedImg);
-        }
-      });
-    }
-    
-    // If no images were found, use default
-    if (images.length === 0) {
-      images.push(imageUrls.PRODUCT_DEFAULT);
-    }
-    
-    return images;
-  } catch (error) {
-    console.error('Error getting product images:', error);
-    return [imageUrls.PRODUCT_DEFAULT];
+  // If product has images array, process it
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    return product.images.map(image => {
+      // Handle both string and object formats
+      if (typeof image === 'string') return image;
+      if (typeof image === 'object' && image.url) return image.url;
+      if (typeof image === 'object' && image.src) return image.src;
+      return imageUrls.PRODUCT_DEFAULT;
+    });
   }
+  
+  // If no images array, create array with main image
+  if (product.imageUrl) return [product.imageUrl];
+  if (product.image_url) return [product.image_url];
+  
+  // Return default placeholder if no image is found
+  return [imageUrls.PRODUCT_DEFAULT];
 };
 
 /**
- * Create an image URL for a product with cache busting if needed
+ * Creates a product image URL with possible modifications
  */
-export const createProductImageUrl = (url: string, useCacheBusting: boolean = false): string => {
+export const createProductImageUrl = (
+  url: string, 
+  options: { width?: number; height?: number; quality?: number } = {}
+): string => {
   if (!url) return imageUrls.PRODUCT_DEFAULT;
   
+  // If it's a local URL or data URL, return as is
+  if (url.startsWith('/') || url.startsWith('data:')) {
+    return url;
+  }
+  
+  // Handle CDN providers
   try {
-    // Don't add cache busting for local or data URLs
-    if (!useCacheBusting || url.startsWith('/') || url.startsWith('data:')) {
-      return url;
+    const imageUrl = new URL(url);
+    
+    // Cloudinary format
+    if (imageUrl.hostname.includes('cloudinary.com')) {
+      const { width, height, quality } = options;
+      const params = [];
+      
+      if (width) params.push(`w_${width}`);
+      if (height) params.push(`h_${height}`);
+      if (quality) params.push(`q_${quality}`);
+      
+      if (params.length > 0) {
+        // Insert transformation parameters
+        const urlParts = url.split('/upload/');
+        if (urlParts.length === 2) {
+          return `${urlParts[0]}/upload/${params.join(',')}/v${Date.now()}/${urlParts[1]}`;
+        }
+      }
     }
     
-    // Add timestamp as cache buster
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}t=${Date.now()}`;
+    // Else, return the original URL
+    return url;
+    
   } catch (error) {
-    console.error('Error creating product image URL:', error);
-    return imageUrls.PRODUCT_DEFAULT;
+    // If URL parsing fails, return the URL as is
+    return url;
   }
 };

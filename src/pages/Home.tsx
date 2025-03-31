@@ -90,8 +90,8 @@ const Home = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-12">
           <h2 className="text-3xl font-bold">Best Sellers</h2>
-          <Link to="/compare" className="text-indigo-600 font-medium flex items-center">
-            Compare Products
+          <Link to="/products" className="text-indigo-600 font-medium flex items-center">
+            View All Products
             <ChevronRight className="h-5 w-5 ml-1" />
           </Link>
         </div>
@@ -128,9 +128,9 @@ const Home = () => {
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
               asChild
             >
-              <Link to="/categories/massage-guns">
+              <Link to="/products">
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                Shop Recovery Gear
+                Shop All Products
               </Link>
             </Button>
             <Button 

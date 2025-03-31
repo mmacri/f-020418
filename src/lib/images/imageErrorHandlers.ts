@@ -1,56 +1,63 @@
 
+import { imageUrls } from '@/lib/constants';
+import { localStorageKeys } from '@/lib/constants';
+
 /**
- * Handle image loading errors by replacing with a fallback image
+ * Handles image loading errors by replacing the source with a fallback
  */
 export const handleImageError = (
   event: React.SyntheticEvent<HTMLImageElement, Event>,
   fallbackSrc: string
-) => {
-  const img = event.currentTarget;
-  img.src = fallbackSrc;
-  img.onerror = null; // Prevent infinite error loops
+): void => {
+  const target = event.currentTarget;
+  
+  // Check if we should use local fallback images
+  const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
+  
+  // Get appropriate fallback based on settings
+  let fallback = fallbackSrc;
+  if (useLocalFallback) {
+    // Use local fallback if enabled
+    if (fallbackSrc === imageUrls.PRODUCT_DEFAULT) {
+      fallback = '/placeholder-product.svg';
+    } else if (fallbackSrc === imageUrls.CATEGORY_DEFAULT) {
+      fallback = '/placeholder-category.svg';
+    } else if (fallbackSrc === imageUrls.BLOG_DEFAULT) {
+      fallback = '/placeholder-blog.svg';
+    } else if (fallbackSrc === imageUrls.HERO_DEFAULT) {
+      fallback = '/placeholder-hero.svg';
+    } else {
+      fallback = '/placeholder.svg';
+    }
+  }
+  
+  // Prevent infinite loop of error events
+  if (target.src !== fallback) {
+    console.log(`Image failed to load: ${target.src}. Using fallback: ${fallback}`);
+    target.src = fallback;
+  }
 };
 
 /**
- * Log image loading errors for analytics and debugging
+ * Applies object-fit and object-position to ensure the image fits correctly
  */
-export const logImageError = (
-  imageUrl: string, 
-  context: string
-) => {
-  console.error(`Image load failed: ${imageUrl} (${context})`);
-  
-  // In a real app, you might want to send this to an analytics service
-  // Example: analyticsService.logEvent('image_error', { url: imageUrl, context });
+export const applyImageFit = (
+  element: HTMLImageElement, 
+  fit: 'cover' | 'contain' | 'fill' = 'cover',
+  position: string = 'center'
+): void => {
+  element.style.objectFit = fit;
+  element.style.objectPosition = position;
 };
 
 /**
- * Generate a placeholder background for images that failed to load
+ * Preloads an image to ensure it's cached
  */
-export const generatePlaceholderBackground = (
-  text: string,
-  width: number = 300,
-  height: number = 200
-): string => {
-  // Create canvas
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
-  
-  // Draw background
-  ctx.fillStyle = '#f0f0f0';
-  ctx.fillRect(0, 0, width, height);
-  
-  // Draw text
-  ctx.fillStyle = '#aaaaaa';
-  ctx.font = 'bold 14px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text || 'Image not available', width / 2, height / 2);
-  
-  // Return data URL
-  return canvas.toDataURL('image/png');
+export const preloadImage = (src: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(src);
+    img.onerror = () => reject(new Error(`Failed to preload image: ${src}`));
+    img.src = src;
+  });
 };

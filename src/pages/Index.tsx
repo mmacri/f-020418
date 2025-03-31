@@ -69,7 +69,7 @@ const Index = () => {
         products={featuredProducts} 
         title="Featured Recovery Products"
         subtitle="Our handpicked selection of the best recovery tools to help you feel better, move better, and perform better."
-        viewAllLink="/categories/massage-guns"
+        viewAllLink="/products"
         viewAllText="View All Products"
         maxProducts={6}
       />
