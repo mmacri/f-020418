@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -9,7 +8,7 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Login from "@/pages/Login";
 import Blog from "@/pages/Blog";
-import BlogPost from "@/pages/BlogPost";
+import BlogPostPage from "@/pages/BlogPost";
 import RecoveryApps from "@/pages/RecoveryApps";
 import Search from "@/pages/Search";
 import Newsletter from "@/pages/Newsletter";
@@ -49,7 +48,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/recovery-apps" element={<RecoveryApps />} />
             <Route path="/search" element={<Search />} />
             <Route path="/newsletter" element={<Newsletter />} />
