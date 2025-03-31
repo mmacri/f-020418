@@ -11,7 +11,7 @@ import {
   Image
 } from "lucide-react";
 import HeroImageSettings from "./HeroImageSettings";
-import ImageSettingsPanel from "./ImageSettingsPanel";
+import { ImageSettingsPanel } from "./image-settings";
 import BlogSettingsPanel from "./blog/BlogSettingsPanel";
 import { ProfileSettings, PasswordSettings, PreferencesSettings } from "./settings";
 

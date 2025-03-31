@@ -20,6 +20,8 @@ import BlogCategoriesManager from './blog/BlogCategoriesManager';
 import BlogCommentsManager from './blog/BlogCommentsManager';
 import BlogSettingsPanel from './blog/BlogSettingsPanel';
 import { ProfileSettings, PasswordSettings, PreferencesSettings } from './settings';
+import { ImageSettingsPanel } from './image-settings';
+import HeroImageSettings from './HeroImageSettings';
 
 export {
   AdminDashboard,
@@ -46,5 +48,7 @@ export {
   BlogSettingsPanel,
   ProfileSettings,
   PasswordSettings,
-  PreferencesSettings
+  PreferencesSettings,
+  ImageSettingsPanel,
+  HeroImageSettings
 };
