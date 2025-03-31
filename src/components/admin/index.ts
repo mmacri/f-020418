@@ -13,7 +13,8 @@ import ProductsTable from './ProductsTable';
 import ProductsLoadingState from './ProductsLoadingState';
 import EmptyProductsState from './EmptyProductsState';
 import ProductForm from './ProductForm';
-import { DashboardTabs, GeneralStats } from './dashboard';
+import { DashboardTabs, GeneralStats, AnalyticsDashboard } from './dashboard';
+import { AffiliateDashboard } from './affiliate-dashboard';
 
 export {
   AdminDashboard,
@@ -31,5 +32,7 @@ export {
   EmptyProductsState,
   ProductForm,
   DashboardTabs,
-  GeneralStats
+  GeneralStats,
+  AnalyticsDashboard,
+  AffiliateDashboard
 };
