@@ -1,7 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2 } from 'lucide-react';
 import { getNavigationCategories } from '@/services/categoryService';
+import { toast } from 'sonner';
 
 interface CategoryFieldsProps {
   categoryId: number | string;
@@ -23,6 +27,7 @@ const CategoryFields = ({
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showCreateCategory, setShowCreateCategory] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -63,53 +68,102 @@ const CategoryFields = ({
     }
   }, [categoryId, categories, propSubcategories]);
 
+  const handleResetSubcategory = () => {
+    handleSubcategoryChange('none');
+    toast('Subcategory association removed');
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
-        <Select
-          value={categoryId ? categoryId.toString() : "0"}
-          onValueChange={handleCategoryChange}
-          disabled={loading}
-        >
-          <SelectTrigger id="category">
-            <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="0">None</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id.toString()}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="category">Category</Label>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowCreateCategory(!showCreateCategory)}
+              className="h-8 px-2 text-xs"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              {showCreateCategory ? 'Cancel' : 'New'}
+            </Button>
+          </div>
+          <Select
+            value={categoryId ? categoryId.toString() : "0"}
+            onValueChange={handleCategoryChange}
+            disabled={loading}
+          >
+            <SelectTrigger id="category">
+              <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">None</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id.toString()}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="subcategory">Subcategory</Label>
+            {subcategory && subcategory !== 'none' && (
+              <Button 
+                type="button"
+                variant="ghost" 
+                size="sm"
+                onClick={handleResetSubcategory}
+                className="h-8 px-2 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
+          <Select
+            value={subcategory || "none"}
+            onValueChange={handleSubcategoryChange}
+            disabled={subcategories.length === 0 || loading}
+          >
+            <SelectTrigger id="subcategory">
+              <SelectValue placeholder={
+                loading ? "Loading..." : 
+                subcategories.length === 0 ? "Select a category first" : 
+                "Select a subcategory"
+              } />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {subcategories.map((subcategory) => (
+                <SelectItem key={subcategory.id} value={subcategory.slug}>
+                  {subcategory.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="subcategory">Subcategory</Label>
-        <Select
-          value={subcategory || "none"}
-          onValueChange={handleSubcategoryChange}
-          disabled={subcategories.length === 0 || loading}
-        >
-          <SelectTrigger id="subcategory">
-            <SelectValue placeholder={
-              loading ? "Loading..." : 
-              subcategories.length === 0 ? "Select a category first" : 
-              "Select a subcategory"
-            } />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
-            {subcategories.map((subcategory) => (
-              <SelectItem key={subcategory.id} value={subcategory.slug}>
-                {subcategory.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {showCreateCategory && (
+        <div className="p-4 border rounded-md bg-slate-50">
+          <p className="text-sm text-muted-foreground mb-2">
+            Category management is available in the Categories tab of the Admin Dashboard
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCreateCategory(false)}
+          >
+            Close
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
