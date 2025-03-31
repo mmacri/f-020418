@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product, SupabaseProduct } from '@/services/products/types';
@@ -227,40 +226,7 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Define type for the raw database result to avoid TypeScript inference issues
-    type ProductRow = {
-      id: string;
-      name: string;
-      slug: string;
-      description?: string;
-      price?: number;
-      sale_price?: number;
-      original_price?: number;
-      rating?: number;
-      review_count?: number;
-      image_url?: string;
-      images?: any[];
-      in_stock?: boolean;
-      best_seller?: boolean;
-      featured?: boolean;
-      is_new?: boolean;
-      category?: string;
-      category_id?: string;
-      subcategory?: string;
-      subcategory_slug?: string;
-      specifications?: Json;
-      attributes?: Json;
-      features?: string[];
-      pros?: string[];
-      cons?: string[];
-      affiliate_url?: string;
-      asin?: string;
-      brand?: string;
-      availability?: boolean;
-      created_at?: string;
-      updated_at?: string;
-    };
-    
+    // Use a simple any array to avoid type inference issues
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -280,15 +246,15 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     if (data && data.length > 0) {
       // Use a traditional for loop to avoid type recursion issues
       for (let i = 0; i < data.length; i++) {
-        // Explicitly cast to our intermediate type to avoid deep type inference
-        const rawProduct = data[i] as unknown as ProductRow;
+        // Using any as an intermediate step to break the deep type inference
+        const rawProduct: any = data[i];
         
-        // Create explicitly typed SupabaseProduct object
+        // Create a more simply-typed intermediate object
         const supabaseProduct: SupabaseProduct = {
           id: rawProduct.id,
           name: rawProduct.name,
           slug: rawProduct.slug,
-          description: rawProduct.description || '',
+          description: rawProduct.description || null,
           price: rawProduct.price,
           sale_price: rawProduct.sale_price,
           original_price: rawProduct.original_price,
@@ -304,8 +270,8 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
           category_id: rawProduct.category_id,
           subcategory: rawProduct.subcategory,
           subcategory_slug: rawProduct.subcategory_slug,
-          specifications: rawProduct.specifications as Json,
-          attributes: rawProduct.attributes as Json,
+          specifications: rawProduct.specifications,
+          attributes: rawProduct.attributes,
           features: rawProduct.features,
           pros: rawProduct.pros,
           cons: rawProduct.cons,
@@ -317,7 +283,7 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
           updated_at: rawProduct.updated_at
         };
         
-        // Now map to Product type
+        // Convert to Product type using the mapper
         const mappedProduct = mapSupabaseProductToProduct(supabaseProduct);
         result.push(mappedProduct);
       }
