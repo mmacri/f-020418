@@ -226,42 +226,40 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Break type inference completely by using any
-    const response: any = await supabase
+    // Use a simple untyped fetch to break the type inference chain
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit);
-    
-    const data = response.data;
-    const error = response.error;
+      .limit(limit) as { data: any[], error: any };
     
     if (error) {
       console.error('Error fetching featured products:', error);
       return [];
     }
     
-    // Create an empty array to store the processed products
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    // Process each product individually using a simple for loop
     const result: Product[] = [];
     
-    // Process each product individually without type inference chain
-    if (data && data.length > 0) {
-      for (let i = 0; i < data.length; i++) {
-        try {
-          // Explicitly cast specifications and attributes to Json type to avoid recursion
-          const processedProduct = {
-            ...data[i],
-            specifications: data[i].specifications as Json,
-            attributes: data[i].attributes as Json
-          };
-          
-          // Now map to the Product type
-          const mappedProduct = mapSupabaseProductToProduct(processedProduct);
-          result.push(mappedProduct);
-        } catch (err) {
-          console.error('Error mapping product:', err, data[i]);
-        }
+    for (let i = 0; i < data.length; i++) {
+      try {
+        // Create an intermediate product object with explicit type casting
+        const supabaseProduct: SupabaseProduct = {
+          ...data[i],
+          specifications: data[i].specifications as Json,
+          attributes: data[i].attributes as Json
+        };
+        
+        // Map to the final Product type
+        const product = mapSupabaseProductToProduct(supabaseProduct);
+        result.push(product);
+      } catch (err) {
+        console.error('Error processing product:', err);
       }
     }
     
