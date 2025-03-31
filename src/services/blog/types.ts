@@ -93,10 +93,10 @@ export interface SupabaseBlogPostRow {
   scheduled_at: string;
   created_at: string;
   updated_at: string;
-  category_id?: string;
-  read_time?: string;
-  featured?: boolean;
-  seo_title?: string;
-  seo_description?: string;
-  seo_keywords?: string[];
+  category_id: string;
+  read_time: string;
+  featured: boolean;
+  seo_title: string;
+  seo_description: string;
+  seo_keywords: string[];
 }

@@ -48,7 +48,9 @@ const BlogPostScheduler = () => {
 
   const handlePublishNow = async (post: BlogPost) => {
     try {
-      await updateBlogPost(String(post.id), { 
+      // Convert the ID to string to ensure type safety
+      const postId = String(post.id);
+      await updateBlogPost(postId, { 
         published: true,
         scheduledDate: null,
         date: new Date().toISOString().split('T')[0]
@@ -70,7 +72,9 @@ const BlogPostScheduler = () => {
 
   const handleCancelSchedule = async (post: BlogPost) => {
     try {
-      await updateBlogPost(String(post.id), { scheduledDate: null });
+      // Convert the ID to string to ensure type safety
+      const postId = String(post.id);
+      await updateBlogPost(postId, { scheduledDate: null });
       toast({
         title: "Success",
         description: `Schedule for post "${post.title}" has been cancelled.`,
