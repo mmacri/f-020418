@@ -75,6 +75,9 @@ const BlogPostPage = () => {
     );
   }
 
+  // Use the appropriate image URL
+  const imageUrl = post.image || post.image_url || post.coverImage || "https://placehold.co/600x400?text=No+Image";
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
@@ -95,7 +98,7 @@ const BlogPostPage = () => {
             <span className="mx-3 hidden sm:block">•</span>
             <span>{post.date}</span>
             <span className="mx-3 hidden sm:block">•</span>
-            <span>{post.readTime || `${Math.ceil(post.content.length / 1000)} min read`}</span>
+            <span>{post.readTime || post.read_time || `${Math.ceil(post.content.length / 1000)} min read`}</span>
           </div>
         </div>
       </div>
@@ -104,7 +107,7 @@ const BlogPostPage = () => {
       <div className="container mx-auto px-4 -mt-8">
         <div className="max-w-3xl mx-auto">
           <img 
-            src={post.image || post.coverImage || "https://placehold.co/600x400?text=No+Image"} 
+            src={imageUrl} 
             alt={post.title} 
             className="w-full h-auto rounded-lg shadow-xl"
           />

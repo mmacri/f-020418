@@ -15,7 +15,9 @@ const BlogPostsSection: React.FC = () => {
         const posts = await getPublishedBlogPosts();
         // Get the 3 most recent posts
         const recentPosts = [...posts].sort((a, b) => {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          const dateA = a.created_at || a.createdAt;
+          const dateB = b.created_at || b.createdAt;
+          return new Date(dateB).getTime() - new Date(dateA).getTime();
         }).slice(0, 3);
         
         setBlogPosts(recentPosts);
@@ -49,7 +51,7 @@ const BlogPostsSection: React.FC = () => {
             <div key={post.id} className="rounded-lg overflow-hidden shadow-md bg-background">
               <Link to={`/blog/${post.slug}`}>
                 <img 
-                  src={post.image || post.coverImage || "https://placehold.co/600x400?text=No+Image"}
+                  src={post.image || post.image_url || post.coverImage || "https://placehold.co/600x400?text=No+Image"}
                   alt={post.title} 
                   className="w-full h-48 object-cover"
                 />
@@ -61,7 +63,7 @@ const BlogPostsSection: React.FC = () => {
                       : post.excerpt}
                   </p>
                   <div className="text-sm text-muted-foreground">
-                    {post.date} • {post.readTime || `${Math.ceil(post.content.length / 1000)} min read`}
+                    {post.date} • {post.readTime || post.read_time || `${Math.ceil(post.content.length / 1000)} min read`}
                   </div>
                 </div>
               </Link>

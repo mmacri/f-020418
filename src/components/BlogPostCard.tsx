@@ -10,14 +10,18 @@ interface BlogPostCardProps {
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   const isMobile = useIsMobile();
+  
   // Calculate read time if not provided
-  const readTime = post.readTime || `${Math.ceil(post.content.length / 1000)} min read`;
+  const readTime = post.readTime || post.read_time || `${Math.ceil(post.content.length / 1000)} min read`;
+  
+  // Use the appropriate image URL
+  const imageUrl = post.image || post.image_url || post.coverImage || "https://placehold.co/600x400?text=No+Image";
   
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md transition transform hover:shadow-xl h-full flex flex-col">
       <div className={`${isMobile ? 'h-36' : 'h-48'} bg-gray-200 relative overflow-hidden`}>
         <img 
-          src={post.image || post.coverImage || "https://placehold.co/600x400?text=No+Image"} 
+          src={imageUrl} 
           alt={post.title} 
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
         />
@@ -34,7 +38,9 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           </Link>
         </h3>
         <p className="text-gray-600 mb-4 flex-grow text-sm md:text-base">
-          {isMobile ? post.excerpt.substring(0, 100) + (post.excerpt.length > 100 ? '...' : '') : post.excerpt}
+          {isMobile 
+            ? post.excerpt.substring(0, 100) + (post.excerpt.length > 100 ? '...' : '') 
+            : post.excerpt}
         </p>
         <div className="flex justify-between items-center mt-auto text-xs md:text-sm">
           <div>

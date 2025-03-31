@@ -1,15 +1,22 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlogPostCard from "@/components/BlogPostCard";
-import { getPublishedBlogPosts, BlogPost } from "@/services/blog";
+import { 
+  getPublishedBlogPosts, 
+  getBlogCategories,
+  BlogPost, 
+  BlogCategory 
+} from "@/services/blog";
 import { Loader2 } from "lucide-react";
 
 const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [featuredPost, setFeaturedPost] = useState<BlogPost | null>(null);
 
@@ -17,12 +24,18 @@ const Blog = () => {
     const fetchBlogPosts = async () => {
       setIsLoading(true);
       try {
+        // Fetch categories
+        const categoriesData = await getBlogCategories();
+        setCategories(categoriesData);
+        
+        // Fetch posts
         const posts = await getPublishedBlogPosts();
         setBlogPosts(posts);
         
         if (posts.length > 0) {
-          // Simply set the first post as featured, or use another selection logic
-          setFeaturedPost(posts[0]);
+          // Find a featured post or use the first one
+          const featured = posts.find(post => post.featured) || posts[0];
+          setFeaturedPost(featured);
         }
       } catch (error) {
         console.error("Error fetching blog posts:", error);
@@ -34,15 +47,21 @@ const Blog = () => {
     fetchBlogPosts();
   }, []);
 
-  // Extract unique categories from all posts
-  const categories = [...new Set(blogPosts.map(post => post.category))];
-
   const filteredPosts = blogPosts.filter(post => {
+    // Skip the featured post from regular listings
+    if (featuredPost && post.id === featuredPost.id) {
+      return false;
+    }
+    
+    // Filter by category
     const matchesCategory = activeCategory === "all" || 
-                          post.category.toLowerCase().replace(/\s+/g, '-') === activeCategory;
+                          post.category?.toLowerCase().replace(/\s+/g, '-') === activeCategory;
+    
+    // Filter by search term
     const matchesSearch = searchTerm === "" || 
                          post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+    
     return matchesCategory && matchesSearch;
   });
 
@@ -89,15 +108,15 @@ const Blog = () => {
             {/* Generate category buttons dynamically from available categories */}
             {categories.map(category => (
               <button
-                key={category}
-                onClick={() => setActiveCategory(category.toLowerCase().replace(/\s+/g, '-'))}
+                key={category.id}
+                onClick={() => setActiveCategory(category.slug)}
                 className={`px-4 py-2 mx-2 rounded-md font-medium ${
-                  activeCategory === category.toLowerCase().replace(/\s+/g, '-') 
+                  activeCategory === category.slug 
                     ? "bg-indigo-600 text-white" 
                     : "text-gray-700 hover:text-indigo-600"
                 }`}
               >
-                {category}
+                {category.name}
               </button>
             ))}
           </div>
@@ -113,7 +132,7 @@ const Blog = () => {
               <div className="lg:col-span-3">
                 <Link to={`/blog/${featuredPost.slug}`} className="block overflow-hidden rounded-lg shadow-lg h-full">
                   <img 
-                    src={featuredPost.image || featuredPost.coverImage || "https://placehold.co/600x400?text=No+Image"} 
+                    src={featuredPost.image || featuredPost.image_url || "https://placehold.co/600x400?text=No+Image"} 
                     alt={featuredPost.title} 
                     className="w-full h-80 object-cover"
                   />

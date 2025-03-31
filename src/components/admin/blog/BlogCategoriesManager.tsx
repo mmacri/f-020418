@@ -16,16 +16,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Pencil, Trash2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-
-// Define types for blog categories
-interface BlogCategory {
-  id: number | string;
-  name: string;
-  slug: string;
-  description?: string;
-  postCount?: number;
-  createdAt: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { getBlogCategories, addBlogCategory, updateBlogCategory, deleteBlogCategory } from '@/services/blog';
+import { BlogCategory } from '@/services/blog/types';
 
 const BlogCategoriesManager = () => {
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -49,43 +42,8 @@ const BlogCategoriesManager = () => {
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      // Mock data for demo - in a real app, this would come from an API
-      const mockCategories: BlogCategory[] = [
-        {
-          id: 1,
-          name: 'Recovery Tips',
-          slug: 'recovery-tips',
-          description: 'Tips and advice for recovery',
-          postCount: 12,
-          createdAt: '2023-08-15T00:00:00Z'
-        },
-        {
-          id: 2,
-          name: 'Product Reviews',
-          slug: 'product-reviews',
-          description: 'Reviews of recovery products',
-          postCount: 8,
-          createdAt: '2023-09-10T00:00:00Z'
-        },
-        {
-          id: 3,
-          name: 'News',
-          slug: 'news',
-          description: 'Latest news in the recovery space',
-          postCount: 5,
-          createdAt: '2023-10-05T00:00:00Z'
-        },
-        {
-          id: 4,
-          name: 'Guides',
-          slug: 'guides',
-          description: 'Comprehensive guides for recovery',
-          postCount: 7,
-          createdAt: '2023-11-20T00:00:00Z'
-        }
-      ];
-      
-      setCategories(mockCategories);
+      const categoriesData = await getBlogCategories();
+      setCategories(categoriesData);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast({
@@ -137,20 +95,13 @@ const BlogCategoriesManager = () => {
     }
     
     try {
-      // In a real app, this would be an API call
       if (editingCategory) {
         // Update existing category
-        const updatedCategories = categories.map(cat => 
-          cat.id === editingCategory.id 
-            ? { 
-                ...cat, 
-                name: formData.name, 
-                slug: categorySlug, 
-                description: formData.description 
-              } 
-            : cat
-        );
-        setCategories(updatedCategories);
+        await updateBlogCategory(editingCategory.id, {
+          name: formData.name,
+          slug: categorySlug,
+          description: formData.description
+        });
         
         toast({
           title: 'Success',
@@ -158,16 +109,11 @@ const BlogCategoriesManager = () => {
         });
       } else {
         // Create new category
-        const newCategory: BlogCategory = {
-          id: Date.now().toString(), // Mock ID generation
+        await addBlogCategory({
           name: formData.name,
           slug: categorySlug,
-          description: formData.description,
-          postCount: 0,
-          createdAt: new Date().toISOString()
-        };
-        
-        setCategories([...categories, newCategory]);
+          description: formData.description
+        });
         
         toast({
           title: 'Success',
@@ -176,6 +122,7 @@ const BlogCategoriesManager = () => {
       }
       
       setIsDialogOpen(false);
+      fetchCategories();
     } catch (error) {
       console.error('Error saving category:', error);
       toast({
@@ -191,14 +138,14 @@ const BlogCategoriesManager = () => {
   const handleDeleteCategory = async (category: BlogCategory) => {
     if (window.confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) {
       try {
-        // In a real app, this would be an API call
-        const filteredCategories = categories.filter(cat => cat.id !== category.id);
-        setCategories(filteredCategories);
+        await deleteBlogCategory(category.id);
         
         toast({
           title: 'Success',
           description: `Category "${category.name}" has been deleted.`,
         });
+        
+        fetchCategories();
       } catch (error) {
         console.error('Error deleting category:', error);
         toast({
@@ -221,6 +168,21 @@ const BlogCategoriesManager = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  // Count posts for each category
+  const getCategoryPostCount = async (categoryId: string) => {
+    const { count, error } = await supabase
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', categoryId);
+    
+    if (error) {
+      console.error(`Error getting post count for category ${categoryId}:`, error);
+      return 0;
+    }
+    
+    return count || 0;
   };
 
   return (
@@ -276,7 +238,7 @@ const BlogCategoriesManager = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Slug</TableHead>
-                <TableHead>Posts</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -286,8 +248,8 @@ const BlogCategoriesManager = () => {
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{category.name}</TableCell>
                   <TableCell>{category.slug}</TableCell>
-                  <TableCell>{category.postCount || 0}</TableCell>
-                  <TableCell>{formatDate(category.createdAt)}</TableCell>
+                  <TableCell>{category.description ? (category.description.length > 50 ? category.description.substring(0, 50) + '...' : category.description) : '-'}</TableCell>
+                  <TableCell>{category.created_at ? formatDate(category.created_at) : '-'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button

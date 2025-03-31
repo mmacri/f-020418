@@ -4,9 +4,11 @@ import {
   getAllPosts, 
   createPost, 
   updatePost, 
-  deletePost, 
+  deletePost,
+  getBlogCategories,
   BlogPost,
   BlogPostInput,
+  BlogCategory,
   generateSeoSuggestions
 } from '@/services/blog';
 import { Button } from '@/components/ui/button';
@@ -31,6 +33,7 @@ import { format } from 'date-fns';
 
 const AdminBlogPosts = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,6 +45,7 @@ const AdminBlogPosts = () => {
     excerpt: '',
     content: '',
     category: 'General',
+    category_id: '',
     image: '',
     published: false,
     tags: [],
@@ -51,19 +55,24 @@ const AdminBlogPosts = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchPosts();
+    fetchData();
   }, []);
 
-  const fetchPosts = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
+      // Fetch categories first
+      const categoriesData = await getBlogCategories();
+      setCategories(categoriesData);
+      
+      // Then fetch posts
       const postsData = await getAllPosts();
       setPosts(postsData);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('Error fetching data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load blog posts. Please try again.',
+        description: 'Failed to load blog data. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -71,7 +80,7 @@ const AdminBlogPosts = () => {
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -79,14 +88,14 @@ const AdminBlogPosts = () => {
     }));
   };
 
-  const handleSwitchChange = (name, checked) => {
+  const handleSwitchChange = (name: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
       [name]: checked
     }));
   };
 
-  const handleTagsChange = (e) => {
+  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const tagsString = e.target.value;
     const tagsArray = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag);
     setFormData(prev => ({
@@ -95,15 +104,31 @@ const AdminBlogPosts = () => {
     }));
   };
 
+  const handleCategoryChange = (value: string) => {
+    const selectedCategory = categories.find(cat => cat.id === value);
+    
+    setFormData(prev => ({
+      ...prev,
+      category_id: value,
+      category: selectedCategory ? selectedCategory.name : 'General'
+    }));
+  };
+
   const handleCreatePost = () => {
     setEditingPost(null);
     const today = new Date().toISOString().split('T')[0];
+    
+    // Default to first category if available
+    const defaultCategoryId = categories.length > 0 ? categories[0].id : '';
+    const defaultCategoryName = categories.length > 0 ? categories[0].name : 'General';
+    
     setFormData({
       title: '',
       slug: '',
       excerpt: '',
       content: '',
-      category: 'General',
+      category: defaultCategoryName,
+      category_id: defaultCategoryId,
       image: '',
       published: false,
       tags: [],
@@ -121,12 +146,14 @@ const AdminBlogPosts = () => {
       excerpt: post.excerpt || '',
       content: post.content || '',
       category: post.category || 'General',
-      image: post.image || post.coverImage || '',
+      category_id: post.category_id || post.categoryId || '',
+      image: post.image || post.image_url || '',
       published: post.published,
       tags: post.tags || [],
       date: post.date || new Date().toISOString().split('T')[0],
       author: post.author || 'Admin',
-      scheduledDate: post.scheduledDate || ''
+      scheduledDate: post.scheduledDate || post.scheduled_for || '',
+      featured: post.featured || false
     });
     setIsDialogOpen(true);
   };
@@ -146,6 +173,8 @@ const AdminBlogPosts = () => {
       id: 0,
       createdAt: '',
       updatedAt: '',
+      published: true,
+      date: new Date().toLocaleDateString()
     } as BlogPost;
 
     const seoSuggestions = generateSeoSuggestions(tempPost);
@@ -163,7 +192,7 @@ const AdminBlogPosts = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
@@ -194,7 +223,7 @@ const AdminBlogPosts = () => {
       }
       
       setIsDialogOpen(false);
-      fetchPosts();
+      fetchData();
     } catch (error) {
       console.error('Error saving post:', error);
       toast({
@@ -215,7 +244,7 @@ const AdminBlogPosts = () => {
           title: 'Success',
           description: `Post "${post.title}" has been deleted.`,
         });
-        fetchPosts();
+        fetchData();
       } catch (error) {
         console.error('Error deleting post:', error);
         toast({
@@ -233,6 +262,15 @@ const AdminBlogPosts = () => {
     post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (post.category && post.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+  
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy');
+    } catch (error) {
+      return dateString;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -312,7 +350,7 @@ const AdminBlogPosts = () => {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>{format(new Date(post.date), 'MMM d, yyyy')}</TableCell>
+                  <TableCell>{formatDate(post.date)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button
@@ -428,18 +466,18 @@ const AdminBlogPosts = () => {
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                    value={formData.category_id}
+                    onValueChange={handleCategoryChange}
                   >
                     <SelectTrigger id="category">
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="General">General</SelectItem>
-                      <SelectItem value="Recovery Tips">Recovery Tips</SelectItem>
-                      <SelectItem value="Product Reviews">Product Reviews</SelectItem>
-                      <SelectItem value="Guides">Guides</SelectItem>
-                      <SelectItem value="News">News</SelectItem>
+                      {categories.map(category => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -475,6 +513,15 @@ const AdminBlogPosts = () => {
                   onCheckedChange={(checked) => handleSwitchChange('published', checked)}
                 />
                 <Label htmlFor="published">Publish immediately</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="featured"
+                  checked={!!formData.featured}
+                  onCheckedChange={(checked) => handleSwitchChange('featured', checked)}
+                />
+                <Label htmlFor="featured">Featured post (shows at the top of the blog page)</Label>
               </div>
             </div>
             
