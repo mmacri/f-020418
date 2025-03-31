@@ -18,6 +18,7 @@ import { AffiliateDashboard } from './affiliate-dashboard';
 import AdminCategories from './AdminCategories';
 import BlogCategoriesManager from './blog/BlogCategoriesManager';
 import BlogCommentsManager from './blog/BlogCommentsManager';
+import BlogSettingsPanel from './blog/BlogSettingsPanel';
 
 export {
   AdminDashboard,
@@ -40,5 +41,6 @@ export {
   AffiliateDashboard,
   AdminCategories,
   BlogCategoriesManager,
-  BlogCommentsManager
+  BlogCommentsManager,
+  BlogSettingsPanel
 };

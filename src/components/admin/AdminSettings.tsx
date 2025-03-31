@@ -14,9 +14,19 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { User, getCurrentUser, updateUserProfile, updateUserPassword } from "@/services/userService";
-import { SlidersHorizontal, KeyRound, User as UserIcon, ShieldCheck, Save, RefreshCw } from "lucide-react";
+import { 
+  SlidersHorizontal, 
+  KeyRound, 
+  User as UserIcon, 
+  ShieldCheck, 
+  Save, 
+  RefreshCw,
+  BookOpen,
+  Image
+} from "lucide-react";
 import HeroImageSettings from "./HeroImageSettings";
 import ImageSettingsPanel from "./ImageSettingsPanel";
+import BlogSettingsPanel from "./blog/BlogSettingsPanel";
 
 // Profile form schema
 const profileFormSchema = z.object({
@@ -28,7 +38,10 @@ const profileFormSchema = z.object({
 // Password form schema
 const passwordFormSchema = z.object({
   currentPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  newPassword: z.string().min(8, { message: "New password must be at least 8 characters" }),
+  newPassword: z.string().min(8, { message: "New password must be at least 8 characters" })
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+      message: "Password must include at least one uppercase letter, one lowercase letter, and one number",
+    }),
   confirmPassword: z.string().min(8, { message: "Confirm password must be at least 8 characters" }),
 }).refine(data => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
@@ -43,6 +56,7 @@ const AdminSettings = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [cacheSize, setCacheSize] = useState<string>("0 KB");
   const [activeTab, setActiveTab] = useState("profile");
+  const { toast } = useToast();
   
   // Load user data
   useEffect(() => {
@@ -121,7 +135,7 @@ const AdminSettings = () => {
         
         if (updatedUser) {
           setUser(updatedUser);
-          useToast().toast({
+          toast({
             title: "Profile updated",
             description: "Your profile has been updated successfully",
           });
@@ -129,7 +143,7 @@ const AdminSettings = () => {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      useToast().toast({
+      toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
@@ -148,13 +162,13 @@ const AdminSettings = () => {
         const success = await updateUserPassword(user.id, data.currentPassword, data.newPassword);
         
         if (success) {
-          useToast().toast({
+          toast({
             title: "Password updated",
             description: "Your password has been updated successfully",
           });
           passwordForm.reset();
         } else {
-          useToast().toast({
+          toast({
             title: "Error",
             description: "Current password is incorrect",
             variant: "destructive",
@@ -163,7 +177,7 @@ const AdminSettings = () => {
       }
     } catch (error) {
       console.error("Error updating password:", error);
-      useToast().toast({
+      toast({
         title: "Error",
         description: "Failed to update password. Please try again.",
         variant: "destructive",
@@ -175,12 +189,12 @@ const AdminSettings = () => {
   
   // Clear cache
   const handleClearCache = () => {
-    api.clearCache();
+    const clearedCount = api.clearCache();
     calculateCacheSize();
     
-    useToast().toast({
+    toast({
       title: "Cache Cleared",
-      description: "Application cache has been cleared successfully",
+      description: `${clearedCount} cached items have been cleared successfully`,
     });
   };
   
@@ -202,7 +216,7 @@ const AdminSettings = () => {
       </div>
       
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
+        <TabsList className="flex flex-wrap">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <UserIcon className="h-4 w-4" />
             <span>Profile</span>
@@ -211,8 +225,12 @@ const AdminSettings = () => {
             <KeyRound className="h-4 w-4" />
             <span>Password</span>
           </TabsTrigger>
+          <TabsTrigger value="blog" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            <span>Blog</span>
+          </TabsTrigger>
           <TabsTrigger value="images" className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4" />
+            <Image className="h-4 w-4" />
             <span>Images</span>
           </TabsTrigger>
           <TabsTrigger value="preferences" className="flex items-center gap-2">
@@ -386,7 +404,7 @@ const AdminSettings = () => {
                           <Input {...field} type="password" />
                         </FormControl>
                         <FormDescription>
-                          Password must be at least 8 characters.
+                          Password must be at least 8 characters and include uppercase, lowercase, and numbers.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -421,6 +439,11 @@ const AdminSettings = () => {
               </Form>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        {/* Blog Tab */}
+        <TabsContent value="blog" className="space-y-6">
+          <BlogSettingsPanel />
         </TabsContent>
         
         {/* Images Tab */}
@@ -464,6 +487,72 @@ const AdminSettings = () => {
                   </p>
                 </div>
                 <Switch defaultChecked />
+              </div>
+              
+              <Separator />
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium">Dark Mode</label>
+                  <p className="text-xs text-muted-foreground">
+                    Use dark theme for the admin dashboard
+                  </p>
+                </div>
+                <Switch defaultChecked={false} />
+              </div>
+              
+              <Separator />
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium">Email Notifications</label>
+                  <p className="text-xs text-muted-foreground">
+                    Receive email notifications for important events
+                  </p>
+                </div>
+                <Switch defaultChecked={true} />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Interface Settings</CardTitle>
+              <CardDescription>
+                Customize your admin interface experience
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="defaultTab">Default Tab</Label>
+                <select 
+                  id="defaultTab" 
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  defaultValue="dashboard"
+                >
+                  <option value="dashboard">Dashboard</option>
+                  <option value="products">Products</option>
+                  <option value="categories">Categories</option>
+                  <option value="content">Content</option>
+                  <option value="blog">Blog</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Choose which tab to show by default when opening the admin panel
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="itemsPerPage">Items Per Page</Label>
+                <Input
+                  id="itemsPerPage"
+                  type="number"
+                  defaultValue={10}
+                  min={5}
+                  max={100}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Number of items to display in tables and lists
+                </p>
               </div>
             </CardContent>
           </Card>
