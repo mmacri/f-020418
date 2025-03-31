@@ -27,7 +27,7 @@ const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({ products, bestP
             )}
             <div className="h-24 flex items-center justify-center">
               <img 
-                src={getProductImageUrl(product)}
+                src={getProductImageUrl(String(product.id))}
                 alt={product.name} 
                 className="max-h-full max-w-full object-contain" 
               />
