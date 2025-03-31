@@ -292,7 +292,7 @@ const AffiliateDashboard: React.FC = () => {
     let newTimeframe: 'week' | 'month' | 'all' = 'week';
     if (period === '7d') newTimeframe = 'week';
     else if (period === '30d') newTimeframe = 'month';
-    else if (period === '90d') newTimeframe = 'all';
+    else if (period === '90d' || period === 'all') newTimeframe = 'all';
     
     setTimeframe(newTimeframe);
   };

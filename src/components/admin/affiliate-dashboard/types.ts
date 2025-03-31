@@ -29,5 +29,5 @@ export interface ChartDataItem {
   conversionRate?: number;
 }
 
-export type PeriodType = '7d' | '30d' | 'all';
+export type PeriodType = '7d' | '30d' | '90d' | 'all';
 export type ChartViewType = 'daily' | 'weekly' | 'monthly';
