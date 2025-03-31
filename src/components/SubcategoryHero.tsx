@@ -23,9 +23,9 @@ const SubcategoryHero: React.FC<SubcategoryHeroProps> = ({
   
   return (
     <section 
-      className="hero-bg text-white py-12 relative min-h-[240px]" 
+      className="hero-bg text-white py-16 relative min-h-[260px] flex items-center" 
       style={{ 
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7))`,
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.75))`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
@@ -46,15 +46,17 @@ const SubcategoryHero: React.FC<SubcategoryHeroProps> = ({
       
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white drop-shadow-md">
             {subcategoryName}: The Best {categoryName} for Recovery
           </h1>
-          <p className="text-lg mb-4">
+          <p className="text-lg mb-6 text-white/90 drop-shadow">
             {description || subcategory?.description || `Comprehensive guide to the top ${subcategoryName.toLowerCase()} products for improving flexibility, mobility, and aiding recovery`}
           </p>
-          <p className="text-sm bg-indigo-700 inline-block px-3 py-1 rounded-full">
-            <span className="mr-1">ⓘ</span> Affiliate Disclosure: We may earn commissions from qualifying purchases
-          </p>
+          <div className="bg-indigo-800/90 backdrop-blur inline-block px-4 py-2 rounded-md shadow-md">
+            <p className="text-sm font-medium text-white">
+              <span className="mr-1">ⓘ</span> Affiliate Disclosure: We may earn commissions from qualifying purchases
+            </p>
+          </div>
         </div>
       </div>
     </section>
