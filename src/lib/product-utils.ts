@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product, SupabaseProduct } from '@/services/products/types';
@@ -227,13 +226,16 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Fetch data from Supabase - use explicit cast to 'any[]' to break type inference
-    const { data, error } = await supabase
+    // Break type inference completely by using any
+    const response: any = await supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
       .limit(limit);
+    
+    const data = response.data;
+    const error = response.error;
     
     if (error) {
       console.error('Error fetching featured products:', error);
@@ -243,50 +245,22 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     // Create an empty array to store the processed products
     const result: Product[] = [];
     
-    // Process each product individually, avoiding complex type inference
+    // Process each product individually without type inference chain
     if (data && data.length > 0) {
-      for (const item of data) {
-        // Cast raw data to 'any' to break circular type references
-        const rawData: any = item;
-        
-        // Map each raw product to the Product type using the mapper function
+      for (let i = 0; i < data.length; i++) {
         try {
-          const product = mapSupabaseProductToProduct({
-            id: rawData.id,
-            name: rawData.name,
-            slug: rawData.slug,
-            description: rawData.description,
-            price: rawData.price,
-            sale_price: rawData.sale_price,
-            original_price: rawData.original_price,
-            rating: rawData.rating,
-            review_count: rawData.review_count,
-            image_url: rawData.image_url,
-            images: rawData.images,
-            in_stock: rawData.in_stock,
-            best_seller: rawData.best_seller,
-            featured: rawData.featured,
-            is_new: rawData.is_new,
-            category: rawData.category,
-            category_id: rawData.category_id,
-            subcategory: rawData.subcategory,
-            subcategory_slug: rawData.subcategory_slug,
-            specifications: rawData.specifications as Json,
-            attributes: rawData.attributes as Json,
-            features: rawData.features,
-            pros: rawData.pros,
-            cons: rawData.cons,
-            affiliate_url: rawData.affiliate_url,
-            asin: rawData.asin,
-            brand: rawData.brand,
-            availability: rawData.availability,
-            created_at: rawData.created_at,
-            updated_at: rawData.updated_at
-          });
+          // Explicitly cast specifications and attributes to Json type to avoid recursion
+          const processedProduct = {
+            ...data[i],
+            specifications: data[i].specifications as Json,
+            attributes: data[i].attributes as Json
+          };
           
-          result.push(product);
+          // Now map to the Product type
+          const mappedProduct = mapSupabaseProductToProduct(processedProduct);
+          result.push(mappedProduct);
         } catch (err) {
-          console.error('Error mapping product:', err, rawData);
+          console.error('Error mapping product:', err, data[i]);
         }
       }
     }
