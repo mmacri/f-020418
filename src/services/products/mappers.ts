@@ -1,3 +1,4 @@
+
 import { Product, SupabaseProduct } from './types';
 
 /**
@@ -43,6 +44,7 @@ export const mapProductToSupabaseProduct = (product: Partial<Product>): Partial<
     description: product.description,
     price: product.price,
     sale_price: product.salePrice,
+    original_price: product.originalPrice || product.comparePrice,
     rating: product.rating,
     review_count: product.reviewCount,
     image_url: product.imageUrl,
@@ -63,8 +65,7 @@ export const mapProductToSupabaseProduct = (product: Partial<Product>): Partial<
       bestSeller: product.bestSeller,
       comparePrice: product.comparePrice || product.originalPrice
     },
-    availability: product.inStock,
-    original_price: product.originalPrice || product.comparePrice
+    availability: product.inStock
   };
 };
 

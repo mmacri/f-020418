@@ -4,6 +4,33 @@ import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product } from '@/services/products/types';
 
 /**
+ * Format a price for display
+ */
+export const formatPrice = (price?: number): string => {
+  if (price === undefined || price === null) {
+    return '$0.00';
+  }
+  return `$${price.toFixed(2)}`;
+};
+
+/**
+ * Get the URL for a product
+ */
+export const getProductUrl = (product: Product): string => {
+  return `/products/${product.slug}`;
+};
+
+/**
+ * Get a category name from its slug
+ */
+export const getCategoryName = (slug: string): string => {
+  return slug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+/**
  * Get all products for a subcategory
  */
 export const getProductsBySubcategory = async (categorySlug: string, subcategorySlug: string): Promise<Product[]> => {
@@ -100,6 +127,66 @@ export const getRelatedProducts = async (product: Product, limit = 4): Promise<P
     return data.map(product => mapSupabaseProductToProduct(product));
   } catch (error) {
     console.error('Error in getRelatedProducts:', error);
+    return [];
+  }
+};
+
+/**
+ * Get all products for a category
+ */
+export const getProductsByCategory = async (categorySlug: string): Promise<Product[]> => {
+  try {
+    // Get the category ID
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', categorySlug)
+      .single();
+    
+    if (categoryError || !categoryData) {
+      console.error('Error fetching category:', categoryError);
+      return [];
+    }
+    
+    // Get products with matching category ID
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('category_id', categoryData.id);
+    
+    if (productsError) {
+      console.error('Error fetching products for category:', productsError);
+      return [];
+    }
+    
+    // Map products to our Product type
+    return products.map(product => mapSupabaseProductToProduct(product));
+  } catch (error) {
+    console.error('Error in getProductsByCategory:', error);
+    return [];
+  }
+};
+
+/**
+ * Get featured products
+ */
+export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('best_seller', true)
+      .order('rating', { ascending: false })
+      .limit(limit);
+    
+    if (error) {
+      console.error('Error fetching featured products:', error);
+      return [];
+    }
+    
+    return data.map(product => mapSupabaseProductToProduct(product));
+  } catch (error) {
+    console.error('Error in getFeaturedProducts:', error);
     return [];
   }
 };
