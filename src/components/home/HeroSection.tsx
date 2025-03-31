@@ -38,9 +38,9 @@ const HeroSection: React.FC = () => {
                 className="bg-white text-indigo-700 hover:bg-gray-100 font-semibold border border-white shadow-md"
                 asChild
               >
-                <Link to="/categories/massage-guns">
+                <Link to="/categories">
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  Shop Recovery Gear
+                  Shop All Categories
                 </Link>
               </Button>
               <Button 
@@ -60,7 +60,7 @@ const HeroSection: React.FC = () => {
             <ImageWithFallback 
               src={heroImageUrl} 
               alt="Recovery Equipment" 
-              className="rounded-lg w-full h-auto"
+              className="rounded-lg w-full h-auto object-cover"
               fallbackSrc={imageUrls.HERO_DEFAULT}
               disableCacheBusting={false}
               type="hero"

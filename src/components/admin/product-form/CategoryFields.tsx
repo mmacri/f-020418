@@ -1,13 +1,12 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getNavigationCategories } from '@/services/categoryService';
 
 interface CategoryFieldsProps {
   categoryId: number | string;
   subcategory: string;
-  categories: any[];
-  subcategories: any[];
   handleCategoryChange: (value: string) => void;
   handleSubcategoryChange: (value: string) => void;
 }
@@ -15,21 +14,53 @@ interface CategoryFieldsProps {
 const CategoryFields = ({
   categoryId,
   subcategory,
-  categories,
-  subcategories,
   handleCategoryChange,
   handleSubcategoryChange
 }: CategoryFieldsProps) => {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const result = await getNavigationCategories();
+        setCategories(result);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    if (categoryId && categories.length > 0) {
+      // Find selected category and get its subcategories
+      const selectedCategory = categories.find(cat => cat.id.toString() === categoryId.toString());
+      if (selectedCategory && selectedCategory.subcategories) {
+        setSubcategories(selectedCategory.subcategories);
+      } else {
+        setSubcategories([]);
+      }
+    } else {
+      setSubcategories([]);
+    }
+  }, [categoryId, categories]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
         <Select
-          value={String(categoryId)}
+          value={categoryId ? categoryId.toString() : "0"}
           onValueChange={handleCategoryChange}
+          disabled={loading}
         >
           <SelectTrigger id="category">
-            <SelectValue placeholder="Select a category" />
+            <SelectValue placeholder={loading ? "Loading categories..." : "Select a category"} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="0">None</SelectItem>
@@ -45,12 +76,16 @@ const CategoryFields = ({
       <div className="space-y-2">
         <Label htmlFor="subcategory">Subcategory</Label>
         <Select
-          value={subcategory}
+          value={subcategory || "none"}
           onValueChange={handleSubcategoryChange}
-          disabled={subcategories.length === 0}
+          disabled={subcategories.length === 0 || loading}
         >
           <SelectTrigger id="subcategory">
-            <SelectValue placeholder={subcategories.length === 0 ? "Select a category first" : "Select a subcategory"} />
+            <SelectValue placeholder={
+              loading ? "Loading..." : 
+              subcategories.length === 0 ? "Select a category first" : 
+              "Select a subcategory"
+            } />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None</SelectItem>

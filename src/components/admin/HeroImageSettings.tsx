@@ -6,11 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { localStorageKeys, imageUrls } from '@/lib/constants';
 import { ImageWithFallback } from '@/lib/images';
+import FileUploadWithPreview from '@/components/FileUploadWithPreview';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const HeroImageSettings: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [useLocalFallback, setUseLocalFallback] = useState<boolean>(false);
+  const [uploadTab, setUploadTab] = useState<string>('url');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,6 +59,11 @@ const HeroImageSettings: React.FC = () => {
     });
   };
 
+  const handleFileUpload = (url: string) => {
+    setImageUrl(url);
+    setPreviewUrl(url);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -65,21 +73,44 @@ const HeroImageSettings: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="heroImage" className="text-sm font-medium">
-            Hero Image URL
-          </label>
-          <Input
-            id="heroImage"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="Enter image URL"
-            aria-describedby="heroImageHelp"
-          />
-          <p id="heroImageHelp" className="text-xs text-muted-foreground">
-            Enter a valid URL for the hero image. Recommended size: 1920x600px.
-          </p>
-        </div>
+        <Tabs defaultValue={uploadTab} onValueChange={setUploadTab} className="w-full">
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="url">Image URL</TabsTrigger>
+            <TabsTrigger value="upload">Upload Image</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="url" className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <label htmlFor="heroImage" className="text-sm font-medium">
+                Hero Image URL
+              </label>
+              <Input
+                id="heroImage"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="Enter image URL"
+                aria-describedby="heroImageHelp"
+              />
+              <p id="heroImageHelp" className="text-xs text-muted-foreground">
+                Enter a valid URL for the hero image. Recommended size: 1920x600px.
+              </p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="upload" className="space-y-4 mt-4">
+            <FileUploadWithPreview
+              onFileChange={handleFileUpload}
+              currentImage={imageUrl !== imageUrls.HERO_DEFAULT ? imageUrl : undefined}
+              bucket="product-images"
+              folder="hero"
+              maxSize={5}
+              aspectRatio="landscape"
+            />
+            <p className="text-xs text-muted-foreground">
+              Upload a hero image. Recommended size: 1920x600px. Maximum file size: 5MB.
+            </p>
+          </TabsContent>
+        </Tabs>
         
         <div className="flex items-center space-x-2">
           <input
@@ -102,7 +133,7 @@ const HeroImageSettings: React.FC = () => {
               alt="Hero Preview"
               className="max-h-full max-w-full object-contain"
               fallbackSrc={useLocalFallback ? imageUrls.PLACEHOLDER : imageUrls.HERO_DEFAULT}
-              type="category"
+              type="hero"
             />
           </div>
         </div>
