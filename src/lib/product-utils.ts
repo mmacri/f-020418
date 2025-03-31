@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product, SupabaseProduct } from '@/services/products/types';
@@ -189,7 +190,8 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
     const { data: productsData, error: productsError } = await supabase
       .from('products')
       .select('*')
-      .eq('category_id', categoryData.id);
+      .eq('category_id', categoryData.id)
+      .order('id');
     
     if (productsError) {
       console.error('Error fetching products for category:', productsError);
