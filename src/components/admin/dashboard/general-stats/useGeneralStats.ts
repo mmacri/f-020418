@@ -1,26 +1,28 @@
 
-import React, { useState, useEffect } from 'react';
-import { useDashboard } from './DashboardContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ChevronDown, Download } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
+import { saveAs } from 'file-saver';
+import { DashboardTimeframe } from '../DashboardContext';
 
 interface CountResult {
   count: number;
 }
 
-const GeneralStats: React.FC = () => {
-  const { timeframe, setTimeframe, isLoading, setIsLoading } = useDashboard();
-  const [stats, setStats] = useState({
+interface StatsData {
+  totalUsers: number;
+  activeProducts: number;
+  blogPosts: number;
+  userGrowth: number;
+  productGrowth: number;
+  blogGrowth: number;
+}
+
+export const useGeneralStats = (
+  timeframe: DashboardTimeframe, 
+  setIsLoading: (loading: boolean) => void
+) => {
+  const [stats, setStats] = useState<StatsData>({
     totalUsers: 0,
     activeProducts: 0,
     blogPosts: 0,
@@ -28,10 +30,6 @@ const GeneralStats: React.FC = () => {
     productGrowth: 0,
     blogGrowth: 0
   });
-
-  useEffect(() => {
-    fetchStats();
-  }, [timeframe]);
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -144,10 +142,6 @@ const GeneralStats: React.FC = () => {
     return Math.round(((current - previous) / previous) * 100);
   };
 
-  const handleTimeframeChange = (newTimeframe: 'week' | 'month' | 'quarter' | 'year') => {
-    setTimeframe(newTimeframe);
-  };
-
   const exportStats = () => {
     try {
       // Create CSV data
@@ -164,119 +158,13 @@ const GeneralStats: React.FC = () => {
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">General Statistics</h2>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                {timeframe === 'week' ? 'Last Week' : 
-                 timeframe === 'month' ? 'Last Month' : 
-                 timeframe === 'quarter' ? 'Last Quarter' : 'Last Year'}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleTimeframeChange('week')}>
-                Last Week
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleTimeframeChange('month')}>
-                Last Month
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleTimeframeChange('quarter')}>
-                Last Quarter
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleTimeframeChange('year')}>
-                Last Year
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" size="icon" onClick={exportStats}>
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Users
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="animate-pulse">
-                <div className="h-6 w-1/3 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
-              </div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  <span className={`${stats.userGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {stats.userGrowth > 0 ? '+' : ''}{stats.userGrowth}%
-                  </span> from last {timeframe}
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Active Products
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="animate-pulse">
-                <div className="h-6 w-1/3 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
-              </div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{stats.activeProducts}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  <span className={`${stats.productGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {stats.productGrowth > 0 ? '+' : ''}{stats.productGrowth}%
-                  </span> from last {timeframe}
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Blog Posts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="animate-pulse">
-                <div className="h-6 w-1/3 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
-              </div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{stats.blogPosts}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  <span className={`${stats.blogGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {stats.blogGrowth > 0 ? '+' : ''}{stats.blogGrowth}%
-                  </span> published this {timeframe}
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-};
+  useEffect(() => {
+    fetchStats();
+  }, [timeframe]);
 
-export default GeneralStats;
+  return {
+    stats,
+    exportStats,
+    fetchStats
+  };
+};
