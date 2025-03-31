@@ -8,16 +8,13 @@ import { Product } from '@/services/products/types';
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Build the query first without executing it
-    const query = supabase
+    // Cast the query result to a simpler type to avoid deep type inference
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit);
-    
-    // Execute the query separately to avoid deep type inference
-    const { data, error } = await query;
+      .limit(limit) as { data: any[] | null; error: any };
     
     if (error) {
       console.error('Error fetching featured products:', error);
