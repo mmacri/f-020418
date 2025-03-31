@@ -8,17 +8,19 @@ import { Product } from '@/services/products/types';
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Use raw query to completely avoid TypeScript's deep type inference
-    const { data, error } = await (supabase
+    // Bypass TypeScript's deep type inference completely
+    const query = supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit)) as unknown as { 
-        data: any[] | null; 
-        error: any | null 
-      };
+      .limit(limit);
       
+    // Perform the query and immediately cast to a simple type
+    const result = await query;
+    const data = result.data as any[] | null;
+    const error = result.error;
+    
     if (error) {
       console.error('Error fetching featured products:', error);
       return [];
