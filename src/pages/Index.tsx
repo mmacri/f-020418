@@ -63,7 +63,7 @@ const Index = () => {
   
   return (
     <MainLayout>
-      <HeroSection />
+      <HeroSection buttonText="Shop All Categories" buttonLink="/categories" />
       <CategoriesSection categories={categories} />
       <FeaturedProductsSection 
         products={featuredProducts} 

@@ -8,7 +8,15 @@ import { ImageWithFallback } from '@/lib/images';
 import FileUploadWithPreview from '@/components/FileUploadWithPreview';
 import { uploadFile } from '@/lib/file-upload';
 
-const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  buttonText?: string;
+  buttonLink?: string;
+}
+
+const HeroSection: React.FC<HeroSectionProps> = ({ 
+  buttonText = "Shop Recovery Gear", 
+  buttonLink = "/products" 
+}) => {
   const [heroImageUrl, setHeroImageUrl] = useState<string>(imageUrls.HERO_DEFAULT);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const [showUploader, setShowUploader] = useState<boolean>(false);
@@ -75,9 +83,9 @@ const HeroSection: React.FC = () => {
                 className="bg-white text-indigo-700 hover:bg-gray-100 font-semibold border border-white shadow-md"
                 asChild
               >
-                <Link to="/products">
+                <Link to={buttonLink}>
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  Shop All Products
+                  {buttonText}
                 </Link>
               </Button>
               <Button 
