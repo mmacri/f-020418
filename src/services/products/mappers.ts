@@ -1,5 +1,6 @@
 
 import { Product, SupabaseProduct } from './types';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Extract image URL from different image formats
@@ -52,7 +53,7 @@ export const mapProductToSupabaseProduct = (product: Partial<Product>): Partial<
     in_stock: product.inStock,
     category_id: product.categoryId,
     subcategory_slug: product.subcategory,
-    specifications: product.specifications,
+    specifications: product.specifications as unknown as Json,
     features: product.features,
     pros: product.pros,
     cons: product.cons,
@@ -64,7 +65,7 @@ export const mapProductToSupabaseProduct = (product: Partial<Product>): Partial<
       shortDescription: product.shortDescription,
       bestSeller: product.bestSeller,
       comparePrice: product.comparePrice || product.originalPrice
-    },
+    } as unknown as Json,
     availability: product.inStock
   };
 };
@@ -78,7 +79,7 @@ export const mapSupabaseProductToProduct = (supabaseProduct: SupabaseProduct): P
   }
   
   // Extract attributes from the attributes JSON object
-  const attributes = supabaseProduct.attributes || {};
+  const attributes = supabaseProduct.attributes as unknown as Record<string, any> || {};
   
   return {
     id: supabaseProduct.id,
@@ -96,7 +97,7 @@ export const mapSupabaseProductToProduct = (supabaseProduct: SupabaseProduct): P
     inStock: supabaseProduct.in_stock !== false,
     categoryId: supabaseProduct.category_id,
     subcategory: supabaseProduct.subcategory_slug,
-    specifications: supabaseProduct.specifications || {},
+    specifications: supabaseProduct.specifications as unknown as Record<string, any> || {},
     features: supabaseProduct.features || [],
     pros: supabaseProduct.pros || [],
     cons: supabaseProduct.cons || [],

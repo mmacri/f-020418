@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product } from '@/services/products/types';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Format a price for display
@@ -72,8 +73,12 @@ export const getProductsBySubcategory = async (categorySlug: string, subcategory
       return [];
     }
     
-    // Map products to our Product type
-    return products.map(product => mapSupabaseProductToProduct(product));
+    // Map products to our Product type with proper type casting
+    return products.map(product => mapSupabaseProductToProduct({
+      ...product,
+      specifications: product.specifications as Json,
+      attributes: product.attributes as Json
+    }));
   } catch (error) {
     console.error('Error in getProductsBySubcategory:', error);
     return [];
@@ -96,7 +101,11 @@ export const getProductBySlug = async (slug: string): Promise<Product | null> =>
       return null;
     }
     
-    return mapSupabaseProductToProduct(data);
+    return mapSupabaseProductToProduct({
+      ...data,
+      specifications: data.specifications as Json,
+      attributes: data.attributes as Json
+    });
   } catch (error) {
     console.error('Error in getProductBySlug:', error);
     return null;
@@ -124,7 +133,11 @@ export const getRelatedProducts = async (product: Product, limit = 4): Promise<P
       return [];
     }
     
-    return data.map(product => mapSupabaseProductToProduct(product));
+    return data.map(product => mapSupabaseProductToProduct({
+      ...product,
+      specifications: product.specifications as Json,
+      attributes: product.attributes as Json
+    }));
   } catch (error) {
     console.error('Error in getRelatedProducts:', error);
     return [];
@@ -160,7 +173,11 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
     }
     
     // Map products to our Product type
-    return products.map(product => mapSupabaseProductToProduct(product));
+    return products.map(product => mapSupabaseProductToProduct({
+      ...product,
+      specifications: product.specifications as Json,
+      attributes: product.attributes as Json
+    }));
   } catch (error) {
     console.error('Error in getProductsByCategory:', error);
     return [];
@@ -184,7 +201,11 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       return [];
     }
     
-    return data.map(product => mapSupabaseProductToProduct(product));
+    return data.map(product => mapSupabaseProductToProduct({
+      ...product,
+      specifications: product.specifications as Json,
+      attributes: product.attributes as Json
+    }));
   } catch (error) {
     console.error('Error in getFeaturedProducts:', error);
     return [];

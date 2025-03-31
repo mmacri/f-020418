@@ -1,4 +1,6 @@
 
+import { Json } from '@/integrations/supabase/types';
+
 export interface SupabaseProduct {
   id: string;
   name: string;
@@ -19,8 +21,8 @@ export interface SupabaseProduct {
   category_id?: string;
   subcategory?: string;
   subcategory_slug?: string;
-  specifications?: Record<string, any>;
-  attributes?: Record<string, any>;
+  specifications?: Json;
+  attributes?: Json;
   features?: string[];
   pros?: string[];
   cons?: string[];
