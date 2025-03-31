@@ -4,7 +4,7 @@ import MainLayout from '@/components/layouts/MainLayout';
 import { getNavigationCategories } from '@/services/categoryService';
 import { getProducts } from '@/services/productService';
 
-// Import new components
+// Import home page components
 import HomeHero from '@/components/home/HomeHero';
 import HomeFeaturedCategories from '@/components/home/HomeFeaturedCategories';
 import HomeFeaturedProducts from '@/components/home/HomeFeaturedProducts';
