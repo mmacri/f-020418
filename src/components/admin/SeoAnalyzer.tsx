@@ -12,7 +12,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from '@/components/ui/tabs';
-import { analyzeReadability, generateSeoSuggestions } from '@/services/blogService';
+import { analyzeReadability, generateSeoSuggestions } from '@/services/blog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';

@@ -14,7 +14,7 @@ import {
 } from '@/components/admin';
 import AdminCategories from '@/components/admin/AdminCategories';
 import SubcategoryManager from '@/components/admin/SubcategoryManager';
-import { publishScheduledPosts } from '@/services/blogService';
+import { publishScheduledPosts } from '@/services/blog';
 import { toast } from 'sonner';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';

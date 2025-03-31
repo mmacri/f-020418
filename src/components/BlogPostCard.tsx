@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { BlogPost } from '@/services/blog';
 
 interface BlogPostCardProps {
   post: {

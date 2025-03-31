@@ -1,186 +1,176 @@
-
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { CalendarIcon, Clock, PlusCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+  getScheduledBlogPosts, 
+  publishScheduledPosts, 
+  updateBlogPost, 
+  BlogPost
+} from '@/services/blog';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { format, parseISO } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { CalendarCheck, CalendarX, Clock, RefreshCcw } from 'lucide-react';
 
-// Mock type for scheduled posts
-interface ScheduledPost {
-  id: string;
-  title: string;
-  scheduledDate: Date;
-  status: 'scheduled';
-}
+const BlogPostScheduler = () => {
+  const [scheduledPosts, setScheduledPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-const BlogPostScheduler: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
-  const [postsByDate, setPostsByDate] = useState<Record<string, ScheduledPost[]>>({});
-
-  // Load scheduled posts (mock data for demonstration)
   useEffect(() => {
-    // In a real application, you would fetch this from an API
-    const mockPosts: ScheduledPost[] = [
-      {
-        id: '1',
-        title: '10 Best Recovery Tips',
-        scheduledDate: new Date(new Date().setDate(new Date().getDate() + 2)),
-        status: 'scheduled',
-      },
-      {
-        id: '2',
-        title: 'Recovery Guide for Beginners',
-        scheduledDate: new Date(new Date().setDate(new Date().getDate() + 3)),
-        status: 'scheduled',
-      },
-      {
-        id: '3',
-        title: 'Product Review: Recovery Tools',
-        scheduledDate: new Date(new Date().setDate(new Date().getDate() + 5)),
-        status: 'scheduled',
-      },
-    ];
-    
-    setScheduledPosts(mockPosts);
-    
-    // Group posts by date for the calendar view
-    const grouped = mockPosts.reduce((acc, post) => {
-      const dateKey = format(post.scheduledDate, 'yyyy-MM-dd');
-      if (!acc[dateKey]) {
-        acc[dateKey] = [];
-      }
-      acc[dateKey].push(post);
-      return acc;
-    }, {} as Record<string, ScheduledPost[]>);
-    
-    setPostsByDate(grouped);
+    fetchScheduledPosts();
   }, []);
 
-  // Get posts for the selected date
-  const getPostsForSelectedDate = () => {
-    if (!selectedDate) return [];
-    
-    const dateKey = format(selectedDate, 'yyyy-MM-dd');
-    return postsByDate[dateKey] || [];
+  const fetchScheduledPosts = async () => {
+    setIsLoading(true);
+    try {
+      const posts = await getScheduledBlogPosts();
+      setScheduledPosts(posts);
+    } catch (error) {
+      console.error("Error fetching scheduled posts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load scheduled posts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Render the calendar with post indicators
-  const renderCalendarWithPosts = () => {
-    return (
-      <Calendar
-        mode="single"
-        selected={selectedDate}
-        onSelect={setSelectedDate}
-        className="rounded-md border"
-        modifiers={{
-          booked: (date) => {
-            const dateKey = format(date, 'yyyy-MM-dd');
-            return !!postsByDate[dateKey];
-          },
-        }}
-        modifiersClassNames={{
-          booked: "bg-primary/20 font-bold text-primary",
-        }}
-      />
-    );
+  const handlePublishNow = async (post: BlogPost) => {
+    try {
+      await updateBlogPost(post.id, { 
+        published: true,
+        scheduledDate: null,
+        date: new Date().toISOString().split('T')[0]
+      });
+      toast({
+        title: "Success",
+        description: `Post "${post.title}" has been published.`,
+      });
+      fetchScheduledPosts();
+    } catch (error) {
+      console.error("Error publishing post:", error);
+      toast({
+        title: "Error",
+        description: "Failed to publish post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancelSchedule = async (post: BlogPost) => {
+    try {
+      await updateBlogPost(post.id, { scheduledDate: null });
+      toast({
+        title: "Success",
+        description: `Schedule for post "${post.title}" has been cancelled.`,
+      });
+      fetchScheduledPosts();
+    } catch (error) {
+      console.error("Error cancelling schedule:", error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel schedule. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReschedule = async () => {
+    try {
+      const publishedCount = await publishScheduledPosts();
+      if (publishedCount > 0) {
+        toast({
+          title: "Success",
+          description: `${publishedCount} scheduled posts have been published.`,
+        });
+      } else {
+        toast({
+          title: "Info",
+          description: "No posts were due for publishing.",
+        });
+      }
+      fetchScheduledPosts();
+    } catch (error) {
+      console.error("Error rescheduling posts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reschedule posts. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Content Schedule</CardTitle>
-        <CardDescription>
-          View and manage your scheduled blog posts
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            {renderCalendarWithPosts()}
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <div className="w-4 h-4 rounded-sm bg-primary/20 mr-2"></div>
-                <span>Posts scheduled</span>
-              </div>
-              
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    Today
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    initialFocus
-                    selected={new Date()}
-                    onSelect={setSelectedDate}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">
-                {selectedDate 
-                  ? format(selectedDate, 'MMMM d, yyyy') 
-                  : "Select a date"}
-              </h3>
-              <Button size="sm" className="flex items-center gap-1">
-                <PlusCircle className="h-4 w-4" />
-                <span>New Post</span>
-              </Button>
-            </div>
-            
-            <Separator />
-            
-            <div>
-              {selectedDate && getPostsForSelectedDate().length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No posts scheduled for this date.</p>
-                  <Button variant="outline" className="mt-4" size="sm">
-                    <PlusCircle className="h-4 w-4 mr-2" /> 
-                    Schedule a post
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {getPostsForSelectedDate().map((post) => (
-                    <div 
-                      key={post.id} 
-                      className="flex items-center justify-between p-3 border rounded-md hover:bg-accent/10 transition-colors"
-                    >
-                      <div>
-                        <h4 className="font-medium">{post.title}</h4>
-                        <div className="flex items-center text-sm text-muted-foreground mt-1">
-                          <Clock className="h-3 w-3 mr-1" />
-                          <span>{format(post.scheduledDate, 'h:mm a')}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">Scheduled</Badge>
-                        <Button size="sm" variant="ghost">Edit</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+    <Card className="border shadow-sm">
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Scheduled Blog Posts</h2>
+          <Button variant="outline" size="sm" onClick={handleReschedule}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Reschedule All
+          </Button>
         </div>
+
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <Clock className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Loading scheduled posts...</span>
+          </div>
+        ) : scheduledPosts.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-lg text-gray-500">No blog posts are currently scheduled.</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Scheduled Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {scheduledPosts.map((post) => (
+                <TableRow key={post.id}>
+                  <TableCell className="font-medium">{post.title}</TableCell>
+                  <TableCell>
+                    {format(parseISO(post.scheduledDate || ''), 'MMM d, yyyy h:mm aa')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePublishNow(post)}
+                      >
+                        <CalendarCheck className="h-4 w-4 mr-2" />
+                        Publish Now
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleCancelSchedule(post)}
+                      >
+                        <CalendarX className="h-4 w-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,59 +1,32 @@
-
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlogPostCard from "@/components/BlogPostCard";
-import { useState } from "react";
+import { getPublishedBlogPosts, BlogPost } from "@/services/blog";
+import { Loader2 } from "lucide-react";
 
 const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const blogPosts = [
-    {
-      id: 1,
-      slug: "recovery-frequency",
-      title: "How Often Should You Use Recovery Tools?",
-      excerpt: "Finding the optimal frequency for massage guns, foam rollers, and other recovery modalities for your specific needs.",
-      image: "https://ext.same-assets.com/4181642789/575270868.jpeg",
-      category: "Recovery Science",
-      date: "April 12, 2023",
-      readTime: "5 min read",
-      author: "Elena Rodriguez"
-    },
-    {
-      id: 2,
-      slug: "massage-gun-techniques",
-      title: "6 Effective Massage Gun Techniques for Faster Recovery",
-      excerpt: "Master these techniques to maximize your percussion therapy results and enhance muscle recovery.",
-      image: "https://ext.same-assets.com/198595764/1658350751.jpeg",
-      category: "Techniques",
-      date: "May 14, 2023",
-      readTime: "8 min read",
-      author: "Dr. Sarah Johnson"
-    },
-    {
-      id: 3,
-      slug: "active-vs-passive-recovery",
-      title: "Essential Recovery Routines for Runners",
-      excerpt: "Follow these research-backed recovery routines to enhance performance and prevent common running injuries.",
-      image: "https://ext.same-assets.com/30303036/runner-recovery-routine.jpg",
-      category: "Running Recovery",
-      date: "June 21, 2023",
-      readTime: "10 min read"
-    },
-    {
-      id: 4,
-      slug: "foam-rolling-guide",
-      title: "The Ultimate Guide to Foam Rolling",
-      excerpt: "Learn proper foam rolling techniques to relieve muscle tension and improve flexibility.",
-      image: "https://ext.same-assets.com/1001010124/foam-roller-guide.jpg",
-      category: "Techniques",
-      date: "July 8, 2023",
-      readTime: "12 min read",
-      author: "Dr. Sarah Johnson"
-    }
-  ];
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      setIsLoading(true);
+      try {
+        const posts = await getPublishedBlogPosts();
+        setBlogPosts(posts);
+      } catch (error) {
+        console.error("Error fetching blog posts:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlogPosts();
+  }, []);
 
   // Filter posts based on category and search term
   const filteredPosts = blogPosts.filter(post => {
@@ -187,7 +160,11 @@ const Blog = () => {
             </div>
           </div>
 
-          {filteredPosts.length > 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+          ) : filteredPosts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredPosts.map((post) => (
                 <BlogPostCard key={post.id} post={post} />
