@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product, SupabaseProduct } from '@/services/products/types';
@@ -73,7 +74,7 @@ export const getProductsBySubcategory = async (categorySlug: string, subcategory
     }
     
     // Map products to our Product type with proper type casting
-    return products.map(product => mapSupabaseProductToProduct({
+    return (products || []).map(product => mapSupabaseProductToProduct({
       ...product,
       specifications: product.specifications as Json,
       attributes: product.attributes as Json
@@ -132,7 +133,7 @@ export const getRelatedProducts = async (product: Product, limit = 4): Promise<P
       return [];
     }
     
-    return data.map(product => mapSupabaseProductToProduct({
+    return (data || []).map(product => mapSupabaseProductToProduct({
       ...product,
       specifications: product.specifications as Json,
       attributes: product.attributes as Json
@@ -171,12 +172,18 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
       return [];
     }
     
-    // Map products to our Product type
-    return products.map((product: any) => mapSupabaseProductToProduct({
-      ...product,
-      specifications: product.specifications as Json,
-      attributes: product.attributes as Json
-    }));
+    // Map products to our Product type using explicit any type to avoid recursive type issues
+    const result: Product[] = [];
+    if (products) {
+      for (const product of products) {
+        result.push(mapSupabaseProductToProduct({
+          ...product,
+          specifications: product.specifications as Json,
+          attributes: product.attributes as Json
+        }));
+      }
+    }
+    return result;
   } catch (error) {
     console.error('Error in getProductsByCategory:', error);
     return [];
@@ -200,11 +207,18 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       return [];
     }
     
-    return data.map((product: any) => mapSupabaseProductToProduct({
-      ...product,
-      specifications: product.specifications as Json,
-      attributes: product.attributes as Json
-    }));
+    // Use explicit loop instead of map to avoid type recursion issues
+    const result: Product[] = [];
+    if (data) {
+      for (const product of data) {
+        result.push(mapSupabaseProductToProduct({
+          ...product,
+          specifications: product.specifications as Json,
+          attributes: product.attributes as Json
+        }));
+      }
+    }
+    return result;
   } catch (error) {
     console.error('Error in getFeaturedProducts:', error);
     return [];
