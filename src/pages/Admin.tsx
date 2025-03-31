@@ -13,6 +13,7 @@ import {
   SubcategoryList
 } from '@/components/admin';
 import AdminCategories from '@/components/admin/AdminCategories';
+import SubcategoryManager from '@/components/admin/SubcategoryManager';
 import { publishScheduledPosts } from '@/services/blogService';
 import { toast } from 'sonner';
 import { Home } from 'lucide-react';
@@ -131,6 +132,7 @@ const AdminPage = () => {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="subcategories">Subcategories</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="blog">Blog</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -144,6 +146,9 @@ const AdminPage = () => {
         </TabsContent>
         <TabsContent value="categories">
           <AdminCategories />
+        </TabsContent>
+        <TabsContent value="subcategories">
+          <SubcategoryManager />
         </TabsContent>
         <TabsContent value="content">
           <AdminCategoryContent />

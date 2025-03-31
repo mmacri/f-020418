@@ -2,7 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, BarChart, TrendingUp } from 'lucide-react';
-import { AffiliateDashboard } from '../affiliate-dashboard';
+import { AffiliateDashboard } from '@/components/admin/affiliate-dashboard';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import GeneralStats from './GeneralStats';
 

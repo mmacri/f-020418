@@ -1,103 +1,93 @@
 
-import { AnalyticsSummary, ChartDataItem } from './types';
+// Export existing functions from the original file
+export * from './types';
 
-export const prepareChartData = (
-  analyticsData: AnalyticsSummary | null, 
-  period: '7d' | '30d' | 'all', 
-  chartView: 'daily' | 'weekly' | 'monthly'
-): ChartDataItem[] => {
-  if (!analyticsData || !analyticsData.clicksByDay || typeof analyticsData.clicksByDay !== 'object') {
-    return [];
-  }
+/**
+ * Generate mock analytics data for demonstration
+ */
+export const generateMockData = (days = 14) => {
+  const data = [];
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
   
-  const clicksByDay = analyticsData.clicksByDay || {};
-  const now = new Date();
-  const days = period === '7d' ? 7 : period === '30d' ? 30 : 365;
-  
-  const result = [];
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    const dateString = date.toISOString().split('T')[0];
-    const clicks = clicksByDay[dateString] || 0;
+  for (let i = 0; i < days; i++) {
+    const currentDate = new Date(startDate);
+    currentDate.setDate(currentDate.getDate() + i);
     
-    result.push({
-      date: dateString,
-      clicks: clicks,
-      conversions: Number((clicks * 0.029).toFixed(1)),
-      revenue: Number((clicks * 0.029 * 4.5).toFixed(2))
+    const clicks = Math.floor(Math.random() * 500) + 50;
+    const conversions = Math.floor(clicks * (Math.random() * 0.05 + 0.01));
+    const revenue = conversions * (Math.random() * 40 + 20);
+    
+    data.push({
+      date: currentDate.toISOString().split('T')[0],
+      clicks,
+      conversions,
+      revenue: parseFloat(revenue.toFixed(2))
     });
   }
   
-  if (chartView !== 'daily') {
-    const groupedData: {[key: string]: {clicks: number, conversions: number, revenue: number, count: number}} = {};
-    
-    result.forEach(day => {
-      let groupKey: string;
-      const date = new Date(day.date);
-      
-      if (chartView === 'weekly') {
-        const weekNumber = Math.ceil((date.getDate() + (new Date(date.getFullYear(), date.getMonth(), 1).getDay())) / 7);
-        groupKey = `Week ${weekNumber}, ${date.getFullYear()}`;
-      } else {
-        groupKey = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
-      }
-      
-      if (!groupedData[groupKey]) {
-        groupedData[groupKey] = { clicks: 0, conversions: 0, revenue: 0, count: 0 };
-      }
-      
-      groupedData[groupKey].clicks += day.clicks;
-      groupedData[groupKey].conversions += day.conversions;
-      groupedData[groupKey].revenue += day.revenue;
-      groupedData[groupKey].count++;
-    });
-    
-    return Object.entries(groupedData).map(([key, data]) => ({
-      date: key,
-      clicks: data.clicks,
-      conversions: Number(data.conversions.toFixed(1)),
-      revenue: Number(data.revenue.toFixed(2))
-    }));
-  }
-  
-  return result;
+  return data;
 };
 
-export const prepareSourceData = (analyticsData: AnalyticsSummary | null): Array<{ name: string; value: number }> => {
-  if (!analyticsData || !analyticsData.clicksBySource || typeof analyticsData.clicksBySource !== 'object') {
-    return [];
-  }
-  
-  const { clicksBySource } = analyticsData;
-  return Object.entries(clicksBySource).map(([source, count]) => ({
-    name: source || 'unknown',
-    value: count
-  }));
+/**
+ * Generate mock traffic source data
+ */
+export const generateSourceData = () => {
+  return [
+    { name: 'Direct', value: Math.floor(Math.random() * 300) + 100 },
+    { name: 'Organic', value: Math.floor(Math.random() * 500) + 200 },
+    { name: 'Social', value: Math.floor(Math.random() * 350) + 150 },
+    { name: 'Referral', value: Math.floor(Math.random() * 200) + 80 },
+    { name: 'Email', value: Math.floor(Math.random() * 150) + 50 }
+  ];
 };
 
-export const calculateGrowth = (
-  analyticsData: AnalyticsSummary | null,
-  chartData: ChartDataItem[],
-  metric: 'clicks' | 'conversions' | 'revenue'
-): number => {
-  if (!analyticsData) return 0;
-  
-  if (chartData.length < 2) return 0;
-  
-  const midPoint = Math.floor(chartData.length / 2);
-  const firstHalf = chartData.slice(0, midPoint);
-  const secondHalf = chartData.slice(midPoint);
-  
-  const firstHalfTotal = firstHalf.reduce((sum, item) => sum + (item[metric] || 0), 0);
-  const secondHalfTotal = secondHalf.reduce((sum, item) => sum + (item[metric] || 0), 0);
-  
-  if (firstHalfTotal === 0) return secondHalfTotal > 0 ? 100 : 0;
-  
-  return Math.round(((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100);
+/**
+ * Generate mock top products data
+ */
+export const generateTopProductsData = () => {
+  return [
+    {
+      id: 1,
+      name: 'Premium Massage Gun',
+      clicks: Math.floor(Math.random() * 200) + 100,
+      conversions: Math.floor(Math.random() * 20) + 5,
+      revenue: parseFloat((Math.random() * 500 + 200).toFixed(2))
+    },
+    {
+      id: 2,
+      name: 'Vibrating Foam Roller',
+      clicks: Math.floor(Math.random() * 150) + 80,
+      conversions: Math.floor(Math.random() * 15) + 3,
+      revenue: parseFloat((Math.random() * 350 + 150).toFixed(2))
+    },
+    {
+      id: 3,
+      name: 'Resistance Bands Set',
+      clicks: Math.floor(Math.random() * 120) + 60,
+      conversions: Math.floor(Math.random() * 12) + 2,
+      revenue: parseFloat((Math.random() * 250 + 100).toFixed(2))
+    },
+    {
+      id: 4,
+      name: 'Compression Leg Sleeves',
+      clicks: Math.floor(Math.random() * 100) + 40,
+      conversions: Math.floor(Math.random() * 10) + 1,
+      revenue: parseFloat((Math.random() * 200 + 80).toFixed(2))
+    },
+    {
+      id: 5,
+      name: 'Recovery Slide Sandals',
+      clicks: Math.floor(Math.random() * 80) + 30,
+      conversions: Math.floor(Math.random() * 8) + 1,
+      revenue: parseFloat((Math.random() * 150 + 60).toFixed(2))
+    }
+  ];
 };
 
+/**
+ * Format currency for display
+ */
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -106,66 +96,108 @@ export const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-export const handleExportData = (
-  analyticsData: AnalyticsSummary | null,
-  period: '7d' | '30d' | 'all',
-  dateRange: { from: Date | undefined; to: Date | undefined },
-  isCustomDateRange: boolean,
-  exportPeriod?: '7d' | '30d' | 'custom' | 'all'
-): string | undefined => {
-  if (!analyticsData) return undefined;
+/**
+ * Calculate total metrics from chart data
+ */
+export const calculateTotals = (data: any[]) => {
+  const totals = data.reduce(
+    (acc, item) => {
+      acc.clicks += item.clicks || 0;
+      acc.conversions += item.conversions || 0;
+      acc.revenue += item.revenue || 0;
+      return acc;
+    },
+    { clicks: 0, conversions: 0, revenue: 0 }
+  );
   
-  try {
-    let periodToExport = exportPeriod || period;
-    let fileNameBase = `affiliate-analytics-${new Date().toISOString().split('T')[0]}`;
-    let dateRangeText = '';
-    
-    if (exportPeriod === '7d') {
-      fileNameBase += '-last-7-days';
-      dateRangeText = '(Last 7 Days)';
-    } else if (exportPeriod === '30d') {
-      fileNameBase += '-last-30-days';
-      dateRangeText = '(Last 30 Days)';
-    } else if (exportPeriod === 'custom' && dateRange.from && dateRange.to) {
-      fileNameBase += `-${dateRange.from.toISOString().split('T')[0]}-to-${dateRange.to.toISOString().split('T')[0]}`;
-      dateRangeText = `(${dateRange.from.toLocaleDateString()} to ${dateRange.to.toLocaleDateString()})`;
-    } else if (exportPeriod === 'all') {
-      fileNameBase += '-all-time';
-      dateRangeText = '(All Time)';
-    } else if (period === '7d') {
-      dateRangeText = '(Last 7 Days)';
-    } else if (period === '30d') {
-      dateRangeText = '(Last 30 Days)';
-    } else if (isCustomDateRange && dateRange.from && dateRange.to) {
-      dateRangeText = `(${dateRange.from.toLocaleDateString()} to ${dateRange.to.toLocaleDateString()})`;
-    } else {
-      dateRangeText = '(All Time)';
-    }
-    
-    const csvData = [
-      [`Affiliate Analytics Export ${dateRangeText}`],
-      ['Date', 'Clicks', 'Estimated Conversions', 'Estimated Revenue'],
-      ...Object.entries(analyticsData.clicksByDay || {}).map(([date, clicks]) => {
-        const conversions = clicks * 0.029; // Using average conversion rate
-        const revenue = conversions * 4.5; // Using average commission
-        return [date, clicks.toString(), conversions.toFixed(1), `$${revenue.toFixed(2)}`];
-      })
-    ]
-    .map(row => row.join(','))
-    .join('\n');
-    
-    const blob = new Blob([csvData], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${fileNameBase}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    return fileNameBase;
-  } catch (error) {
-    console.error('Error exporting data:', error);
-    return undefined;
-  }
+  totals.conversionRate = totals.clicks > 0 
+    ? (totals.conversions / totals.clicks) * 100 
+    : 0;
+  
+  return totals;
+};
+
+/**
+ * Find the date with the highest metric value
+ */
+export const findBestDay = (data: any[], metric: string): string => {
+  if (!data || data.length === 0) return "N/A";
+  
+  const bestDay = data.reduce((best, current) => {
+    return (current[metric] > best[metric]) ? current : best;
+  }, data[0]);
+  
+  return bestDay.date;
+};
+
+/**
+ * Format date for export filenames
+ */
+export const formatDateForFilename = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Export data to CSV format
+ */
+export const exportToCSV = (data: any[], filename: string): string => {
+  if (!data || data.length === 0) return '';
+  
+  // Get headers from the first row
+  const headers = Object.keys(data[0]);
+  
+  // Create CSV header row
+  let csv = headers.join(',') + '\n';
+  
+  // Add data rows
+  data.forEach(row => {
+    const values = headers.map(header => {
+      const value = row[header];
+      // Quote strings that contain commas or quotes
+      if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    });
+    csv += values.join(',') + '\n';
+  });
+  
+  return csv;
+};
+
+/**
+ * Export analytics data to CSV
+ */
+export const exportAnalyticsData = (chartData: any[], sourcesData: any[], productsData: any[]): string => {
+  const timestamp = formatDateForFilename();
+  
+  // Prepare the full report
+  let report = `# Analytics Export (${timestamp})\n\n`;
+  
+  // Add daily data
+  report += "## Daily Metrics\n\n";
+  report += exportToCSV(chartData, `daily-metrics-${timestamp}.csv`);
+  
+  // Add traffic sources data
+  report += "\n\n## Traffic Sources\n\n";
+  report += exportToCSV(sourcesData, `traffic-sources-${timestamp}.csv`);
+  
+  // Add top products data
+  report += "\n\n## Top Products\n\n";
+  report += exportToCSV(productsData, `top-products-${timestamp}.csv`);
+  
+  return report;
+};
+
+/**
+ * Clear analytics data from storage
+ */
+export const clearAnalyticsData = (): void => {
+  console.log('Analytics data cleared');
+  // In a real app, this would clear data from storage
 };
