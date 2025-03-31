@@ -1,15 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
-import { Product, SupabaseProduct } from '@/services/products/types';
-import { Json } from '@/integrations/supabase/types';
+import { Product } from '@/services/products/types';
 
 /**
  * Get featured products
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Break the type chain completely by using any
+    // Completely break the type chain by using any
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -31,46 +30,11 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
     
     for (const item of data) {
       try {
-        // Create a simple intermediate object without nested types
-        const rawProduct = item as Record<string, any>;
-        
-        // Manually construct the product with explicit types
-        const supabaseProduct: SupabaseProduct = {
-          id: rawProduct.id,
-          name: rawProduct.name,
-          slug: rawProduct.slug,
-          description: rawProduct.description,
-          price: rawProduct.price,
-          sale_price: rawProduct.sale_price,
-          original_price: rawProduct.original_price,
-          rating: rawProduct.rating,
-          review_count: rawProduct.review_count,
-          image_url: rawProduct.image_url,
-          images: rawProduct.images,
-          in_stock: rawProduct.in_stock,
-          best_seller: rawProduct.best_seller,
-          featured: rawProduct.featured,
-          is_new: rawProduct.is_new,
-          category: rawProduct.category,
-          category_id: rawProduct.category_id,
-          subcategory: rawProduct.subcategory,
-          subcategory_slug: rawProduct.subcategory_slug,
-          // Break the deep type inference with explicit casting
-          specifications: rawProduct.specifications as Json,
-          attributes: rawProduct.attributes as Json,
-          features: rawProduct.features,
-          pros: rawProduct.pros,
-          cons: rawProduct.cons,
-          affiliate_url: rawProduct.affiliate_url,
-          asin: rawProduct.asin,
-          brand: rawProduct.brand,
-          availability: rawProduct.availability,
-          created_at: rawProduct.created_at,
-          updated_at: rawProduct.updated_at
-        };
+        // Cast each item to any to break type inference
+        const rawProduct = item as any;
         
         // Map to final Product type
-        const product = mapSupabaseProductToProduct(supabaseProduct);
+        const product = mapSupabaseProductToProduct(rawProduct);
         result.push(product);
       } catch (err) {
         console.error('Error processing product:', err);
