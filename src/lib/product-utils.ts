@@ -226,7 +226,7 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Explicitly type the query to "any" to break the type inference chain
+    // Use a variable to store the query separately
     const query = supabase
       .from('products')
       .select('*')
@@ -234,8 +234,10 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       .order('rating', { ascending: false })
       .limit(limit);
     
-    // Cast the query to any to break type inference
-    const { data, error } = await (query as any);
+    // Execute the query without any type checking
+    // Using any here is necessary to break the deep type recursion
+    const response: any = await query;
+    const { data, error } = response;
     
     if (error) {
       console.error('Error fetching featured products:', error);
@@ -275,7 +277,7 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
           category_id: rawProduct.category_id,
           subcategory: rawProduct.subcategory,
           subcategory_slug: rawProduct.subcategory_slug,
-          // Use explicit double casting to break the type inference chain
+          // Use explicit double casting with any as intermediate step
           specifications: (rawProduct.specifications as any) as Json,
           attributes: (rawProduct.attributes as any) as Json,
           features: rawProduct.features,
