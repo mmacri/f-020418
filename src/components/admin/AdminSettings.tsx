@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
 import { User, getCurrentUser, updateUserProfile, updateUserPassword } from "@/services/userService";
 import { 
   SlidersHorizontal, 
@@ -481,7 +482,7 @@ const AdminSettings = () => {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <label className="text-sm font-medium">Use Data Caching</label>
+                  <Label className="text-base">Use Data Caching</Label>
                   <p className="text-xs text-muted-foreground">
                     Enable caching for faster page loads
                   </p>
@@ -493,7 +494,7 @@ const AdminSettings = () => {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <label className="text-sm font-medium">Dark Mode</label>
+                  <Label className="text-base">Dark Mode</Label>
                   <p className="text-xs text-muted-foreground">
                     Use dark theme for the admin dashboard
                   </p>
@@ -505,7 +506,7 @@ const AdminSettings = () => {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <label className="text-sm font-medium">Email Notifications</label>
+                  <Label className="text-base">Email Notifications</Label>
                   <p className="text-xs text-muted-foreground">
                     Receive email notifications for important events
                   </p>
