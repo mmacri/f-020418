@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, BarChart, TrendingUp } from 'lucide-react';
 import { AffiliateDashboard } from '@/components/admin/affiliate-dashboard';
 import AnalyticsDashboard from './AnalyticsDashboard';
-import GeneralStats from './GeneralStats';
+import GeneralStats from './general-stats';
 import { DashboardProvider } from './DashboardContext';
 
 const DashboardTabs: React.FC = () => {
