@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { mapSupabaseProductToProduct } from '@/services/products/mappers';
 import { Product, SupabaseProduct } from '@/services/products/types';
@@ -227,15 +226,13 @@ export const getProductsByCategory = async (categorySlug: string): Promise<Produ
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Break type inference using an explicit any cast
-    const response = await supabase
+    // Use type assertion to any to break the deep type inference
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit);
-    
-    const { data, error } = response;
+      .limit(limit) as { data: any[], error: any };
     
     if (error) {
       console.error('Error fetching featured products:', error);
@@ -246,50 +243,44 @@ export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
       return [];
     }
     
-    // Use a simpler approach with manually created objects
+    // Process each product individually to avoid complex type inference
     const result: Product[] = [];
     
-    for (const item of data) {
+    for (let i = 0; i < data.length; i++) {
       try {
-        // Create a completely new object with explicit typing to break any type reference chains
-        const rawProduct = {
-          id: item.id,
-          name: item.name,
-          slug: item.slug,
-          description: item.description,
-          price: item.price,
-          sale_price: item.sale_price,
-          original_price: item.original_price,
-          rating: item.rating,
-          review_count: item.review_count,
-          image_url: item.image_url,
-          images: item.images,
-          in_stock: item.in_stock,
-          best_seller: item.best_seller,
-          featured: item.featured,
-          is_new: item.is_new,
-          category: item.category,
-          category_id: item.category_id,
-          subcategory: item.subcategory,
-          subcategory_slug: item.subcategory_slug,
-          specifications: item.specifications,
-          attributes: item.attributes,
-          features: item.features,
-          pros: item.pros,
-          cons: item.cons,
-          affiliate_url: item.affiliate_url,
-          asin: item.asin,
-          brand: item.brand,
-          availability: item.availability,
-          created_at: item.created_at,
-          updated_at: item.updated_at
-        };
-        
-        // Explicitly create a SupabaseProduct with properly typed Json fields
+        // Create a simplified intermediate product with required fields only
         const supabaseProduct: SupabaseProduct = {
-          ...rawProduct,
-          specifications: rawProduct.specifications as Json,
-          attributes: rawProduct.attributes as Json
+          id: data[i].id,
+          name: data[i].name,
+          slug: data[i].slug,
+          description: data[i].description,
+          price: data[i].price,
+          sale_price: data[i].sale_price,
+          original_price: data[i].original_price,
+          rating: data[i].rating,
+          review_count: data[i].review_count,
+          image_url: data[i].image_url,
+          images: data[i].images,
+          in_stock: data[i].in_stock,
+          best_seller: data[i].best_seller,
+          featured: data[i].featured,
+          is_new: data[i].is_new,
+          category: data[i].category,
+          category_id: data[i].category_id,
+          subcategory: data[i].subcategory,
+          subcategory_slug: data[i].subcategory_slug,
+          // Explicitly cast to Json to avoid type recursion
+          specifications: data[i].specifications as Json,
+          attributes: data[i].attributes as Json,
+          features: data[i].features,
+          pros: data[i].pros,
+          cons: data[i].cons,
+          affiliate_url: data[i].affiliate_url,
+          asin: data[i].asin,
+          brand: data[i].brand,
+          availability: data[i].availability,
+          created_at: data[i].created_at,
+          updated_at: data[i].updated_at
         };
         
         // Map to the final Product type
