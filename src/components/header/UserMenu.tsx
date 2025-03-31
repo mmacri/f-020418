@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, Settings, Heart, ShoppingBag, UserCircle } from "lucide-react";
 import { isAdmin, logout } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface UserMenuProps {
   user: any;
@@ -20,40 +21,63 @@ interface UserMenuProps {
 
 export const UserMenu = ({ user, onLogout }: UserMenuProps) => {
   const navigate = useNavigate();
+  
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map(part => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   return user ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button 
-          className="flex items-center rounded-full h-8 w-8 overflow-hidden border bg-primary text-primary-foreground hover:bg-primary/90"
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full h-9 w-9 overflow-hidden"
           aria-label="User menu"
           title="User menu"
         >
-          <span className="sr-only">User menu</span>
-          <User className="h-4 w-4 mx-auto" aria-hidden="true" />
-        </button>
+          <Avatar>
+            <AvatarImage src={user.avatar} alt={user.name || "User"} />
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              {getInitials(user.name || user.email)}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          {user.name || user.email}
+        <DropdownMenuLabel className="flex flex-col">
+          <span className="font-semibold">{user.name || "User"}</span>
+          <span className="text-xs text-muted-foreground truncate">{user.email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/profile')}>
-          My Profile
+        <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-2 cursor-pointer">
+          <UserCircle size={16} aria-hidden="true" />
+          <span>My Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/wishlist')}>
-          Saved Products
+        <DropdownMenuItem onClick={() => navigate('/orders')} className="gap-2 cursor-pointer">
+          <ShoppingBag size={16} aria-hidden="true" />
+          <span>My Orders</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/wishlist')} className="gap-2 cursor-pointer">
+          <Heart size={16} aria-hidden="true" />
+          <span>Saved Products</span>
         </DropdownMenuItem>
         {isAdmin() && (
-          <DropdownMenuItem onClick={() => navigate('/admin')}>
-            <Settings size={16} className="mr-2" aria-hidden="true" />
-            Admin Dashboard
+          <DropdownMenuItem onClick={() => navigate('/admin')} className="gap-2 cursor-pointer">
+            <Settings size={16} aria-hidden="true" />
+            <span>Admin Dashboard</span>
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onLogout}>
-          <LogOut size={16} className="mr-2" aria-hidden="true" />
-          Logout
+        <DropdownMenuItem onClick={onLogout} className="gap-2 cursor-pointer text-destructive">
+          <LogOut size={16} aria-hidden="true" />
+          <span>Logout</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,15 +1,36 @@
 
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
-export const Logo = () => {
+interface LogoProps {
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}
+
+export const Logo = ({ className, size = "md" }: LogoProps) => {
+  const containerSizes = {
+    sm: "w-7 h-7",
+    md: "w-10 h-10",
+    lg: "w-12 h-12"
+  };
+
+  const textSizes = {
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base"
+  };
+
+  const logoSize = containerSizes[size];
+  const subtitleSize = textSizes[size];
+
   return (
-    <Link to="/" className="flex items-center">
-      <div className="w-10 h-10 bg-primary flex items-center justify-center rounded">
+    <Link to="/" className={cn("flex items-center", className)}>
+      <div className={cn("bg-primary flex items-center justify-center rounded", logoSize)}>
         <span className="text-primary-foreground font-bold">RE</span>
       </div>
       <div className="ml-2">
         <div className="font-bold text-foreground">Recovery Essentials</div>
-        <div className="text-xs text-muted-foreground">Best Recovery Products & Reviews</div>
+        <div className={cn("text-muted-foreground", subtitleSize)}>Best Recovery Products & Reviews</div>
       </div>
     </Link>
   );
