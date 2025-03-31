@@ -8,13 +8,20 @@ import { Product } from '@/services/products/types';
  */
 export const getFeaturedProducts = async (limit = 6): Promise<Product[]> => {
   try {
-    // Completely bypass TypeScript's type inference by using an explicit any cast
-    const { data, error } = await supabase
+    // First perform the query without type inference
+    const query = supabase
       .from('products')
       .select('*')
       .eq('best_seller', true)
       .order('rating', { ascending: false })
-      .limit(limit) as { data: any[] | null; error: any };
+      .limit(limit);
+    
+    // Execute the query with no type inference
+    const result = await query;
+    
+    // Manually extract and type the response data
+    const data = result.data as any[] | null;
+    const error = result.error;
     
     if (error) {
       console.error('Error fetching featured products:', error);
