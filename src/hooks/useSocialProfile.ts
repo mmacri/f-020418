@@ -24,6 +24,10 @@ export const useSocialProfile = (profileId?: string) => {
     updated_at: ''
   });
 
+  const isSupabaseError = (obj: any): boolean => {
+    return obj && typeof obj === 'object' && 'error' in obj;
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       setIsLoading(true);
@@ -105,8 +109,8 @@ export const useSocialProfile = (profileId?: string) => {
               }
             });
             
-            let userProfile: UserProfile | undefined;
-            if (post.user && !('error' in post.user)) {
+            let userProfile: UserProfile;
+            if (post.user && !isSupabaseError(post.user)) {
               userProfile = {
                 id: post.user.id,
                 display_name: post.user.display_name,
@@ -118,7 +122,7 @@ export const useSocialProfile = (profileId?: string) => {
                 updated_at: ''
               };
             } else {
-              userProfile = createEmptyUserProfile("", "Unknown User");
+              userProfile = createEmptyUserProfile(post.user_id, "Unknown User");
             }
             
             const typedPost: Post = {
@@ -176,8 +180,8 @@ export const useSocialProfile = (profileId?: string) => {
             console.error('Error fetching pending requests:', pendingError);
           } else if (pendingRequests) {
             const typedPendingRequests: Friendship[] = pendingRequests.map(request => {
-              let requestorProfile: UserProfile | undefined;
-              if (request.requestor && !('error' in request.requestor)) {
+              let requestorProfile: UserProfile;
+              if (request.requestor && !isSupabaseError(request.requestor)) {
                 requestorProfile = {
                   id: request.requestor.id,
                   display_name: request.requestor.display_name,
@@ -189,7 +193,7 @@ export const useSocialProfile = (profileId?: string) => {
                   updated_at: ''
                 };
               } else {
-                requestorProfile = createEmptyUserProfile("", "Unknown User");
+                requestorProfile = createEmptyUserProfile(request.requestor_id, "Unknown User");
               }
               
               return {
@@ -236,8 +240,8 @@ export const useSocialProfile = (profileId?: string) => {
           
           if (friendsAsRequestor) {
             friendsAsRequestor.forEach(friendship => {
-              let recipientProfile: UserProfile | undefined;
-              if (friendship.recipient && !('error' in friendship.recipient)) {
+              let recipientProfile: UserProfile;
+              if (friendship.recipient && !isSupabaseError(friendship.recipient)) {
                 recipientProfile = {
                   id: friendship.recipient.id,
                   display_name: friendship.recipient.display_name,
@@ -249,7 +253,7 @@ export const useSocialProfile = (profileId?: string) => {
                   updated_at: ''
                 };
               } else {
-                recipientProfile = createEmptyUserProfile("", "Unknown User");
+                recipientProfile = createEmptyUserProfile(friendship.recipient_id, "Unknown User");
               }
               
               processedFriends.push({
@@ -266,8 +270,8 @@ export const useSocialProfile = (profileId?: string) => {
           
           if (friendsAsRecipient) {
             friendsAsRecipient.forEach(friendship => {
-              let requestorProfile: UserProfile | undefined;
-              if (friendship.requestor && !('error' in friendship.requestor)) {
+              let requestorProfile: UserProfile;
+              if (friendship.requestor && !isSupabaseError(friendship.requestor)) {
                 requestorProfile = {
                   id: friendship.requestor.id,
                   display_name: friendship.requestor.display_name,
@@ -279,7 +283,7 @@ export const useSocialProfile = (profileId?: string) => {
                   updated_at: ''
                 };
               } else {
-                requestorProfile = createEmptyUserProfile("", "Unknown User");
+                requestorProfile = createEmptyUserProfile(friendship.requestor_id, "Unknown User");
               }
               
               processedFriends.push({
