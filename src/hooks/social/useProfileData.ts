@@ -91,58 +91,28 @@ export const useProfileData = (userId?: string) => {
         setProfile(profileData as UserProfile);
       }
       
-      // Fetch user's posts along with relations
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user:user_profiles(*),
-          comments:comments(*, user:user_profiles(*)),
-          reactions:reactions(*)
-        `)
-        .eq('user_id', profileId)
-        .order('created_at', { ascending: false });
+      // Fetch user's posts
+      const { data: postsData, error: postsError } = await supabase.rpc(
+        'get_user_posts_with_details',
+        { p_user_id: profileId }
+      );
       
       if (postsError) {
         console.error('Error fetching posts:', postsError);
       } else if (postsData) {
-        // Process posts data
+        // Process and set posts data (with explicit type casting)
         const processedPosts = postsData.map(post => {
-          // Calculate reaction counts
-          const like = post.reactions?.filter(r => r.type === 'like').length || 0;
-          const heart = post.reactions?.filter(r => r.type === 'heart').length || 0;
-          const thumbs_up = post.reactions?.filter(r => r.type === 'thumbs_up').length || 0;
-          const thumbs_down = post.reactions?.filter(r => r.type === 'thumbs_down').length || 0;
-          
-          // Create a user object if user is missing
-          const user = post.user || {
-            id: profileId,
-            display_name: 'Unknown User',
-            bio: null,
-            avatar_url: null,
-            is_public: false,
-            newsletter_subscribed: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          
-          // Ensure comments array
-          const comments = post.comments || [];
-          
-          // Ensure reactions array
-          const reactions = post.reactions || [];
-          
           return {
-            ...post,
-            reaction_counts: {
-              like,
-              heart,
-              thumbs_up,
-              thumbs_down
-            },
-            user,
-            comments,
-            reactions
+            id: post.id,
+            user_id: post.user_id,
+            content: post.content,
+            image_url: post.image_url,
+            created_at: post.created_at,
+            updated_at: post.updated_at,
+            user: post.user as UserProfile,
+            comments: post.comments as unknown as Comment[],
+            reactions: post.reactions as unknown as Reaction[],
+            reaction_counts: post.reaction_counts
           } as Post;
         });
         
@@ -151,14 +121,10 @@ export const useProfileData = (userId?: string) => {
       
       // If this is the current user, fetch their pending friend requests
       if (isCurrentUser) {
-        const { data: friendRequestsData, error: friendRequestsError } = await supabase
-          .from('friendships')
-          .select(`
-            *,
-            requestor:user_profiles(*)
-          `)
-          .eq('recipient_id', profileId)
-          .eq('status', 'pending');
+        const { data: friendRequestsData, error: friendRequestsError } = await supabase.rpc(
+          'get_pending_friend_requests',
+          { p_user_id: profileId }
+        );
         
         if (friendRequestsError) {
           console.error('Error fetching friend requests:', friendRequestsError);
@@ -167,66 +133,42 @@ export const useProfileData = (userId?: string) => {
         }
         
         // Fetch bookmarks for current user
-        const { data: bookmarksData, error: bookmarksError } = await supabase
-          .from('bookmarks')
-          .select(`
-            *,
-            post:posts(
-              *,
-              user:user_profiles(*),
-              comments:comments(*, user:user_profiles(*)),
-              reactions:reactions(*)
-            )
-          `)
-          .eq('user_id', profileId);
+        const { data: bookmarksData, error: bookmarksError } = await supabase.rpc(
+          'get_user_bookmarks_with_posts',
+          { p_user_id: profileId }
+        );
         
         if (bookmarksError) {
           console.error('Error fetching bookmarks:', bookmarksError);
         } else if (bookmarksData) {
-          // Process bookmarks
+          // Process bookmarks with type conversions
           const processedBookmarks = bookmarksData.map(bookmark => {
             if (!bookmark.post) {
-              return bookmark as Bookmark;
+              return {
+                id: bookmark.id,
+                user_id: bookmark.user_id,
+                post_id: bookmark.post_id,
+                created_at: bookmark.created_at
+              } as Bookmark;
             }
             
-            // Calculate reaction counts for the post
-            const like = bookmark.post.reactions?.filter(r => r.type === 'like').length || 0;
-            const heart = bookmark.post.reactions?.filter(r => r.type === 'heart').length || 0;
-            const thumbs_up = bookmark.post.reactions?.filter(r => r.type === 'thumbs_up').length || 0;
-            const thumbs_down = bookmark.post.reactions?.filter(r => r.type === 'thumbs_down').length || 0;
-            
-            // Create a user object if user is missing
-            const user = bookmark.post.user || {
-              id: bookmark.post.user_id,
-              display_name: 'Unknown User',
-              bio: null,
-              avatar_url: null,
-              is_public: false,
-              newsletter_subscribed: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            };
-            
-            // Ensure comments array
-            const comments = bookmark.post.comments || [];
-            
-            // Ensure reactions array
-            const reactions = bookmark.post.reactions || [];
-            
             return {
-              ...bookmark,
+              id: bookmark.id,
+              user_id: bookmark.user_id,
+              post_id: bookmark.post_id,
+              created_at: bookmark.created_at,
               post: {
-                ...bookmark.post,
-                reaction_counts: {
-                  like,
-                  heart,
-                  thumbs_up,
-                  thumbs_down
-                },
-                user,
-                comments,
-                reactions
-              }
+                id: bookmark.post.id,
+                user_id: bookmark.post.user_id,
+                content: bookmark.post.content,
+                image_url: bookmark.post.image_url,
+                created_at: bookmark.post.created_at,
+                updated_at: bookmark.post.updated_at,
+                user: bookmark.post.user as UserProfile,
+                comments: bookmark.post.comments as unknown as Comment[],
+                reactions: bookmark.post.reactions as unknown as Reaction[],
+                reaction_counts: bookmark.post.reaction_counts
+              } as Post
             } as Bookmark;
           });
           
@@ -240,59 +182,25 @@ export const useProfileData = (userId?: string) => {
         const currentUserId = sessionData.session?.user.id;
         
         if (currentUserId) {
-          // Check if there's a pending request from current user to other user
-          const { data: outgoingRequest } = await supabase
-            .from('friendships')
-            .select('*')
-            .eq('requestor_id', currentUserId)
-            .eq('recipient_id', profileId)
-            .eq('status', 'pending')
-            .maybeSingle();
-            
-          if (outgoingRequest) {
-            setFriendshipStatus('pending');
-          } else {
-            // Check if there's an accepted friendship
-            const { data: acceptedFriendship } = await supabase
-              .from('friendships')
-              .select('*')
-              .or(`requestor_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`)
-              .or(`requestor_id.eq.${profileId},recipient_id.eq.${profileId}`)
-              .eq('status', 'accepted')
-              .maybeSingle();
-              
-            if (acceptedFriendship) {
-              setFriendshipStatus('accepted');
-            } else {
-              // Check if there's a pending request from other user to current user
-              const { data: incomingRequest } = await supabase
-                .from('friendships')
-                .select('*')
-                .eq('requestor_id', profileId)
-                .eq('recipient_id', currentUserId)
-                .eq('status', 'pending')
-                .maybeSingle();
-                
-              if (incomingRequest) {
-                setFriendshipStatus('requested');
-              } else {
-                setFriendshipStatus('none');
-              }
-            }
+          // Use RPC function to get friendship status
+          const { data: statusData, error: statusError } = await supabase.rpc(
+            'get_friendship_status',
+            { p_user_id: currentUserId, p_other_user_id: profileId }
+          );
+          
+          if (statusError) {
+            console.error('Error fetching friendship status:', statusError);
+          } else if (statusData && statusData.length > 0) {
+            setFriendshipStatus(statusData[0].status as 'none' | 'pending' | 'accepted' | 'requested');
           }
         }
       }
       
       // Fetch friends list (accepted friendships)
-      const { data: friendshipsData, error: friendshipsError } = await supabase
-        .from('friendships')
-        .select(`
-          *,
-          requestor:user_profiles(*),
-          recipient:user_profiles(*)
-        `)
-        .or(`requestor_id.eq.${profileId},recipient_id.eq.${profileId}`)
-        .eq('status', 'accepted');
+      const { data: friendshipsData, error: friendshipsError } = await supabase.rpc(
+        'get_user_friends',
+        { p_user_id: profileId }
+      );
       
       if (friendshipsError) {
         console.error('Error fetching friendships:', friendshipsError);
