@@ -1,13 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { useProfileData } from './useProfileData';
 import { usePostActions } from './usePostActions';
 import { useProfileActions } from './useProfileActions';
 import { useFriendActions } from './useFriendActions';
 import { SocialProfileHook } from './types';
-import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
-import { createWelcomePost, checkAndCreateAdminProfile } from './utils';
+import { UserProfile, Post, Comment, Reaction, Friendship, ReactionType, Bookmark } from '@/types/social';
 
-export const useSocialProfile = (profileId?: string): SocialProfileHook => {
+export const useSocialProfile = (userId?: string): SocialProfileHook => {
+  const [isUploading, setIsUploading] = useState(false);
+  
+  // Get basic profile data
   const {
     profile,
     posts,
@@ -16,129 +19,100 @@ export const useSocialProfile = (profileId?: string): SocialProfileHook => {
     bookmarks,
     isLoading,
     isCurrentUser,
-    friendshipStatus
-  } = useProfileData(profileId);
+    friendshipStatus,
+    refetchProfile
+  } = useProfileData(userId);
 
-  const [postsState, setPostsState] = useState(posts);
+  // Get post actions
+  const postActions = usePostActions();
   
-  // Keep posts in sync with the profile data
-  useEffect(() => {
-    if (posts !== postsState) {
-      setPostsState(posts);
-    }
-  }, [posts]);
-
-  const {
-    createPost,
-    deletePost,
-    addComment,
-    addReaction,
-    bookmarkPost,
-    isBookmarked,
-    isUploading: isPostUploading
-  } = usePostActions(postsState, setPostsState);
-
-  const [profileState, setProfileState] = useState(profile);
+  // Get profile actions
+  const profileActions = useProfileActions(refetchProfile);
   
-  // Keep profile in sync with the profile data
+  // Get friend actions
+  const friendActions = useFriendActions(refetchProfile);
+
+  // Track uploading state from both actions
   useEffect(() => {
-    if (profile !== profileState) {
-      setProfileState(profile);
-    }
-  }, [profile]);
+    setIsUploading(postActions.isUploading || profileActions.isUploading);
+  }, [postActions.isUploading, profileActions.isUploading]);
 
-  const {
-    updateProfile,
-    deleteAccount,
-    isUploading: isProfileUploading
-  } = useProfileActions(profileState, setProfileState);
-
-  const [friendshipStatusState, setFriendshipStatusState] = useState(friendshipStatus);
-  const [pendingRequestsState, setPendingRequestsState] = useState(pendingFriendRequests);
-  const [friendsState, setFriendsState] = useState(friends);
-  const [bookmarksState, setBookmarksState] = useState(bookmarks);
-  
-  // Keep friendship and bookmark data in sync with the profile data
-  useEffect(() => {
-    if (friendshipStatus !== friendshipStatusState) {
-      setFriendshipStatusState(friendshipStatus);
+  // Combined post creating function that updates the UI
+  const createPost = async (content: string, imageFile?: File, imageUrl?: string): Promise<Post | null> => {
+    const newPost = await postActions.createPost(content, imageFile, imageUrl);
+    if (newPost) {
+      refetchProfile();
     }
-    
-    if (pendingFriendRequests !== pendingRequestsState) {
-      setPendingRequestsState(pendingFriendRequests);
-    }
-    
-    if (friends !== friendsState) {
-      setFriendsState(friends);
-    }
+    return newPost;
+  };
 
-    if (bookmarks !== bookmarksState) {
-      setBookmarksState(bookmarks);
+  // Combined post deletion function that updates the UI
+  const deletePost = async (postId: string): Promise<boolean> => {
+    const success = await postActions.deletePost(postId);
+    if (success) {
+      refetchProfile();
     }
-  }, [friendshipStatus, pendingFriendRequests, friends, bookmarks]);
+    return success;
+  };
 
-  const {
-    sendFriendRequest,
-    respondToFriendRequest
-  } = useFriendActions(
-    friendshipStatusState, 
-    setFriendshipStatusState,
-    setPendingRequestsState,
-    setFriendsState
-  );
+  // Combined comment adding function that updates the UI
+  const addComment = async (postId: string, content: string): Promise<Comment | null> => {
+    const newComment = await postActions.addComment(postId, content);
+    if (newComment) {
+      refetchProfile();
+    }
+    return newComment;
+  };
 
-  // Run once on initial load to check for admin welcome post
-  useEffect(() => {
-    const setupInitialData = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // Check if admin exists, if not create it
-          await checkAndCreateAdminProfile();
-          
-          // Check if there are any posts, if not create welcome post
-          const { count, error } = await supabase
-            .from('posts')
-            .select('*', { count: 'exact', head: true });
-            
-          if (error) {
-            console.error('Error checking posts:', error);
-            return;
-          }
-          
-          if (count === 0) {
-            await createWelcomePost();
-          }
-        }
-      } catch (error) {
-        console.error('Error in initial setup:', error);
-      }
-    };
-    
-    setupInitialData();
-  }, []);
+  // Combined reaction function that updates the UI
+  const addReaction = async (type: ReactionType, postId?: string, commentId?: string): Promise<Reaction | null> => {
+    const newReaction = await postActions.addReaction(type, postId, commentId);
+    refetchProfile();
+    return newReaction;
+  };
+
+  // Bookmark post function
+  const bookmarkPost = async (postId: string): Promise<boolean> => {
+    const result = await postActions.bookmarkPost(postId);
+    refetchProfile();
+    return result;
+  };
+
+  // Check if post is bookmarked function
+  const isBookmarked = async (postId: string): Promise<boolean> => {
+    return await postActions.isBookmarked(postId);
+  };
 
   return {
-    profile: profileState,
-    posts: postsState,
-    pendingFriendRequests: pendingRequestsState,
-    friends: friendsState,
-    bookmarks: bookmarksState,
+    // State
+    profile,
+    posts,
+    pendingFriendRequests,
+    friends,
+    bookmarks,
     isLoading,
     isCurrentUser,
-    friendshipStatus: friendshipStatusState,
+    friendshipStatus,
+    isUploading,
+    
+    // Post actions
     createPost,
     deletePost,
     addComment,
     addReaction,
-    updateProfile,
-    sendFriendRequest,
-    respondToFriendRequest,
     bookmarkPost,
     isBookmarked,
-    deleteAccount,
-    isUploading: isProfileUploading || isPostUploading
+    
+    // Profile actions
+    updateProfile: profileActions.updateProfile,
+    deleteAccount: profileActions.deleteAccount,
+    
+    // Friend actions
+    sendFriendRequest: friendActions.sendFriendRequest,
+    respondToFriendRequest: friendActions.respondToFriendRequest
   };
 };
 
-export * from './types';
+// Re-export types for convenience
+export type { SocialProfileHook } from './types';
+export type { UserProfile, Post, Comment, Reaction, Friendship, ReactionType, Bookmark } from '@/types/social';

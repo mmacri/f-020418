@@ -1,86 +1,63 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
 import { Post, Comment, Reaction, ReactionType } from '@/types/social';
-import { useToast } from '@/hooks/use-toast';
-import { extractUserProfileFromResult, isSupabaseError } from './utils';
-import { uploadFile } from '@/lib/file-upload';
+import { uploadProfileImage, uploadPostImage } from './utils';
 
-export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.SetStateAction<Post[]>>) => {
-  const { toast } = useToast();
+export const usePostActions = () => {
   const [isUploading, setIsUploading] = useState(false);
 
-  const createPost = async (content: string, imageFile?: File, imageUrl?: string) => {
+  const createPost = async (content: string, imageFile?: File, imageUrl?: string): Promise<Post | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "You must be logged in to create posts",
-          variant: "destructive"
-        });
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('Error getting session:', sessionError);
+        toast.error('You must be logged in to create a post');
         return null;
       }
       
+      const userId = sessionData.session.user.id;
       let finalImageUrl = imageUrl;
+      
       if (imageFile) {
         setIsUploading(true);
-        toast({
-          title: "Uploading image",
-          description: "Please wait while we upload your image"
-        });
         
-        const { url, error: uploadError } = await uploadFile(imageFile, {
-          bucket: 'social-images',
-          folder: 'posts',
-          fileTypes: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-          maxSize: 5 * 1024 * 1024 // 5MB
-        });
-        
-        setIsUploading(false);
-        
-        if (uploadError) {
-          toast({
-            title: "Error",
-            description: uploadError,
-            variant: "destructive"
-          });
+        try {
+          const uploadedUrl = await uploadPostImage(imageFile, userId);
+          finalImageUrl = uploadedUrl;
+        } catch (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          toast.error('Failed to upload image');
+          setIsUploading(false);
           return null;
         }
         
-        finalImageUrl = url;
+        setIsUploading(false);
       }
-      
-      const newPost = {
-        user_id: session.user.id,
-        content,
-        image_url: finalImageUrl || null
-      };
       
       const { data, error } = await supabase
         .from('posts')
-        .insert(newPost)
-        .select(`
-          *,
-          user:user_profiles(id, display_name, avatar_url)
-        `)
+        .insert({
+          user_id: userId,
+          content,
+          image_url: finalImageUrl || null
+        })
+        .select('*, user:user_profiles(*)')
         .single();
-        
-      if (error) throw error;
       
-      const userProfile = extractUserProfileFromResult(
-        data.user && !isSupabaseError(data.user) ? data.user : null, 
-        session.user.id, 
-        "User"
-      );
-            
-      const typedPost: Post = {
-        id: data.id,
-        user_id: data.user_id,
-        content: data.content,
-        image_url: data.image_url,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        user: userProfile,
+      if (error) {
+        console.error('Error creating post:', error);
+        toast.error('Failed to create post');
+        return null;
+      }
+      
+      toast.success('Post created successfully');
+      return {
+        ...data,
+        user: data.user,
+        reactions: [],
+        comments: [],
         reaction_counts: {
           like: 0,
           heart: 0,
@@ -88,294 +65,268 @@ export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.Set
           thumbs_down: 0
         }
       };
-      
-      setPosts(prev => [typedPost, ...prev]);
-      
-      toast({
-        title: "Success",
-        description: "Post created successfully"
-      });
-      
-      return typedPost;
     } catch (error) {
-      console.error('Error creating post:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create post",
-        variant: "destructive"
-      });
+      console.error('Error in createPost:', error);
+      toast.error('An error occurred while creating the post');
       return null;
     }
   };
-  
-  const deletePost = async (postId: string) => {
+
+  const deletePost = async (postId: string): Promise<boolean> => {
     try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('Error getting session:', sessionError);
+        toast.error('You must be logged in to delete a post');
+        return false;
+      }
+      
       const { error } = await supabase
         .from('posts')
         .delete()
         .eq('id', postId);
-        
-      if (error) throw error;
       
-      setPosts(prev => prev.filter(post => post.id !== postId));
-      toast({
-        title: "Success",
-        description: "Post deleted successfully"
-      });
+      if (error) {
+        console.error('Error deleting post:', error);
+        toast.error('Failed to delete post');
+        return false;
+      }
+      
+      toast.success('Post deleted successfully');
       return true;
     } catch (error) {
-      console.error('Error deleting post:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete post",
-        variant: "destructive"
-      });
+      console.error('Error in deletePost:', error);
+      toast.error('An error occurred while deleting the post');
       return false;
     }
   };
-  
+
   const addComment = async (postId: string, content: string): Promise<Comment | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "You must be logged in to comment",
-          variant: "destructive"
-        });
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('Error getting session:', sessionError);
+        toast.error('You must be logged in to comment');
         return null;
       }
       
-      const newComment = {
-        post_id: postId,
-        user_id: session.user.id,
-        content
-      };
+      const userId = sessionData.session.user.id;
       
       const { data, error } = await supabase
         .from('comments')
-        .insert(newComment)
-        .select(`
-          *,
-          user:user_profiles(id, display_name, avatar_url)
-        `)
+        .insert({
+          post_id: postId,
+          user_id: userId,
+          content
+        })
+        .select('*, user:user_profiles(*)')
         .single();
-        
-      if (error) throw error;
       
-      const userProfile = extractUserProfileFromResult(
-        data.user && !isSupabaseError(data.user) ? data.user : null, 
-        session.user.id, 
-        "User"
-      );
-            
-      const typedComment: Comment = {
-        id: data.id,
-        post_id: data.post_id,
-        user_id: data.user_id,
-        content: data.content,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        user: userProfile
-      };
+      if (error) {
+        console.error('Error adding comment:', error);
+        toast.error('Failed to add comment');
+        return null;
+      }
       
-      setPosts(prev => prev.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: [...(post.comments || []), typedComment]
-          };
+      toast.success('Comment added successfully');
+      return {
+        ...data,
+        user: data.user,
+        reactions: [],
+        reaction_counts: {
+          like: 0,
+          heart: 0,
+          thumbs_up: 0,
+          thumbs_down: 0
         }
-        return post;
-      }));
-      
-      return typedComment;
+      };
     } catch (error) {
-      console.error('Error adding comment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add comment",
-        variant: "destructive"
-      });
+      console.error('Error in addComment:', error);
+      toast.error('An error occurred while adding the comment');
       return null;
     }
   };
-  
+
   const addReaction = async (type: ReactionType, postId?: string, commentId?: string): Promise<Reaction | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "You must be logged in to react",
-          variant: "destructive"
-        });
+      if (!postId && !commentId) {
+        console.error('A postId or commentId must be provided');
         return null;
       }
       
-      if ((!postId && !commentId) || (postId && commentId)) {
-        throw new Error("Invalid reaction target");
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('Error getting session:', sessionError);
+        toast.error('You must be logged in to react');
+        return null;
       }
       
-      const { data: existingReaction, error: checkError } = await supabase
+      const userId = sessionData.session.user.id;
+      
+      const { data: existingReactions, error: fetchError } = await supabase
         .from('reactions')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .eq(postId ? 'post_id' : 'comment_id', postId || commentId)
-        .eq('type', type)
-        .maybeSingle();
-        
-      if (checkError) throw checkError;
+        .select('*')
+        .eq('user_id', userId)
+        .eq(postId ? 'post_id' : 'comment_id', postId || commentId);
       
-      if (existingReaction) {
-        const { error: deleteError } = await supabase
-          .from('reactions')
-          .delete()
-          .eq('id', existingReaction.id);
-          
-        if (deleteError) throw deleteError;
-        
-        if (postId) {
-          setPosts(prev => prev.map(post => {
-            if (post.id === postId && post.reaction_counts) {
-              const newCounts = { ...post.reaction_counts };
-              newCounts[type]--;
-              return { ...post, reaction_counts: newCounts };
-            }
-            return post;
-          }));
-        }
-        
+      if (fetchError) {
+        console.error('Error checking existing reactions:', fetchError);
         return null;
       }
       
-      const newReaction = {
-        post_id: postId,
-        comment_id: commentId,
-        user_id: session.user.id,
-        type
-      };
+      if (existingReactions && existingReactions.length > 0) {
+        const existingReaction = existingReactions.find(r => r.type === type);
+        
+        if (existingReaction) {
+          const { error: deleteError } = await supabase
+            .from('reactions')
+            .delete()
+            .eq('id', existingReaction.id);
+          
+          if (deleteError) {
+            console.error('Error removing reaction:', deleteError);
+            return null;
+          }
+          
+          return null;
+        } else {
+          const { data: updatedReaction, error: updateError } = await supabase
+            .from('reactions')
+            .update({ type })
+            .eq('id', existingReactions[0].id)
+            .select('*')
+            .single();
+          
+          if (updateError) {
+            console.error('Error updating reaction:', updateError);
+            return null;
+          }
+          
+          return updatedReaction as Reaction;
+        }
+      }
       
       const { data, error } = await supabase
         .from('reactions')
-        .insert(newReaction)
-        .select()
+        .insert({
+          post_id: postId || null,
+          comment_id: commentId || null,
+          user_id: userId,
+          type
+        })
+        .select('*')
         .single();
-        
-      if (error) throw error;
       
-      if (postId) {
-        setPosts(prev => prev.map(post => {
-          if (post.id === postId && post.reaction_counts) {
-            const newCounts = { ...post.reaction_counts };
-            newCounts[type]++;
-            return { ...post, reaction_counts: newCounts };
-          }
-          return post;
-        }));
+      if (error) {
+        console.error('Error adding reaction:', error);
+        return null;
       }
       
-      const typedReaction: Reaction = {
+      return {
         id: data.id,
-        post_id: data.post_id || undefined,
-        comment_id: data.comment_id || undefined,
+        post_id: data.post_id,
+        comment_id: data.comment_id,
         user_id: data.user_id,
         type: data.type as ReactionType,
         created_at: data.created_at
       };
-      
-      return typedReaction;
     } catch (error) {
-      console.error('Error adding reaction:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add reaction",
-        variant: "destructive"
-      });
+      console.error('Error in addReaction:', error);
       return null;
     }
   };
 
   const bookmarkPost = async (postId: string): Promise<boolean> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "You must be logged in to bookmark posts",
-          variant: "destructive"
-        });
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('Error getting session:', sessionError);
+        toast.error('You must be logged in to bookmark posts');
         return false;
       }
+      
+      const userId = sessionData.session.user.id;
       
       const { data: existingBookmark, error: checkError } = await supabase
         .from('bookmarks')
         .select('id')
-        .eq('user_id', session.user.id)
+        .eq('user_id', userId)
         .eq('post_id', postId)
         .maybeSingle();
-        
-      if (checkError) throw checkError;
+      
+      if (checkError) {
+        console.error('Error checking bookmark:', checkError);
+        toast.error('Failed to check bookmark status');
+        return false;
+      }
       
       if (existingBookmark) {
         const { error: deleteError } = await supabase
           .from('bookmarks')
           .delete()
           .eq('id', existingBookmark.id);
-          
-        if (deleteError) throw deleteError;
         
-        toast({
-          title: "Bookmark removed",
-          description: "Post removed from your bookmarks"
-        });
+        if (deleteError) {
+          console.error('Error removing bookmark:', deleteError);
+          toast.error('Failed to remove bookmark');
+          return false;
+        }
         
+        toast.success('Bookmark removed');
         return false;
       }
       
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('bookmarks')
         .insert({
-          user_id: session.user.id,
+          user_id: userId,
           post_id: postId
         });
-        
-      if (error) throw error;
       
-      toast({
-        title: "Bookmarked",
-        description: "Post added to your bookmarks"
-      });
+      if (insertError) {
+        console.error('Error adding bookmark:', insertError);
+        toast.error('Failed to bookmark post');
+        return false;
+      }
       
+      toast.success('Post bookmarked');
       return true;
     } catch (error) {
-      console.error('Error bookmarking post:', error);
-      toast({
-        title: "Error",
-        description: "Failed to bookmark post",
-        variant: "destructive"
-      });
+      console.error('Error in bookmarkPost:', error);
+      toast.error('An error occurred while bookmarking the post');
       return false;
     }
   };
 
   const isBookmarked = async (postId: string): Promise<boolean> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return false;
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        return false;
+      }
+      
+      const userId = sessionData.session.user.id;
       
       const { data, error } = await supabase
         .from('bookmarks')
         .select('id')
-        .eq('user_id', session.user.id)
+        .eq('user_id', userId)
         .eq('post_id', postId)
         .maybeSingle();
-        
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Error checking bookmark status:', error);
+        return false;
+      }
       
       return !!data;
     } catch (error) {
-      console.error('Error checking bookmark status:', error);
+      console.error('Error in isBookmarked:', error);
       return false;
     }
   };

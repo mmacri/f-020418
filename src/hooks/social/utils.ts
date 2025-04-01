@@ -1,185 +1,193 @@
 
-import { UserProfile, Post } from '@/types/social';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
+import { toast } from 'sonner';
 
-export const createEmptyUserProfile = (id: string = "", displayName: string = ""): UserProfile => ({
-  id,
-  display_name: displayName,
-  bio: null,
-  avatar_url: null,
-  is_public: false,
-  newsletter_subscribed: false,
-  created_at: '',
-  updated_at: ''
-});
-
-export const isSupabaseError = (obj: any): boolean => {
-  return obj && typeof obj === 'object' && 'error' in obj;
+// Generate a unique file name for uploaded images
+export const generateFileName = (userId: string, fileName: string): string => {
+  const timestamp = new Date().getTime();
+  const extension = fileName.split('.').pop();
+  return `${userId}-${timestamp}.${extension}`;
 };
 
-export const extractUserProfileFromResult = (
-  result: any, 
-  userId: string, 
-  fallbackName: string = "Unknown User"
-): UserProfile => {
-  if (!result || isSupabaseError(result)) {
-    return createEmptyUserProfile(userId, fallbackName);
-  }
-  
-  return {
-    id: result.id || userId,
-    display_name: result.display_name || fallbackName,
-    avatar_url: result.avatar_url || null,
-    bio: result.bio || null,
-    is_public: !!result.is_public,
-    newsletter_subscribed: !!result.newsletter_subscribed,
-    created_at: result.created_at || '',
-    updated_at: result.updated_at || ''
-  };
-};
-
-// Check if admin profile exists, create if not
-export const checkAndCreateAdminProfile = async (): Promise<UserProfile | null> => {
-  const adminEmail = 'admin@recoveryessentials.com';
-  
+// Upload profile avatar image
+export const uploadProfileImage = async (file: File, userId: string): Promise<string> => {
   try {
-    // Get or create admin user
-    let adminUserId;
+    if (!file) {
+      throw new Error('No file provided');
+    }
+
+    // Generate a unique file path for the avatar
+    const filePath = `avatars/${userId}/${generateFileName(userId, file.name)}`;
     
-    // Check if admin exists
-    const { data: existingAdmin, error: adminFetchError } = await supabase
+    // Upload the file to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('social-images')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+    
+    if (error) {
+      console.error('Error uploading avatar:', error);
+      throw error;
+    }
+    
+    // Get the public URL for the uploaded file
+    const { data: { publicUrl } } = supabase.storage
+      .from('social-images')
+      .getPublicUrl(data.path);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error('Error in uploadProfileImage:', error);
+    throw error;
+  }
+};
+
+// Upload post image
+export const uploadPostImage = async (file: File, userId: string): Promise<string> => {
+  try {
+    if (!file) {
+      throw new Error('No file provided');
+    }
+
+    // Generate a unique file path for the post image
+    const filePath = `posts/${userId}/${generateFileName(userId, file.name)}`;
+    
+    // Upload the file to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('social-images')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+    
+    if (error) {
+      console.error('Error uploading post image:', error);
+      throw error;
+    }
+    
+    // Get the public URL for the uploaded file
+    const { data: { publicUrl } } = supabase.storage
+      .from('social-images')
+      .getPublicUrl(data.path);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error('Error in uploadPostImage:', error);
+    throw error;
+  }
+};
+
+// Create a welcome post from admin to new users
+export const createWelcomePost = async (recipientId: string): Promise<boolean> => {
+  try {
+    // Get admin user (assumed to be the first user in the system or a specific ID)
+    const { data: adminProfiles, error: adminError } = await supabase
       .from('user_profiles')
-      .select('id')
+      .select('*')
       .eq('display_name', 'Admin')
       .maybeSingle();
-      
-    if (adminFetchError && adminFetchError.code !== 'PGRST116') {
-      console.error('Error checking for admin:', adminFetchError);
-      return null;
-    }
     
-    if (existingAdmin) {
-      return null; // Admin already exists
-    }
-    
-    // Try to find if there's any user with admin role
-    const { data: admins, error: adminsError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'admin')
-      .limit(1);
-      
-    if (!adminsError && admins && admins.length > 0) {
-      adminUserId = admins[0].id;
-    } else {
-      // Create admin user if doesn't exist
-      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-        email: adminEmail,
-        password: 'Admin123!', // Use a strong password
-        options: {
-          data: {
-            name: 'Admin'
-          }
-        }
-      });
-      
-      if (signUpError) {
-        console.error('Error creating admin user:', signUpError);
-        return null;
-      }
-      
-      adminUserId = user?.id;
-      
-      if (!adminUserId) {
-        console.error('Failed to get admin user ID');
-        return null;
-      }
-      
-      // Set admin role in profiles table
-      await supabase
-        .from('profiles')
-        .upsert({
-          id: adminUserId,
-          display_name: 'Admin',
-          role: 'admin'
-        });
-    }
-    
-    // Create admin profile in user_profiles table
-    const { data: profileData, error: profileError } = await supabase
-      .from('user_profiles')
-      .upsert({
-        id: adminUserId,
-        display_name: 'Admin',
-        bio: 'Site administrator',
-        is_public: true,
-        avatar_url: 'https://ext.same-assets.com/2651616194/3622592620.jpeg'
-      })
-      .select()
-      .single();
-      
-    if (profileError) {
-      console.error('Error creating admin profile:', profileError);
-      return null;
-    }
-    
-    return profileData as UserProfile;
-  } catch (error) {
-    console.error('Error in admin profile creation:', error);
-    return null;
-  }
-};
-
-// Create welcome post from admin
-export const createWelcomePost = async (): Promise<Post | null> => {
-  try {
-    // Get admin user
-    const { data: adminProfile, error: adminError } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('display_name', 'Admin')
-      .single();
-      
     if (adminError) {
       console.error('Error finding admin profile:', adminError);
-      return null;
+      return false;
     }
     
-    // Get hero image for welcome post
-    const { data: settings, error: settingsError } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('id', 'hero_image')
-      .maybeSingle();
+    let adminId: string;
+    
+    if (!adminProfiles) {
+      // Create an admin profile if it doesn't exist
+      const { data: adminAuth, error: authError } = await supabase.auth.getSession();
       
-    // Default hero image if not found
-    let heroImageUrl = 'https://ext.same-assets.com/2651616194/3622592620.jpeg';
-    
-    if (!settingsError && settings && settings.value) {
-      heroImageUrl = settings.value.url || heroImageUrl;
+      if (authError || !adminAuth.session) {
+        console.error('Error getting current user session:', authError);
+        return false;
+      }
+      
+      const { data: newAdmin, error: createError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: adminAuth.session.user.id,
+          display_name: 'Admin',
+          is_public: true,
+          newsletter_subscribed: true
+        })
+        .select('*')
+        .single();
+      
+      if (createError) {
+        console.error('Error creating admin profile:', createError);
+        return false;
+      }
+      
+      adminId = newAdmin.id;
+    } else {
+      adminId = adminProfiles.id;
     }
+    
+    // Get the recipient's display name
+    const { data: recipient, error: recipientError } = await supabase
+      .from('user_profiles')
+      .select('display_name')
+      .eq('id', recipientId)
+      .single();
+    
+    if (recipientError) {
+      console.error('Error getting recipient profile:', recipientError);
+      return false;
+    }
+    
+    // Get hero image for the post
+    const heroImageUrl = localStorage.getItem('hero_image') || 
+                         'https://ext.same-assets.com/1001010126/hero-default.jpg';
     
     // Create welcome post
-    const welcomePost = {
-      user_id: adminProfile.id,
-      content: "Welcome to the community! This is a place to share your recovery journey, wellness experiences, and connect with others. Feel free to post reviews, ask questions, and make friends. We're excited to have you join us!",
-      image_url: heroImageUrl
-    };
+    const welcomeMessage = `
+Welcome to the community, ${recipient.display_name}! 
+
+We're excited to have you join us. This is a place to share your reviews, ideas, and wellness experiences with like-minded people. Feel free to post about your favorite recovery products, share tips, and connect with others on their wellness journeys.
+
+Looking forward to seeing your contributions and building meaningful connections!
+    `;
     
-    const { data: post, error: postError } = await supabase
+    const { error: postError } = await supabase
       .from('posts')
-      .insert(welcomePost)
-      .select()
-      .single();
-      
+      .insert({
+        user_id: adminId,
+        content: welcomeMessage,
+        image_url: heroImageUrl
+      });
+    
     if (postError) {
       console.error('Error creating welcome post:', postError);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in createWelcomePost:', error);
+    return false;
+  }
+};
+
+// Helper function to get user profile by ID
+export const getUserProfile = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching user profile:', error);
       return null;
     }
     
-    return post as Post;
+    return data;
   } catch (error) {
-    console.error('Error creating welcome post:', error);
+    console.error('Error in getUserProfile:', error);
     return null;
   }
 };

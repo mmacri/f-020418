@@ -1,12 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
-import { UserProfile, Post, Friendship, ReactionType, Bookmark } from '@/types/social';
-import { useToast } from '@/hooks/use-toast';
-import { ProfileState } from './types';
-import { extractUserProfileFromResult, isSupabaseError, createEmptyUserProfile } from './utils';
+import { UserProfile, Post, Friendship, Bookmark } from '@/types/social';
 
-export const useProfileData = (profileId?: string): ProfileState => {
+export const useProfileData = (userId?: string) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [pendingFriendRequests, setPendingFriendRequests] = useState<Friendship[]>([]);
@@ -15,335 +13,264 @@ export const useProfileData = (profileId?: string): ProfileState => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'accepted' | 'requested'>('none');
-  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  // Fetch profile data
+  const fetchProfile = useCallback(async (profileId?: string) => {
+    try {
       setIsLoading(true);
       
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUserId = session?.user?.id;
+      if (!profileId) {
+        // If no userId provided, get the current user's profile
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
-        const targetProfileId = profileId || currentUserId;
-        
-        if (!targetProfileId) {
+        if (sessionError || !sessionData.session) {
+          console.error('Error getting session:', sessionError);
           setIsLoading(false);
           return;
         }
         
-        setIsCurrentUser(currentUserId === targetProfileId);
+        profileId = sessionData.session.user.id;
+        setIsCurrentUser(true);
+      } else {
+        // Check if the profile belongs to the current user
+        const { data: sessionData } = await supabase.auth.getSession();
+        setIsCurrentUser(sessionData.session?.user.id === profileId);
+      }
+      
+      // Fetch user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', profileId)
+        .single();
+      
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        toast.error('Failed to load profile data');
+        setIsLoading(false);
+        return;
+      }
+      
+      // If profile not found, try to check if auth user exists
+      if (!profileData) {
+        const { data: authUserData, error: authUserError } = await supabase.auth.admin.getUserById(profileId);
         
-        // Try to get user profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', targetProfileId)
-          .single();
+        if (authUserError || !authUserData.user) {
+          console.error('Error fetching auth user:', authUserError);
+          toast.error('User not found');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Create a new profile for the user
+        if (isCurrentUser) {
+          const { data: newProfile, error: createProfileError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: profileId,
+              display_name: authUserData.user.email?.split('@')[0] || 'New User',
+              is_public: false,
+              newsletter_subscribed: true
+            })
+            .select('*')
+            .single();
           
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          // If we're looking at the current user's profile and it doesn't exist, create a default one
-          if (currentUserId === targetProfileId) {
-            // Set a default profile for rendering
-            const defaultProfile = createEmptyUserProfile(
-              currentUserId, 
-              session?.user?.email ? session.user.email.split('@')[0] : "User"
-            );
-            setProfile(defaultProfile);
-          } else {
-            // For other users, just set profile to null
-            setProfile(null);
+          if (createProfileError) {
+            console.error('Error creating profile:', createProfileError);
+            toast.error('Failed to create profile');
+            setIsLoading(false);
+            return;
           }
+          
+          setProfile(newProfile as UserProfile);
         } else {
-          // Profile exists
-          const userProfile: UserProfile = {
-            id: profileData.id,
-            display_name: profileData.display_name,
-            bio: profileData.bio,
-            avatar_url: profileData.avatar_url,
-            is_public: profileData.is_public,
-            newsletter_subscribed: profileData.newsletter_subscribed,
-            created_at: profileData.created_at,
-            updated_at: profileData.updated_at
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        setProfile(profileData as UserProfile);
+      }
+      
+      // Fetch user's posts with linked user profiles, comments, and reactions
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          user:user_profiles(*),
+          comments:comments(
+            *,
+            user:user_profiles(*)
+          ),
+          reactions:reactions(*)
+        `)
+        .eq('user_id', profileId)
+        .order('created_at', { ascending: false });
+      
+      if (postsError) {
+        console.error('Error fetching posts:', postsError);
+      } else {
+        // Process posts to include reaction counts
+        const processedPosts = postsData.map(post => {
+          const reactions = post.reactions || [];
+          
+          // Count reactions by type
+          const reactionCounts = {
+            like: reactions.filter(r => r.type === 'like').length,
+            heart: reactions.filter(r => r.type === 'heart').length,
+            thumbs_up: reactions.filter(r => r.type === 'thumbs_up').length,
+            thumbs_down: reactions.filter(r => r.type === 'thumbs_down').length
           };
           
-          setProfile(userProfile);
-        }
-        
-        // If we have a profile or it's the current user
-        if (profile || currentUserId === targetProfileId) {
-          await fetchPosts(targetProfileId);
-          
-          if (currentUserId && currentUserId !== targetProfileId) {
-            await checkFriendshipStatus(currentUserId, targetProfileId);
-          }
-          
-          if (currentUserId === targetProfileId) {
-            await fetchFriendRequests(currentUserId);
-            await fetchFriends(currentUserId);
-            await fetchBookmarks(currentUserId);
-          }
-        }
-      } catch (error) {
-        console.error('Error in profile loading:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile data",
-          variant: "destructive"
+          return {
+            ...post,
+            reaction_counts: reactionCounts
+          };
         });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchProfile();
-  }, [profileId, toast]);
-
-  // Extract post fetching to a separate function for clarity
-  const fetchPosts = async (userId: string) => {
-    const { data: postsData, error: postsError } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        user:user_profiles(id, display_name, avatar_url)
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-      
-    if (postsError) {
-      console.error('Error fetching posts:', postsError);
-      return;
-    }
-    
-    const postsWithReactions = await Promise.all(postsData.map(async (post) => {
-      const { data: reactionsData, error: reactionsError } = await supabase
-        .from('reactions')
-        .select('type, id')
-        .eq('post_id', post.id);
         
-      if (reactionsError) {
-        console.error('Error fetching reactions:', reactionsError);
-        return post;
+        setPosts(processedPosts);
       }
       
-      const reaction_counts = {
-        like: 0,
-        heart: a0,
-        thumbs_up: 0,
-        thumbs_down: 0
-      };
-      
-      reactionsData.forEach((reaction) => {
-        if (reaction.type && typeof reaction.type === 'string') {
-          const reactionType = reaction.type as ReactionType;
-          reaction_counts[reactionType]++;
+      // If this is the current user, fetch their pending friend requests
+      if (isCurrentUser) {
+        const { data: friendRequestsData, error: friendRequestsError } = await supabase
+          .from('friendships')
+          .select('*, requestor:user_profiles!requestor_id(*)')
+          .eq('recipient_id', profileId)
+          .eq('status', 'pending');
+        
+        if (friendRequestsError) {
+          console.error('Error fetching friend requests:', friendRequestsError);
+        } else {
+          setPendingFriendRequests(friendRequestsData as Friendship[]);
         }
-      });
-      
-      const userProfile = extractUserProfileFromResult(post.user, post.user_id);
-      
-      const typedPost: Post = {
-        id: post.id,
-        user_id: post.user_id,
-        content: post.content,
-        image_url: post.image_url,
-        created_at: post.created_at,
-        updated_at: post.updated_at,
-        user: userProfile,
-        reaction_counts
-      };
-      
-      return typedPost;
-    }));
-    
-    setPosts(postsWithReactions as Post[]);
-  };
-
-  const checkFriendshipStatus = async (currentUserId: string, targetUserId: string) => {
-    const { data: sentRequestData } = await supabase
-      .from('friendships')
-      .select('*')
-      .eq('requestor_id', currentUserId)
-      .eq('recipient_id', targetUserId)
-      .single();
-      
-    const { data: receivedRequestData } = await supabase
-      .from('friendships')
-      .select('*')
-      .eq('requestor_id', targetUserId)
-      .eq('recipient_id', currentUserId)
-      .single();
-      
-    if (sentRequestData) {
-      const status = sentRequestData.status as 'pending' | 'accepted' | 'rejected';
-      setFriendshipStatus(status === 'accepted' ? 'accepted' : 'pending');
-    } else if (receivedRequestData) {
-      const status = receivedRequestData.status as 'pending' | 'accepted' | 'rejected';
-      setFriendshipStatus(status === 'accepted' ? 'accepted' : 'requested');
-    }
-  };
-
-  const fetchFriendRequests = async (userId: string) => {
-    const { data: pendingRequests, error: pendingError } = await supabase
-      .from('friendships')
-      .select(`
-        *,
-        requestor:user_profiles!friendships_requestor_id_fkey(id, display_name, avatar_url)
-      `)
-      .eq('recipient_id', userId)
-      .eq('status', 'pending');
-      
-    if (pendingError) {
-      console.error('Error fetching pending requests:', pendingError);
-      return;
-    }
-    
-    if (pendingRequests) {
-      const typedPendingRequests: Friendship[] = pendingRequests.map(request => {
-        const requestorProfile = extractUserProfileFromResult(
-          request.requestor, 
-          request.requestor_id, 
-          "Unknown User"
-        );
         
-        return {
-          id: request.id,
-          requestor_id: request.requestor_id,
-          recipient_id: request.recipient_id,
-          status: request.status as 'pending' | 'accepted' | 'rejected',
-          created_at: request.created_at,
-          updated_at: request.updated_at,
-          requestor: requestorProfile
-        };
-      });
-      
-      setPendingFriendRequests(typedPendingRequests);
-    }
-  };
-
-  const fetchFriends = async (userId: string) => {
-    const { data: friendsAsRequestor, error: requestorError } = await supabase
-      .from('friendships')
-      .select(`
-        *,
-        recipient:user_profiles!friendships_recipient_id_fkey(id, display_name, avatar_url)
-      `)
-      .eq('requestor_id', userId)
-      .eq('status', 'accepted');
-    
-    const { data: friendsAsRecipient, error: recipientError } = await supabase
-      .from('friendships')
-      .select(`
-        *,
-        requestor:user_profiles!friendships_requestor_id_fkey(id, display_name, avatar_url)
-      `)
-      .eq('recipient_id', userId)
-      .eq('status', 'accepted');
-      
-    if (requestorError) {
-      console.error('Error fetching friends as requestor:', requestorError);
-    }
-    
-    if (recipientError) {
-      console.error('Error fetching friends as recipient:', recipientError);
-    }
-    
-    const processedFriends: Friendship[] = [];
-    
-    if (friendsAsRequestor) {
-      friendsAsRequestor.forEach(friendship => {
-        const recipientProfile = extractUserProfileFromResult(
-          friendship.recipient, 
-          friendship.recipient_id, 
-          "Unknown User"
-        );
+        // Fetch bookmarks for current user
+        const { data: bookmarksData, error: bookmarksError } = await supabase
+          .from('bookmarks')
+          .select(`
+            *,
+            post:posts(
+              *,
+              user:user_profiles(*),
+              comments:comments(
+                *,
+                user:user_profiles(*)
+              ),
+              reactions:reactions(*)
+            )
+          `)
+          .eq('user_id', profileId);
         
-        processedFriends.push({
-          id: friendship.id,
-          requestor_id: friendship.requestor_id,
-          recipient_id: friendship.recipient_id,
-          status: friendship.status as 'pending' | 'accepted' | 'rejected',
-          created_at: friendship.created_at,
-          updated_at: friendship.updated_at,
-          recipient: recipientProfile
-        });
-      });
-    }
-    
-    if (friendsAsRecipient) {
-      friendsAsRecipient.forEach(friendship => {
-        const requestorProfile = extractUserProfileFromResult(
-          friendship.requestor, 
-          friendship.requestor_id, 
-          "Unknown User"
-        );
-        
-        processedFriends.push({
-          id: friendship.id,
-          requestor_id: friendship.requestor_id,
-          recipient_id: friendship.recipient_id,
-          status: friendship.status as 'pending' | 'accepted' | 'rejected',
-          created_at: friendship.created_at,
-          updated_at: friendship.updated_at,
-          requestor: requestorProfile
-        });
-      });
-    }
-    
-    setFriends(processedFriends);
-  };
-
-  const fetchBookmarks = async (userId: string) => {
-    const { data: bookmarksData, error: bookmarksError } = await supabase
-      .from('bookmarks')
-      .select(`
-        *,
-        post:posts(
-          *,
-          user:user_profiles(id, display_name, avatar_url)
-        )
-      `)
-      .eq('user_id', userId);
+        if (bookmarksError) {
+          console.error('Error fetching bookmarks:', bookmarksError);
+        } else {
+          // Process bookmarked posts to include reaction counts
+          const processedBookmarks = bookmarksData.map(bookmark => {
+            if (bookmark.post) {
+              const post = bookmark.post;
+              const reactions = post.reactions || [];
+              
+              // Count reactions by type
+              post.reaction_counts = {
+                like: reactions.filter(r => r.type === 'like').length,
+                heart: reactions.filter(r => r.type === 'heart').length,
+                thumbs_up: reactions.filter(r => r.type === 'thumbs_up').length,
+                thumbs_down: reactions.filter(r => r.type === 'thumbs_down').length
+              };
+            }
+            
+            return {
+              id: bookmark.id,
+              user_id: bookmark.user_id,
+              post_id: bookmark.post_id,
+              created_at: bookmark.created_at,
+              post: bookmark.post
+            };
+          });
+          
+          setBookmarks(processedBookmarks);
+        }
+      }
       
-    if (bookmarksError) {
-      console.error('Error fetching bookmarks:', bookmarksError);
-      return;
-    }
-    
-    if (bookmarksData) {
-      const typedBookmarks: Bookmark[] = bookmarksData.map(bookmark => {
-        const post = bookmark.post as any;
-        const userProfile = extractUserProfileFromResult(post.user, post.user_id);
+      // Fetch friendship status if not current user
+      if (!isCurrentUser) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const currentUserId = sessionData.session?.user.id;
         
-        const typedPost: Post = {
-          id: post.id,
-          user_id: post.user_id,
-          content: post.content,
-          image_url: post.image_url,
-          created_at: post.created_at,
-          updated_at: post.updated_at,
-          user: userProfile,
-          reaction_counts: {
-            like: 0,
-            heart: 0,
-            thumbs_up: 0,
-            thumbs_down: 0
+        if (currentUserId) {
+          // Check if there's a friend request from current user to profile
+          const { data: outgoingRequest, error: outgoingError } = await supabase
+            .from('friendships')
+            .select('*')
+            .eq('requestor_id', currentUserId)
+            .eq('recipient_id', profileId)
+            .maybeSingle();
+          
+          if (outgoingError) {
+            console.error('Error checking outgoing friendship:', outgoingError);
+          } else if (outgoingRequest) {
+            setFriendshipStatus(outgoingRequest.status as 'pending' | 'accepted');
+          } else {
+            // Check if there's a friend request from profile to current user
+            const { data: incomingRequest, error: incomingError } = await supabase
+              .from('friendships')
+              .select('*')
+              .eq('requestor_id', profileId)
+              .eq('recipient_id', currentUserId)
+              .maybeSingle();
+            
+            if (incomingError) {
+              console.error('Error checking incoming friendship:', incomingError);
+            } else if (incomingRequest) {
+              setFriendshipStatus(incomingRequest.status === 'pending' ? 'requested' : 'accepted');
+            } else {
+              setFriendshipStatus('none');
+            }
           }
-        };
-        
-        return {
-          id: bookmark.id,
-          user_id: bookmark.user_id,
-          post_id: bookmark.post_id,
-          created_at: bookmark.created_at,
-          post: typedPost
-        };
-      });
+        }
+      }
       
-      setBookmarks(typedBookmarks);
+      // Fetch friends list (accepted friendships)
+      const { data: friendshipsAsRequestor, error: requestorError } = await supabase
+        .from('friendships')
+        .select('*, recipient:user_profiles!recipient_id(*)')
+        .eq('requestor_id', profileId)
+        .eq('status', 'accepted');
+      
+      if (requestorError) {
+        console.error('Error fetching friendships as requestor:', requestorError);
+      }
+      
+      const { data: friendshipsAsRecipient, error: recipientError } = await supabase
+        .from('friendships')
+        .select('*, requestor:user_profiles!requestor_id(*)')
+        .eq('recipient_id', profileId)
+        .eq('status', 'accepted');
+      
+      if (recipientError) {
+        console.error('Error fetching friendships as recipient:', recipientError);
+      }
+      
+      // Combine both friendship lists
+      const allFriendships = [
+        ...(friendshipsAsRequestor || []),
+        ...(friendshipsAsRecipient || [])
+      ] as Friendship[];
+      
+      setFriends(allFriendships);
+      
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
+      toast.error('An error occurred while loading profile data');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchProfile(userId);
+  }, [fetchProfile, userId]);
 
   return {
     profile,
@@ -353,6 +280,7 @@ export const useProfileData = (profileId?: string): ProfileState => {
     bookmarks,
     isLoading,
     isCurrentUser,
-    friendshipStatus
+    friendshipStatus,
+    refetchProfile: () => fetchProfile(userId)
   };
 };

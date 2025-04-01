@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
 import { useToast } from '@/hooks/use-toast';
+import { createWelcomePost } from './social/utils';
 
 export const useAuthSignup = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,21 +25,33 @@ export const useAuthSignup = () => {
       
       if (error) throw error;
       
-      // Send welcome email
-      try {
-        await fetch(`${window.location.origin}/api/send-welcome-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email,
-            name: displayName || email.split('@')[0]
-          })
-        });
-      } catch (emailError) {
-        console.error('Failed to send welcome email:', emailError);
-        // Continue with signup even if email fails
+      // User was created successfully
+      if (data?.user?.id) {
+        // Create welcome post from admin
+        try {
+          await createWelcomePost(data.user.id);
+        } catch (welcomePostError) {
+          console.error('Failed to create welcome post:', welcomePostError);
+          // Continue with signup even if welcome post fails
+        }
+        
+        // Send welcome email
+        try {
+          const currentUrl = window.location.origin;
+          await fetch(`${currentUrl}/api/send-welcome-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email,
+              name: displayName || email.split('@')[0]
+            })
+          });
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+          // Continue with signup even if email fails
+        }
       }
       
       toast({

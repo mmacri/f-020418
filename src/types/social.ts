@@ -47,8 +47,8 @@ export interface Comment {
 
 export interface Reaction {
   id: string;
-  post_id?: string;
-  comment_id?: string;
+  post_id?: string | null;
+  comment_id?: string | null;
   user_id: string;
   type: 'like' | 'heart' | 'thumbs_up' | 'thumbs_down';
   created_at: string;

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark } from "lucide-react";
 import { UserProfile, Bookmark as BookmarkType } from "@/types/social";
@@ -11,6 +11,7 @@ interface ProfileBookmarksTabProps {
   addComment: (postId: string, content: string) => Promise<any>;
   addReaction: (type: 'like' | 'heart' | 'thumbs_up' | 'thumbs_down', postId: string) => Promise<any>;
   bookmarkPost: (postId: string) => Promise<boolean>;
+  isBookmarked?: (postId: string) => Promise<boolean>;
 }
 
 export const ProfileBookmarksTab: React.FC<ProfileBookmarksTabProps> = ({
@@ -18,11 +19,20 @@ export const ProfileBookmarksTab: React.FC<ProfileBookmarksTabProps> = ({
   bookmarks,
   addComment,
   addReaction,
-  bookmarkPost
+  bookmarkPost,
+  isBookmarked
 }) => {
+  const [loadedBookmarks, setLoadedBookmarks] = useState<BookmarkType[]>([]);
+
+  useEffect(() => {
+    // Filter out bookmarks that don't have post data
+    const validBookmarks = bookmarks.filter(bookmark => bookmark.post);
+    setLoadedBookmarks(validBookmarks);
+  }, [bookmarks]);
+
   return (
     <div className="space-y-4">
-      {bookmarks.length === 0 ? (
+      {loadedBookmarks.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <Bookmark className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -34,7 +44,7 @@ export const ProfileBookmarksTab: React.FC<ProfileBookmarksTabProps> = ({
         </Card>
       ) : (
         <div className="space-y-4">
-          {bookmarks.map((bookmark) => bookmark.post && (
+          {loadedBookmarks.map((bookmark) => bookmark.post && (
             <PostCard 
               key={bookmark.id} 
               post={bookmark.post} 

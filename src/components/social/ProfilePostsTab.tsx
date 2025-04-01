@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { UserProfile, Post } from "@/types/social";
@@ -31,6 +31,37 @@ export const ProfilePostsTab: React.FC<ProfilePostsTabProps> = ({
   isBookmarked,
   isUploading
 }) => {
+  const [postBookmarkStates, setPostBookmarkStates] = useState<Record<string, boolean>>({});
+  
+  // Load initial bookmark states if function is provided
+  useEffect(() => {
+    const loadBookmarkStates = async () => {
+      if (isBookmarked && posts.length > 0) {
+        const bookmarkStates: Record<string, boolean> = {};
+        
+        // Check bookmark status for each post
+        for (const post of posts) {
+          bookmarkStates[post.id] = await isBookmarked(post.id);
+        }
+        
+        setPostBookmarkStates(bookmarkStates);
+      }
+    };
+    
+    loadBookmarkStates();
+  }, [posts, isBookmarked]);
+  
+  // Handle bookmark toggle
+  const handleToggleBookmark = async (postId: string) => {
+    if (bookmarkPost) {
+      const isNowBookmarked = await bookmarkPost(postId);
+      setPostBookmarkStates(prev => ({
+        ...prev,
+        [postId]: isNowBookmarked
+      }));
+    }
+  };
+
   return (
     <div className="space-y-4">
       {isCurrentUser && (
@@ -63,7 +94,8 @@ export const ProfilePostsTab: React.FC<ProfilePostsTabProps> = ({
               onAddComment={addComment}
               onAddReaction={addReaction}
               onDeletePost={deletePost}
-              onToggleBookmark={bookmarkPost}
+              isBookmarked={postBookmarkStates[post.id]}
+              onToggleBookmark={() => handleToggleBookmark(post.id)}
             />
           ))}
         </div>
