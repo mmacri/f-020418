@@ -70,7 +70,7 @@ export const useProfilePosts = (userId?: string) => {
         
         // Process user data from post
         let userProfile: UserProfile;
-        if (post.user && typeof post.user === 'object' && !('error' in post.user)) {
+        if (post.user && typeof post.user === 'object' && post.user !== null && !('error' in post.user)) {
           userProfile = post.user as UserProfile;
         } else {
           // Fallback if user relation fails
@@ -95,7 +95,7 @@ export const useProfilePosts = (userId?: string) => {
         // Map comments with proper typing
         const comments = commentsData ? commentsData.map(comment => {
           let commentUser: UserProfile;
-          if (comment.user && typeof comment.user === 'object' && !('error' in comment.user)) {
+          if (comment.user && typeof comment.user === 'object' && comment.user !== null && !('error' in comment.user)) {
             commentUser = comment.user as UserProfile;
           } else {
             // We'll use a placeholder user if relation fails
