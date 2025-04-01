@@ -54,7 +54,7 @@ const ProfilePage = () => {
         {isLoading ? (
           <ProfileLoadingSkeleton />
         ) : !profile ? (
-          <ProfileNotFound />
+          <ProfileNotFound userId={id} isCurrentUser={isCurrentUser} />
         ) : isEditing ? (
           <div className="container mx-auto px-4 py-8">
             <ProfileSettings 
