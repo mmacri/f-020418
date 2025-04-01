@@ -1,14 +1,9 @@
 
-import AnalyticsHeader from './AnalyticsHeader';
-import AnalyticsSummaryCards from './AnalyticsSummaryCards';
-import DetailedCharts from './DetailedCharts';
-import { processPageViewsData, processTrafficSources, exportAnalyticsData } from './analyticsUtils';
-
-export {
-  AnalyticsHeader,
-  AnalyticsSummaryCards,
-  DetailedCharts,
+export { default as AnalyticsHeader } from './AnalyticsHeader';
+export { default as AnalyticsSummaryCards } from './AnalyticsSummaryCards';
+export { default as DetailedCharts } from './DetailedCharts';
+export { 
   processPageViewsData,
   processTrafficSources,
-  exportAnalyticsData
-};
+  exportAnalyticsData 
+} from './analyticsUtils';

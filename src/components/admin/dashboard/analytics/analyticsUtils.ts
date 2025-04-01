@@ -113,14 +113,3 @@ export const exportAnalyticsData = (type: string, pageViewsData: any[], sourcesD
     return false;
   }
 };
-
-// Make sure all files are exported from the analytics index.ts
-<lov-write file_path="src/components/admin/dashboard/analytics/index.ts">
-export { default as AnalyticsHeader } from './AnalyticsHeader';
-export { default as AnalyticsSummaryCards } from './AnalyticsSummaryCards';
-export { default as DetailedCharts } from './DetailedCharts';
-export { 
-  processPageViewsData,
-  processTrafficSources,
-  exportAnalyticsData 
-} from './analyticsUtils';
