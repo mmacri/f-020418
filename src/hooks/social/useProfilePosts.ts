@@ -80,7 +80,16 @@ export const useProfilePosts = (userId?: string) => {
             .eq('id', post.user_id)
             .single();
           
-          userProfile = userData as UserProfile;
+          userProfile = userData as UserProfile || {
+            id: post.user_id,
+            display_name: "Unknown User",
+            bio: null,
+            avatar_url: null,
+            is_public: false,
+            newsletter_subscribed: false,
+            created_at: post.created_at,
+            updated_at: post.created_at
+          };
         }
         
         // Map comments with proper typing

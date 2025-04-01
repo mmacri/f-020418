@@ -112,9 +112,20 @@ export const useProfileBookmarks = (userId?: string, isCurrentUser: boolean = fa
           } as Comment;
         }) : [];
         
+        const postUser = postUserData as UserProfile || {
+          id: bookmark.post.user_id,
+          display_name: "Unknown User",
+          bio: null,
+          avatar_url: null,
+          is_public: false,
+          newsletter_subscribed: false,
+          created_at: bookmark.post.created_at,
+          updated_at: bookmark.post.created_at
+        };
+        
         const postWithDetails: Post = {
           ...bookmark.post,
-          user: postUserData as UserProfile,
+          user: postUser,
           comments: comments,
           reactions: reactionsData as Reaction[] || [],
           reaction_counts: reactionCounts

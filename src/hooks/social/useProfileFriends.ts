@@ -29,14 +29,46 @@ export const useProfileFriends = (userId?: string, isCurrentUser: boolean = fals
         console.error('Error fetching friendships:', friendshipsError);
       } else if (friendshipsData) {
         const processedFriendships = friendshipsData.map(friendship => {
-          // Ensure requestor and recipient are properly typed
-          const requestor = friendship.requestor as UserProfile;
-          const recipient = friendship.recipient as UserProfile;
+          // Check if relationships were properly loaded
+          let requestorProfile: UserProfile;
+          let recipientProfile: UserProfile;
+          
+          if (friendship.requestor && typeof friendship.requestor === 'object' && !('error' in friendship.requestor)) {
+            requestorProfile = friendship.requestor as UserProfile;
+          } else {
+            // Fallback for missing requestor
+            requestorProfile = {
+              id: friendship.requestor_id,
+              display_name: "Unknown User",
+              bio: null,
+              avatar_url: null,
+              is_public: false,
+              newsletter_subscribed: false,
+              created_at: friendship.created_at,
+              updated_at: friendship.created_at
+            };
+          }
+          
+          if (friendship.recipient && typeof friendship.recipient === 'object' && !('error' in friendship.recipient)) {
+            recipientProfile = friendship.recipient as UserProfile;
+          } else {
+            // Fallback for missing recipient
+            recipientProfile = {
+              id: friendship.recipient_id,
+              display_name: "Unknown User",
+              bio: null,
+              avatar_url: null,
+              is_public: false,
+              newsletter_subscribed: false,
+              created_at: friendship.created_at,
+              updated_at: friendship.created_at
+            };
+          }
           
           return {
             ...friendship,
-            requestor,
-            recipient
+            requestor: requestorProfile,
+            recipient: recipientProfile
           } as Friendship;
         });
         
@@ -58,11 +90,27 @@ export const useProfileFriends = (userId?: string, isCurrentUser: boolean = fals
           console.error('Error fetching friend requests:', friendRequestsError);
         } else if (friendRequestsData) {
           const processedRequests = friendRequestsData.map(request => {
-            const requestor = request.requestor as UserProfile;
+            let requestorProfile: UserProfile;
+            
+            if (request.requestor && typeof request.requestor === 'object' && !('error' in request.requestor)) {
+              requestorProfile = request.requestor as UserProfile;
+            } else {
+              // Fallback for missing requestor
+              requestorProfile = {
+                id: request.requestor_id,
+                display_name: "Unknown User",
+                bio: null,
+                avatar_url: null,
+                is_public: false,
+                newsletter_subscribed: false,
+                created_at: request.created_at,
+                updated_at: request.created_at
+              };
+            }
             
             return {
               ...request,
-              requestor
+              requestor: requestorProfile
             } as Friendship;
           });
           
