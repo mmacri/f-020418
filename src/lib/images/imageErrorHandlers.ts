@@ -1,37 +1,53 @@
 
-import { imageUrls } from '@/lib/constants';
-
 /**
- * Handles image loading errors by replacing the failed image with a fallback
+ * Handles image loading errors
+ * @param imageSrc The source URL of the image that failed to load
  */
-export const handleImageError = (
-  event: React.SyntheticEvent<HTMLImageElement, Event>,
-  fallbackSrc = imageUrls.PLACEHOLDER
-) => {
-  const img = event.currentTarget;
-  console.log(`Image failed to load: ${img.src}. Using fallback: ${fallbackSrc}`);
-  img.src = fallbackSrc;
-  img.onerror = null; // Prevent infinite error loop if fallback also fails
+export const handleImageError = (imageSrc: string): void => {
+  // Log the error for debugging purposes
+  logImageError(imageSrc);
 };
 
 /**
- * Logs image errors to console for debugging
+ * Logs image errors to the console for debugging
+ * @param imageSrc The source URL of the image that failed to load
  */
-export const logImageError = (imageSrc: string, error?: any) => {
-  console.warn(`Image error for ${imageSrc}:`, error || 'Unknown error');
+export const logImageError = (imageSrc: string): void => {
+  console.warn(`Failed to load image: ${imageSrc}`);
 };
 
 /**
- * Generates a CSS background color based on a string (for placeholders)
+ * Generates a placeholder background with initials or a color
+ * @param text Text to generate initials from
+ * @param index Index for color variation
+ * @returns CSS style object for background
  */
-export const generatePlaceholderBackground = (text: string): string => {
-  // Generate a deterministic color based on the text
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    hash = text.charCodeAt(i) + ((hash << 5) - hash);
-  }
+export const generatePlaceholderBackground = (text: string = '', index: number = 0): React.CSSProperties => {
+  const colors = [
+    'rgba(239, 68, 68, 0.2)',   // red
+    'rgba(59, 130, 246, 0.2)',  // blue
+    'rgba(34, 197, 94, 0.2)',   // green
+    'rgba(234, 179, 8, 0.2)',   // yellow
+    'rgba(168, 85, 247, 0.2)',  // purple
+    'rgba(236, 72, 153, 0.2)',  // pink
+  ];
+
+  // Use the index to pick a color, or fall back to a random one if no index provided
+  const backgroundColor = colors[index % colors.length];
   
-  // Convert to hexadecimal and ensure it's light enough to work as a background
-  const hue = hash % 360;
-  return `hsl(${hue}, 70%, 85%)`;
+  const initials = text
+    .split(' ')
+    .slice(0, 2)
+    .map(word => word.charAt(0).toUpperCase())
+    .join('');
+
+  return {
+    backgroundColor,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#666',
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+  };
 };

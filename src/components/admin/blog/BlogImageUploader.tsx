@@ -5,9 +5,10 @@ import { ImageWithFallback } from '@/lib/images';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { ImagePlus, Loader2 } from 'lucide-react';
+import { ImagePlus, Loader2, Upload } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
 interface BlogImageUploaderProps {
   currentImage?: string;
@@ -24,6 +25,7 @@ const BlogImageUploader: React.FC<BlogImageUploaderProps> = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState(currentImage || '');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
   
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,11 +50,21 @@ const BlogImageUploader: React.FC<BlogImageUploaderProps> = ({
       
       if (error) {
         setUploadError(error);
+        toast({
+          title: 'Upload failed',
+          description: error,
+          variant: 'destructive'
+        });
         return;
       }
       
       setImageUrl(url);
       onImageChange(url);
+      
+      toast({
+        title: 'Image uploaded',
+        description: 'Your image has been uploaded successfully'
+      });
       
       // Close dialog after successful upload
       if (insertIntoEditor) {
@@ -62,6 +74,11 @@ const BlogImageUploader: React.FC<BlogImageUploaderProps> = ({
     } catch (error) {
       console.error('Image upload error:', error);
       setUploadError('Failed to upload image. Please try again.');
+      toast({
+        title: 'Upload error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive'
+      });
     } finally {
       setIsUploading(false);
     }
@@ -105,13 +122,29 @@ const BlogImageUploader: React.FC<BlogImageUploaderProps> = ({
           <TabsContent value="upload" className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="image-upload">Upload Image</Label>
-              <Input
-                id="image-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                disabled={isUploading}
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={isUploading}
+                  className="flex-grow"
+                />
+                {isUploading ? (
+                  <Button disabled variant="outline" size="icon">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
               {isUploading && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
