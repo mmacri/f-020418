@@ -70,10 +70,12 @@ export const useProfilePosts = (userId?: string) => {
         
         // Process user data from post
         let userProfile: UserProfile;
+        
+        // Fix: Ensure we check for null before accessing properties
         if (post.user && 
             typeof post.user === 'object' && 
             post.user !== null && 
-            !('error' in post.user)) {
+            !('error' in (post.user as object))) {
           userProfile = post.user as UserProfile;
         } else {
           // Fallback if user relation fails
@@ -98,10 +100,12 @@ export const useProfilePosts = (userId?: string) => {
         // Map comments with proper typing
         const comments = commentsData ? commentsData.map(comment => {
           let commentUser: UserProfile;
+          
+          // Fix: Ensure we check for null before accessing properties
           if (comment.user && 
               typeof comment.user === 'object' && 
               comment.user !== null && 
-              !('error' in comment.user)) {
+              !('error' in (comment.user as object))) {
             commentUser = comment.user as UserProfile;
           } else {
             // We'll use a placeholder user if relation fails
