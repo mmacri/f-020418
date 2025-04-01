@@ -9,6 +9,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { User, updateUserProfile } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
+import { ImageWithFallback } from "@/lib/images/ImageWithFallback";
 
 // Profile form schema
 const profileFormSchema = z.object({
@@ -21,9 +22,10 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 interface ProfileFormProps {
   user: User;
+  onProfileUpdate?: (updatedUser: User) => void;
 }
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({ user, onProfileUpdate }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { toast } = useToast();
   
@@ -60,6 +62,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
             title: "Profile updated",
             description: "Your profile has been updated successfully",
           });
+          
+          // Call the callback if provided
+          if (onProfileUpdate) {
+            onProfileUpdate(updatedUser);
+          }
         }
       }
     } catch (error) {
@@ -129,13 +136,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
           <div className="mt-2">
             <p className="text-sm font-medium mb-2">Current Avatar:</p>
             <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-200">
-              <img 
+              <ImageWithFallback 
                 src={user.avatar} 
                 alt="Profile avatar" 
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://ext.same-assets.com/2651616194/3622592620.jpeg";
-                }}
+                fallbackSrc="https://ext.same-assets.com/2651616194/3622592620.jpeg"
               />
             </div>
           </div>

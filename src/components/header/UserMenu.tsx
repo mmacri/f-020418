@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { User, LogOut, Settings, Heart, ShoppingBag, UserCircle } from "lucide-react";
+import { User, LogOut, Settings, Heart, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -62,10 +62,6 @@ export const UserMenu = ({ user, onLogout }: UserMenuProps) => {
         <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-2 cursor-pointer">
           <UserCircle size={16} aria-hidden="true" />
           <span>My Profile</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/orders')} className="gap-2 cursor-pointer">
-          <ShoppingBag size={16} aria-hidden="true" />
-          <span>My Orders</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/wishlist')} className="gap-2 cursor-pointer">
           <Heart size={16} aria-hidden="true" />

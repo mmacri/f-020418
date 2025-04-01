@@ -5,23 +5,17 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { User, getCurrentUser, updateUserPassword, isAuthenticated, logout } from "@/services/userService";
+import { UserCircle, KeyRound, Save, LogOut, Heart } from "lucide-react";
+import { ProfileSettings } from "@/components/admin/settings/profile";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { User, getCurrentUser, updateUserProfile, updateUserPassword, isAuthenticated, logout } from "@/services/userService";
-import { UserCircle, KeyRound, Save, LogOut } from "lucide-react";
-
-// Profile form schema
-const profileFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  avatar: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal("")),
-});
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
 // Password form schema
 const passwordFormSchema = z.object({
@@ -33,7 +27,6 @@ const passwordFormSchema = z.object({
   path: ["confirmPassword"],
 });
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
 type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 const Profile = () => {
@@ -60,32 +53,6 @@ const Profile = () => {
     }
   }, [navigate, toast]);
 
-  // Profile form
-  const profileForm = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      avatar: "",
-    },
-    values: {
-      name: user?.name || "",
-      email: user?.email || "",
-      avatar: user?.avatar || "",
-    },
-  });
-
-  // Update form values when user data changes
-  useEffect(() => {
-    if (user) {
-      profileForm.reset({
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar || "",
-      });
-    }
-  }, [user, profileForm]);
-
   // Password form
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordFormSchema),
@@ -95,39 +62,6 @@ const Profile = () => {
       confirmPassword: "",
     },
   });
-
-  // Handle profile form submission
-  const onProfileSubmit = async (data: ProfileFormValues) => {
-    setIsLoading(true);
-
-    try {
-      if (user) {
-        const updatedUser = await updateUserProfile({
-          id: user.id,
-          name: data.name,
-          email: data.email,
-          avatar: data.avatar || undefined,
-        });
-
-        if (updatedUser) {
-          setUser(updatedUser);
-          toast({
-            title: "Profile updated",
-            description: "Your profile has been updated successfully",
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Handle password form submission
   const onPasswordSubmit = async (data: PasswordFormValues) => {
@@ -166,6 +100,10 @@ const Profile = () => {
   const handleLogout = async () => {
     await logout();
     navigate("/login");
+  };
+
+  const handleProfileUpdate = (updatedUser: User) => {
+    setUser(updatedUser);
   };
 
   if (!user) {
@@ -208,136 +146,14 @@ const Profile = () => {
                   <KeyRound size={16} />
                   <span>Password & Security</span>
                 </TabsTrigger>
+                <TabsTrigger value="bookmarks" className="flex items-center gap-2">
+                  <Heart size={16} />
+                  <span>My Bookmarks</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="personal" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>
-                      Update your account details and profile information
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...profileForm}>
-                      <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                        <FormField
-                          control={profileForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={profileForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="email" />
-                              </FormControl>
-                              <FormDescription>
-                                This is the email address you use to log in.
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={profileForm.control}
-                          name="avatar"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Avatar URL</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="https://example.com/avatar.jpg" />
-                              </FormControl>
-                              <FormDescription>
-                                Enter a URL for your profile avatar.
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {user.avatar && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium mb-2">Current Avatar:</p>
-                            <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-200">
-                              <img 
-                                src={user.avatar} 
-                                alt="Profile avatar" 
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "https://ext.same-assets.com/2651616194/3622592620.jpeg";
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        <div>
-                          <Button 
-                            type="submit" 
-                            disabled={isLoading}
-                            className="flex items-center gap-2"
-                          >
-                            <Save size={16} />
-                            <span>{isLoading ? "Saving..." : "Save Changes"}</span>
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Account Type</CardTitle>
-                    <CardDescription>
-                      Your current account permissions
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="p-3 rounded-md bg-blue-50 text-blue-700 flex items-center">
-                      <div className="mr-3 p-2 rounded-full bg-blue-100">
-                        <UserCircle size={20} />
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {user.role === "admin" ? "Administrator" : 
-                           user.role === "editor" ? "Editor" : "Regular User"}
-                        </p>
-                        <p className="text-sm text-blue-600">
-                          {user.role === "admin" ? "Full access to all areas of the platform." : 
-                           user.role === "editor" ? "Can manage content but not system settings." : 
-                           "Limited access to platform features."}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {user.role === "admin" && (
-                      <div className="mt-4">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => navigate("/admin")}
-                          className="w-full"
-                        >
-                          Go to Admin Dashboard
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <ProfileSettings user={user} onProfileUpdate={handleProfileUpdate} />
               </TabsContent>
 
               <TabsContent value="security" className="space-y-6">
@@ -437,6 +253,29 @@ const Profile = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="bookmarks" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>My Saved Products</CardTitle>
+                    <CardDescription>
+                      View and manage your bookmarked products
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="py-8 text-center">
+                      <Heart size={48} className="mx-auto text-gray-300 mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No saved products yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Products you bookmark will appear here for easy access
+                      </p>
+                      <Button onClick={() => navigate('/products')}>
+                        Browse Products
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

@@ -1,27 +1,42 @@
 
 import React from "react";
+import { User } from "@/services/userService";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ProfileAvatarProps {
-  avatarUrl?: string;
+  user: User;
+  size?: "sm" | "md" | "lg";
 }
 
-const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ avatarUrl }) => {
-  if (!avatarUrl) return null;
+const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ user, size = "md" }) => {
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map(part => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
+  const getAvatarSize = () => {
+    switch (size) {
+      case "sm": return "h-8 w-8";
+      case "lg": return "h-16 w-16";
+      default: return "h-12 w-12"; // md
+    }
+  };
+
   return (
-    <div className="mt-2">
-      <p className="text-sm font-medium mb-2">Current Avatar:</p>
-      <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-200">
-        <img 
-          src={avatarUrl} 
-          alt="Profile avatar" 
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = "https://ext.same-assets.com/2651616194/3622592620.jpeg";
-          }}
-        />
-      </div>
-    </div>
+    <Avatar className={getAvatarSize()}>
+      <AvatarImage 
+        src={user.avatar} 
+        alt={user.name || "User"} 
+      />
+      <AvatarFallback className="bg-primary text-primary-foreground">
+        {getInitials(user.name || user.email)}
+      </AvatarFallback>
+    </Avatar>
   );
 };
 
