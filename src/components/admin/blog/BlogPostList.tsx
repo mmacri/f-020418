@@ -7,11 +7,15 @@ import {
   TableCell, 
   TableHead, 
   TableHeader, 
-  TableRow,
-  Button,
+  TableRow
+} from '@/components/ui/table';
+import {
+  Button
+} from '@/components/ui/button';
+import {
   Card,
   CardContent
-} from '@/components/ui';
+} from '@/components/ui/card';
 import { Pencil, Trash2, Loader2, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 

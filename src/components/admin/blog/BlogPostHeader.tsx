@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Input, Button } from '@/components/ui';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { PlusCircle, Search } from 'lucide-react';
 
 interface BlogPostHeaderProps {

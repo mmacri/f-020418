@@ -1,23 +1,26 @@
-
 import React, { useState } from 'react';
 import { 
-  Button,
+  Button
+} from '@/components/ui/button';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-  Label,
-  Input,
-  Textarea,
-  Switch,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui';
+} from '@/components/ui/select';
 import { BlogPost, BlogPostInput, BlogCategory, generateSeoSuggestions } from '@/services/blog';
 import { Loader2, FileText, Calendar, Image, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
