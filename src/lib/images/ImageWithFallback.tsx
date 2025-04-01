@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { handleImageError } from './imageErrorHandlers';
 
-interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
 }
 

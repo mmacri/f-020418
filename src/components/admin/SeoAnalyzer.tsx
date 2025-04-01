@@ -1,199 +1,95 @@
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/tabs';
-import { analyzeReadability, generateSeoSuggestions } from '@/services/blog/analysis';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Check, Info } from 'lucide-react';
-import { BlogPost } from '@/services/blog/types';
+import { BlogPost } from '@/services/blog';
+import { analyzeReadability } from '@/services/blog/analysis';
 
 interface SeoAnalyzerProps {
-  title: string;
   content: string;
-  excerpt: string;
-  tags?: string[];
-  onApplySuggestions: (suggestions: { title?: string; description?: string; keywords?: string[] }) => void;
+  onAnalysisComplete?: (score: number) => void;
 }
 
-const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ 
-  title, 
-  content, 
-  excerpt,
-  tags = [],
-  onApplySuggestions 
-}) => {
-  const [seoTitle, setSeoTitle] = useState(title);
-  const [seoDescription, setSeoDescription] = useState(excerpt.substring(0, 160));
-  const [seoKeywords, setSeoKeywords] = useState<string[]>(tags);
-  const [readabilityScore, setReadabilityScore] = useState(0);
-  const [readabilityFeedback, setReadabilityFeedback] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState('seo');
-  const [readingTime, setReadingTime] = useState('');
+const SeoAnalyzer: React.FC<SeoAnalyzerProps> = ({ content, onAnalysisComplete }) => {
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    // Re-analyze when content changes
-    if (content) {
-      const readabilityResult = analyzeReadability(content);
-      setReadabilityScore(readabilityResult.score);
-      setReadabilityFeedback(readabilityResult.feedback);
-      setReadingTime(readabilityResult.readingTime);
-    }
-    
-    // Generate SEO suggestions
-    const tempPost: BlogPost = {
-      id: 0,
-      title,
-      slug: '',
-      excerpt,
-      content,
-      category: '',
-      published: false,
-      createdAt: '',
-      updatedAt: ''
-    };
-    
-    const { title: suggestedTitle, description, keywords } = generateSeoSuggestions(tempPost);
-    
-    setSeoTitle(suggestedTitle);
-    setSeoDescription(description);
-    setSeoKeywords(keywords);
-  }, [title, content, excerpt, tags]);
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-
-  const handleApplySuggestions = () => {
-    onApplySuggestions({
-      title: seoTitle,
-      description: seoDescription,
-      keywords: seoKeywords
-    });
+  const runAnalysis = () => {
+    setIsAnalyzing(true);
+    setTimeout(() => {
+      // Create a temporary blog post object to analyze
+      const tempPost = {
+        id: 0,
+        title: '',
+        slug: '',
+        excerpt: '',
+        content: content,
+        published: false
+      } as BlogPost;
+      
+      const results = analyzeReadability(content);
+      setAnalysis(results);
+      if (onAnalysisComplete) {
+        onAnalysisComplete(results.readabilityScore);
+      }
+      setIsAnalyzing(false);
+    }, 500);
   };
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Content Analysis</CardTitle>
+        <CardTitle className="flex justify-between items-center">
+          <span>Content Readability Analysis</span>
+          <Button 
+            onClick={runAnalysis} 
+            disabled={isAnalyzing || !content}
+            size="sm"
+          >
+            {isAnalyzing ? 'Analyzing...' : 'Analyze Content'}
+          </Button>
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
-            <TabsTrigger value="seo" className="flex-1">SEO</TabsTrigger>
-            <TabsTrigger value="readability" className="flex-1">Readability</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="seo" className="mt-4 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">SEO Title ({seoTitle.length}/60)</label>
-              <Input 
-                value={seoTitle} 
-                onChange={(e) => setSeoTitle(e.target.value)}
-                className={seoTitle.length > 60 ? 'border-red-500' : ''}
-              />
-              {seoTitle.length > 60 && (
-                <p className="text-xs text-red-500">Title is too long</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Meta Description ({seoDescription.length}/160)</label>
-              <Textarea 
-                value={seoDescription} 
-                onChange={(e) => setSeoDescription(e.target.value)}
-                className={seoDescription.length > 160 ? 'border-red-500' : ''}
-                rows={3}
-              />
-              {seoDescription.length > 160 && (
-                <p className="text-xs text-red-500">Description is too long</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Keywords</label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {seoKeywords.map((keyword, index) => (
-                  <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                    {keyword}
-                    <button 
-                      onClick={() => setSeoKeywords(keywords => keywords.filter((_, i) => i !== index))}
-                      className="ml-1 text-gray-500 hover:text-gray-700"
-                    >
-                      ✕
-                    </button>
-                  </Badge>
-                ))}
+        {analysis ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border rounded p-3">
+                <div className="text-sm text-muted-foreground">Word Count</div>
+                <div className="text-xl font-bold">{analysis.wordCount}</div>
               </div>
-              <div className="flex gap-2">
-                <Input 
-                  id="new-keyword" 
-                  placeholder="Add keyword"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
-                      setSeoKeywords([...seoKeywords, (e.target as HTMLInputElement).value.trim()]);
-                      (e.target as HTMLInputElement).value = '';
-                    }
-                  }}
-                />
+              <div className="border rounded p-3">
+                <div className="text-sm text-muted-foreground">Reading Time</div>
+                <div className="text-xl font-bold">{analysis.readTime}</div>
               </div>
             </div>
             
-            <Button onClick={handleApplySuggestions} className="w-full mt-4">
-              Apply SEO Suggestions
-            </Button>
-          </TabsContent>
-          
-          <TabsContent value="readability" className="mt-4 space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium">Readability Score</label>
-                <span className="text-sm font-bold">{readabilityScore}/100</span>
-              </div>
-              <Progress value={readabilityScore} className={getScoreColor(readabilityScore)} />
-              
-              <div className="flex items-center gap-2 text-sm mt-2">
-                <Info size={16} />
-                <span>Estimated reading time: {readingTime}</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Suggestions</label>
-              {readabilityFeedback.length > 0 ? (
-                <div className="space-y-2">
-                  {readabilityFeedback.map((suggestion, index) => (
-                    <Alert key={index}>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{suggestion}</AlertDescription>
-                    </Alert>
-                  ))}
+            <div className="border rounded p-3">
+              <div className="text-sm text-muted-foreground">Readability Score</div>
+              <div className="flex items-center">
+                <div className="text-xl font-bold mr-2">{Math.round(analysis.readabilityScore)}</div>
+                <div className="text-sm px-2 py-1 rounded bg-gray-100">
+                  {analysis.readabilityLevel}
                 </div>
-              ) : (
-                <Alert>
-                  <Check className="h-4 w-4 text-green-500" />
-                  <AlertDescription>No readability issues found!</AlertDescription>
-                </Alert>
-              )}
+              </div>
             </div>
-          </TabsContent>
-        </Tabs>
+            
+            {analysis.feedback && analysis.feedback.length > 0 && (
+              <div className="border rounded p-3">
+                <div className="text-sm text-muted-foreground mb-2">Suggestions</div>
+                <ul className="list-disc pl-5 space-y-1">
+                  {analysis.feedback.map((item: string, index: number) => (
+                    <li key={index} className="text-sm">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            {content ? 'Click "Analyze Content" to check readability metrics.' : 'Add content to analyze readability.'}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
