@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DateRange } from 'react-day-picker';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import {
 
 const AnalyticsDashboard = () => {
   const { isLoading, setIsLoading } = useDashboard();
+  const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     to: new Date(),
@@ -24,14 +25,12 @@ const AnalyticsDashboard = () => {
   const [uniqueVisitors, setUniqueVisitors] = useState(0);
   const [totalPageViews, setTotalPageViews] = useState(0);
 
-  useEffect(() => {
-    fetchAnalyticsData();
-  }, [date]);
-
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     if (!date?.from) return;
     
     setIsLoading(true);
+    setError(null);
+    
     try {
       const startDate = date.from;
       const endDate = date.to || new Date();
@@ -49,6 +48,7 @@ const AnalyticsDashboard = () => {
       
       if (pageViewsError) {
         console.error('Error fetching page views:', pageViewsError);
+        setError('Failed to fetch page views data');
         toast.error('Failed to fetch page views data');
         return;
       }
@@ -71,19 +71,40 @@ const AnalyticsDashboard = () => {
       
     } catch (error) {
       console.error('Error in fetchAnalyticsData:', error);
+      setError('Failed to load analytics data');
       toast.error('Failed to load analytics data');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [date, setIsLoading]);
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, [fetchAnalyticsData]);
 
   const handleExportData = (type: string) => {
     exportAnalyticsData(type, pageViewsData, trafficSourcesData);
+    toast.success(`${type} data exported successfully`);
+  };
+
+  const handleRefresh = () => {
+    fetchAnalyticsData();
+    toast.success('Analytics data refreshed');
   };
 
   return (
     <div className="space-y-4">
-      <AnalyticsHeader date={date} setDate={setDate} />
+      <AnalyticsHeader 
+        date={date} 
+        setDate={setDate} 
+        onRefresh={handleRefresh}
+      />
+      
+      {error && (
+        <div className="bg-destructive/15 text-destructive px-4 py-2 rounded-md">
+          {error}
+        </div>
+      )}
       
       <AnalyticsSummaryCards
         isLoading={isLoading}
@@ -93,6 +114,7 @@ const AnalyticsDashboard = () => {
         totalPageViews={totalPageViews}
         date={date}
         exportData={handleExportData}
+        error={error}
       />
 
       <DetailedCharts
@@ -101,6 +123,7 @@ const AnalyticsDashboard = () => {
         trafficSourcesData={trafficSourcesData}
         uniqueVisitors={uniqueVisitors}
         exportData={handleExportData}
+        error={error}
       />
     </div>
   );

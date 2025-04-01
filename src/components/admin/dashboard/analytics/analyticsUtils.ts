@@ -1,77 +1,126 @@
 
-import { saveAs } from 'file-saver';
+import { format, subDays } from 'date-fns';
 import { toast } from 'sonner';
-import { exportToCSV } from '@/components/admin/affiliate-dashboard/utils/exportUtils';
+import { saveAs } from 'file-saver';
 
-// Process page views data
-export const processPageViewsData = (data: any[]) => {
+// Process raw page views data for charts
+export const processPageViewsData = (pageViews: any[]) => {
+  if (!pageViews || !pageViews.length) return [];
+
   // Group by day
-  const dailyViews: Record<string, number> = {};
+  const viewsByDay: Record<string, number> = {};
   
-  data.forEach(view => {
-    const date = new Date(view.created_at).toISOString().split('T')[0];
-    dailyViews[date] = (dailyViews[date] || 0) + 1;
+  pageViews.forEach(view => {
+    const day = view.created_at ? new Date(view.created_at).toISOString().split('T')[0] : null;
+    if (day) {
+      viewsByDay[day] = (viewsByDay[day] || 0) + 1;
+    }
   });
   
-  // Convert to array format
-  return Object.entries(dailyViews).map(([date, views]) => ({
-    name: date,
-    views
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  // Fill in missing days in the range
+  const result = [];
+  const sortedDays = Object.keys(viewsByDay).sort();
+  
+  if (sortedDays.length > 0) {
+    const startDate = new Date(sortedDays[0]);
+    const endDate = new Date(sortedDays[sortedDays.length - 1]);
+    
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const day = d.toISOString().split('T')[0];
+      result.push({
+        date: format(new Date(day), 'MMM dd'),
+        fullDate: day,
+        views: viewsByDay[day] || 0
+      });
+    }
+  }
+  
+  // If there's no data or just one day, provide some context
+  if (result.length <= 1) {
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const day = subDays(today, i).toISOString().split('T')[0];
+      const formatted = format(new Date(day), 'MMM dd');
+      
+      // Only add if not already in results
+      if (!result.find(item => item.fullDate === day)) {
+        result.push({
+          date: formatted,
+          fullDate: day,
+          views: viewsByDay[day] || 0
+        });
+      }
+    }
+  }
+  
+  return result;
 };
 
-// Process traffic sources data
-export const processTrafficSources = (data: any[]) => {
-  // Group by referrer
-  const sources: Record<string, number> = {};
+// Process traffic sources
+export const processTrafficSources = (pageViews: any[]) => {
+  if (!pageViews || !pageViews.length) return [];
+
+  const sourceCount: Record<string, number> = {};
   
-  data.forEach(view => {
-    let source = view.referrer;
+  pageViews.forEach(view => {
+    let source = 'Direct';
     
-    if (!source) source = 'Direct';
-    else if (source.includes('google')) source = 'Google';
-    else if (source.includes('bing')) source = 'Bing';
-    else if (source.includes('yahoo')) source = 'Yahoo';
-    else if (source.includes('facebook') || source.includes('instagram') || source.includes('twitter')) source = 'Social';
-    else source = 'Other';
+    if (view.referrer) {
+      try {
+        const url = new URL(view.referrer);
+        source = url.hostname;
+      } catch (e) {
+        // If parsing fails, use the raw referrer string or a fallback
+        source = view.referrer || 'Unknown';
+      }
+    }
     
-    sources[source] = (sources[source] || 0) + 1;
+    sourceCount[source] = (sourceCount[source] || 0) + 1;
   });
   
-  // Convert to array format for the chart
-  return Object.entries(sources).map(([name, value]) => ({
-    name,
-    value
-  }));
+  // Convert to array for chart
+  return Object.entries(sourceCount)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5); // Top 5 sources
 };
 
-// Export data helper
-export const exportAnalyticsData = (type: string, pageViewsData: any[], trafficSourcesData: any[]) => {
+// Export analytics data
+export const exportAnalyticsData = (type: string, pageViewsData: any[], sourcesData: any[]) => {
   try {
-    let data: any[] = [];
-    let fileName = '';
+    let dataToExport;
+    let filename;
     
     if (type === 'pageViews') {
-      data = pageViewsData;
-      fileName = `page_views_${new Date().toISOString().split('T')[0]}.csv`;
+      dataToExport = pageViewsData;
+      filename = `page-views-${new Date().toISOString().split('T')[0]}.json`;
     } else if (type === 'sources') {
-      data = trafficSourcesData;
-      fileName = `traffic_sources_${new Date().toISOString().split('T')[0]}.csv`;
+      dataToExport = sourcesData;
+      filename = `traffic-sources-${new Date().toISOString().split('T')[0]}.json`;
+    } else {
+      dataToExport = { pageViews: pageViewsData, sources: sourcesData };
+      filename = `analytics-data-${new Date().toISOString().split('T')[0]}.json`;
     }
     
-    if (data.length === 0) {
-      toast.error('No data to export');
-      return;
-    }
+    const jsonData = JSON.stringify(dataToExport, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
     
-    // Create CSV and download
-    const csvData = exportToCSV(data, fileName);
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8' });
-    saveAs(blob, fileName);
-    
-    toast.success(`Data exported to ${fileName}`);
+    saveAs(blob, filename);
+    return true;
   } catch (error) {
     console.error('Error exporting data:', error);
     toast.error('Failed to export data');
+    return false;
   }
 };
+
+// Make sure all files are exported from the analytics index.ts
+<lov-write file_path="src/components/admin/dashboard/analytics/index.ts">
+export { default as AnalyticsHeader } from './AnalyticsHeader';
+export { default as AnalyticsSummaryCards } from './AnalyticsSummaryCards';
+export { default as DetailedCharts } from './DetailedCharts';
+export { 
+  processPageViewsData,
+  processTrafficSources,
+  exportAnalyticsData 
+} from './analyticsUtils';

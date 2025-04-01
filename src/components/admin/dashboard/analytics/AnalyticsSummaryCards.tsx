@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, AlertCircle } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 
 interface AnalyticsSummaryCardsProps {
@@ -14,6 +14,7 @@ interface AnalyticsSummaryCardsProps {
   totalPageViews: number;
   date: DateRange | undefined;
   exportData: (type: string) => void;
+  error: string | null;
 }
 
 const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({
@@ -23,7 +24,8 @@ const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({
   uniqueVisitors,
   totalPageViews,
   date,
-  exportData
+  exportData,
+  error
 }) => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
   
@@ -34,6 +36,23 @@ const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({
       ? `${date.from.toLocaleDateString()} - ${date.to.toLocaleDateString()}`
       : `Since ${date.from.toLocaleDateString()}`;
   };
+
+  if (error) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <AlertCircle className="h-4 w-4" />
+                <p>Unable to load data</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -54,11 +73,17 @@ const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({
             <>
               <div className="text-2xl font-bold">{totalPageViews}</div>
               <div className="h-[80px] mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={pageViewsData}>
-                    <Bar dataKey="views" fill="#4f46e5" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                {pageViewsData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={pageViewsData}>
+                      <Bar dataKey="views" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    No page view data available
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -82,11 +107,17 @@ const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({
             <>
               <div className="text-2xl font-bold">{uniqueVisitors}</div>
               <div className="h-[80px] mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={pageViewsData}>
-                    <Line type="monotone" dataKey="views" stroke="#8884d8" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
+                {pageViewsData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={pageViewsData}>
+                      <Line type="monotone" dataKey="views" stroke="#8884d8" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    No visitor data available
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -115,23 +146,29 @@ const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({
                 </Button>
               </div>
               <div className="h-[80px] mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={trafficSourcesData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={25}
-                      outerRadius={40}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {trafficSourcesData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+                {trafficSourcesData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={trafficSourcesData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={25}
+                        outerRadius={40}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {trafficSourcesData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    No source data available
+                  </div>
+                )}
               </div>
             </>
           )}
