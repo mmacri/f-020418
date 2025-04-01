@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -295,7 +294,7 @@ const AuthSettings: React.FC = () => {
         </CardFooter>
       </Card>
       
-      <Alert variant="warning" className="bg-yellow-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
+      <Alert variant="default" className="bg-yellow-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Important Note</AlertTitle>
         <AlertDescription>

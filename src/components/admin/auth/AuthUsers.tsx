@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,6 @@ import {
   UserCog
 } from 'lucide-react';
 
-// Mock user type that matches our service
 interface User {
   id: number;
   name: string;
@@ -42,14 +40,13 @@ interface User {
   updatedAt: string;
 }
 
-// Form for adding/editing users
 const UserForm = ({ 
   user, 
   onSave, 
   onCancel 
 }: { 
   user?: User, 
-  onSave: (userData: Partial<User>) => void, 
+  onSave: (userData: Partial<User> & { password?: string }) => void, 
   onCancel: () => void 
 }) => {
   const isEditing = !!user;
@@ -61,7 +58,7 @@ const UserForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const userData: Partial<User> = {
+    const userData: Partial<User> & { password?: string } = {
       name,
       email,
       role: role as 'admin' | 'editor' | 'user',
@@ -69,7 +66,6 @@ const UserForm = ({
     };
     
     if (!isEditing && password) {
-      // Only include password for new users
       userData.password = password;
     }
     
@@ -194,9 +190,7 @@ const AuthUsers: React.FC = () => {
     user.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const handleAddUser = (userData: Partial<User>) => {
-    // In a real application, you would call an API to create the user
-    // and then update the local state with the response
+  const handleAddUser = (userData: Partial<User> & { password?: string }) => {
     const newUser: User = {
       id: Math.max(0, ...users.map(u => u.id)) + 1,
       name: userData.name || '',
@@ -215,7 +209,6 @@ const AuthUsers: React.FC = () => {
   const handleUpdateUser = (userData: Partial<User>) => {
     if (!editingUser) return;
     
-    // In a real application, you would call an API to update the user
     const updatedUsers = users.map(user => 
       user.id === editingUser.id
         ? { ...user, ...userData, updatedAt: new Date().toISOString() }
@@ -228,7 +221,6 @@ const AuthUsers: React.FC = () => {
   };
   
   const handleDeleteUser = (userId: number) => {
-    // In a real application, you would call an API to delete the user
     const updatedUsers = users.filter(user => user.id !== userId);
     setUsers(updatedUsers);
     toast.success('User deleted successfully');
