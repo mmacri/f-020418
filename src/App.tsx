@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -27,6 +28,9 @@ import NotFound from "@/pages/NotFound";
 import ProductComparisonPage from "@/pages/ProductComparisonPage";
 import Wishlist from "@/pages/Wishlist";
 import Register from "@/pages/Register";
+import Profile from "@/pages/Profile";
+import ProfilePage from "@/pages/ProfilePage";
+import FriendRequestsPage from "@/pages/FriendRequestsPage";
 import initPolyfills from "@/lib/browser-polyfills";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -55,6 +59,12 @@ function App() {
             <Route path="/product-comparison" element={<ProductComparisonPage />} />
             <Route path="/product-comparison/:category" element={<ProductComparisonPage />} />
             <Route path="/wishlist" element={<Wishlist />} />
+
+            {/* Profile routes */}
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/:id" element={<ProfilePage />} />
+            <Route path="/profile/requests" element={<FriendRequestsPage />} />
+            <Route path="/account" element={<Profile />} />
 
             {/* Product routes */}
             <Route path="/products/:slug" element={<ProductDetail />} />

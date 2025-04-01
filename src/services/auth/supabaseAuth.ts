@@ -26,14 +26,32 @@ export const login = async (email: string, password: string): Promise<{
     
     if (data.user) {
       // Get user profile data including role
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
+      let profileData;
+      
+      // Try to get from user_profiles first (new table)
+      const { data: userProfileData, error: userProfileError } = await supabase
+        .from('user_profiles')
         .select('*')
         .eq('id', data.user.id)
         .single();
-      
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
+        
+      if (!userProfileError && userProfileData) {
+        profileData = {
+          display_name: userProfileData.display_name,
+          avatar_url: userProfileData.avatar_url,
+          role: 'user' // Default role for social profiles
+        };
+      } else {
+        // Fallback to profiles table
+        const { data: legacyProfileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (!profileError && legacyProfileData) {
+          profileData = legacyProfileData;
+        }
       }
       
       // Convert Supabase user to our User format with proper type conversion
@@ -42,7 +60,7 @@ export const login = async (email: string, password: string): Promise<{
           ? parseInt(data.user.id.substring(0, 8), 16) || 1 
           : 1, // Convert UUID to number or use default
         email: data.user.email || email,
-        name: profileData?.display_name || email.split('@')[0],
+        name: profileData?.display_name || profileData?.avatar_url || email.split('@')[0],
         role: (profileData?.role as "admin" | "editor" | "user") || 'user',
         avatar: profileData?.avatar_url,
         createdAt: profileData?.created_at || new Date().toISOString(),
@@ -100,15 +118,33 @@ export const getUser = async (): Promise<User | null> => {
     const { data } = await supabase.auth.getUser();
     if (data.user) {
       console.log("Supabase user:", data.user);
-      // Get user profile data
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
+      
+      // Try to get from user_profiles first (new table)
+      let profileData;
+      
+      const { data: userProfileData, error: userProfileError } = await supabase
+        .from('user_profiles')
         .select('*')
         .eq('id', data.user.id)
         .single();
-      
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
+        
+      if (!userProfileError && userProfileData) {
+        profileData = {
+          display_name: userProfileData.display_name,
+          avatar_url: userProfileData.avatar_url,
+          role: 'user' // Default role for social profiles
+        };
+      } else {
+        // Fallback to profiles table
+        const { data: legacyProfileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (!profileError && legacyProfileData) {
+          profileData = legacyProfileData;
+        }
       }
       
       if (profileData) {

@@ -61,7 +61,11 @@ export const UserMenu = ({ user, onLogout }: UserMenuProps) => {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-2 cursor-pointer">
           <UserCircle size={16} aria-hidden="true" />
-          <span>My Profile</span>
+          <span>My Social Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/account')} className="gap-2 cursor-pointer">
+          <Settings size={16} aria-hidden="true" />
+          <span>Account Settings</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/wishlist')} className="gap-2 cursor-pointer">
           <Heart size={16} aria-hidden="true" />
