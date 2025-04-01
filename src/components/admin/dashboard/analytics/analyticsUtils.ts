@@ -1,4 +1,3 @@
-
 import { format, subDays } from 'date-fns';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
@@ -112,4 +111,17 @@ export const exportAnalyticsData = (type: string, pageViewsData: any[], sourcesD
     toast.error('Failed to export data');
     return false;
   }
+};
+
+// Calculate percentage change between current and previous period
+export const calculatePercentageChange = (current: number, previous: number): number => {
+  if (previous === 0) return current > 0 ? 100 : 0;
+  const change = ((current - previous) / previous) * 100;
+  return Math.round(change * 10) / 10; // Round to 1 decimal place
+};
+
+// Format percentage change with + or - sign
+export const formatPercentageChange = (change: number): string => {
+  const prefix = change > 0 ? '+' : '';
+  return `${prefix}${change}%`;
 };
