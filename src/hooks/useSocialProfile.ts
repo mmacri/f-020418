@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { UserProfile, Post, Comment, Reaction, Friendship } from '@/types/social';
+import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
+import { UserProfile, Post, Comment, Reaction, Friendship, ReactionType } from '@/types/social';
 import { useToast } from '@/hooks/use-toast';
 
 export const useSocialProfile = (profileId?: string) => {
@@ -18,22 +18,18 @@ export const useSocialProfile = (profileId?: string) => {
       setIsLoading(true);
       
       try {
-        // Get current user
         const { data: { session } } = await supabase.auth.getSession();
         const currentUserId = session?.user?.id;
         
-        // If no profileId is provided, use the current user's ID
         const targetProfileId = profileId || currentUserId;
         
         if (!targetProfileId) {
-          // Not logged in and no profile ID specified
           setIsLoading(false);
           return;
         }
         
         setIsCurrentUser(currentUserId === targetProfileId);
         
-        // Fetch the profile
         const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
           .select('*')
@@ -47,9 +43,7 @@ export const useSocialProfile = (profileId?: string) => {
         
         setProfile(profileData);
         
-        // Only proceed if the profile is public or it's the current user
         if (profileData.is_public || currentUserId === targetProfileId) {
-          // Fetch posts
           const { data: postsData, error: postsError } = await supabase
             .from('posts')
             .select(`
@@ -64,7 +58,6 @@ export const useSocialProfile = (profileId?: string) => {
             throw postsError;
           }
           
-          // For each post, get reactions count
           const postsWithReactions = await Promise.all(postsData.map(async (post) => {
             const { data: reactionsData, error: reactionsError } = await supabase
               .from('reactions')
@@ -76,7 +69,6 @@ export const useSocialProfile = (profileId?: string) => {
               return post;
             }
             
-            // Count reactions by type
             const reaction_counts = {
               like: 0,
               heart: 0,
@@ -97,7 +89,6 @@ export const useSocialProfile = (profileId?: string) => {
           setPosts(postsWithReactions);
         }
         
-        // If current user is viewing someone else's profile, check friendship status
         if (currentUserId && currentUserId !== targetProfileId) {
           const { data: sentRequestData } = await supabase
             .from('friendships')
@@ -120,7 +111,6 @@ export const useSocialProfile = (profileId?: string) => {
           }
         }
         
-        // If this is the current user, fetch pending friend requests
         if (currentUserId === targetProfileId) {
           const { data: pendingRequests } = await supabase
             .from('friendships')
@@ -135,7 +125,6 @@ export const useSocialProfile = (profileId?: string) => {
             setPendingFriendRequests(pendingRequests);
           }
           
-          // Fetch friends (accepted friendships)
           const { data: friendsAsRequestor } = await supabase
             .from('friendships')
             .select(`
@@ -273,7 +262,6 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      // Update the post with the new comment
       setPosts(prev => prev.map(post => {
         if (post.id === postId) {
           return {
@@ -308,7 +296,6 @@ export const useSocialProfile = (profileId?: string) => {
         return null;
       }
       
-      // You can only react to a post or a comment, not both
       if ((!postId && !commentId) || (postId && commentId)) {
         throw new Error("Invalid reaction target");
       }
@@ -320,7 +307,6 @@ export const useSocialProfile = (profileId?: string) => {
         type
       };
       
-      // Check if user already has this reaction
       const { data: existingReaction, error: checkError } = await supabase
         .from('reactions')
         .select('id')
@@ -331,7 +317,6 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (checkError) throw checkError;
       
-      // If reaction exists, delete it (toggle off)
       if (existingReaction) {
         const { error: deleteError } = await supabase
           .from('reactions')
@@ -340,7 +325,6 @@ export const useSocialProfile = (profileId?: string) => {
           
         if (deleteError) throw deleteError;
         
-        // Update local state - decrement the reaction count
         if (postId) {
           setPosts(prev => prev.map(post => {
             if (post.id === postId) {
@@ -355,7 +339,6 @@ export const useSocialProfile = (profileId?: string) => {
         return null;
       }
       
-      // Otherwise, add the reaction
       const { data, error } = await supabase
         .from('reactions')
         .insert(newReaction)
@@ -364,7 +347,6 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      // Update local state - increment the reaction count
       if (postId) {
         setPosts(prev => prev.map(post => {
           if (post.id === postId) {
@@ -482,10 +464,8 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      // Update pending requests
       setPendingFriendRequests(prev => prev.filter(req => req.id !== friendshipId));
       
-      // If accepted, add to friends list
       if (accept) {
         setFriends(prev => [...prev, data]);
         toast({
@@ -524,12 +504,10 @@ export const useSocialProfile = (profileId?: string) => {
       }
       
       if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-        // Delete the user account (this will cascade delete all related data due to FK constraints)
         const { error } = await supabase.auth.admin.deleteUser(session.user.id);
         
         if (error) throw error;
         
-        // Sign out
         await supabase.auth.signOut();
         
         toast({

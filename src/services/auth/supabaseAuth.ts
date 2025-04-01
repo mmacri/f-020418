@@ -1,7 +1,7 @@
 
 import { toast } from "sonner";
 import { User } from "@/services/userService";
-import { supabase } from "@/integrations/supabase/client";
+import { socialSupabase as supabase } from "@/integrations/supabase/socialClient";
 
 // Enhanced login function that uses Supabase auth
 export const login = async (email: string, password: string): Promise<{
