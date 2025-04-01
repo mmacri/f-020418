@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Trash2,
-  Send
+  Send,
+  Bookmark
 } from 'lucide-react';
 
 interface PostCardProps {
@@ -24,6 +25,8 @@ interface PostCardProps {
   onAddComment: (postId: string, content: string) => Promise<Comment | null>;
   onAddReaction: (type: 'like' | 'heart' | 'thumbs_up' | 'thumbs_down', postId: string) => Promise<any>;
   onDeletePost: (postId: string) => Promise<boolean>;
+  isBookmarked?: boolean;
+  onToggleBookmark?: (postId: string) => Promise<boolean>;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -31,11 +34,20 @@ export const PostCard: React.FC<PostCardProps> = ({
   isOwner,
   onAddComment,
   onAddReaction,
-  onDeletePost
+  onDeletePost,
+  isBookmarked,
+  onToggleBookmark
 }) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookmarkStatus, setBookmarkStatus] = useState(isBookmarked || false);
+  
+  useEffect(() => {
+    if (isBookmarked !== undefined) {
+      setBookmarkStatus(isBookmarked);
+    }
+  }, [isBookmarked]);
   
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
@@ -57,6 +69,13 @@ export const PostCard: React.FC<PostCardProps> = ({
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this post?')) {
       await onDeletePost(post.id);
+    }
+  };
+  
+  const handleToggleBookmark = async () => {
+    if (onToggleBookmark) {
+      const result = await onToggleBookmark(post.id);
+      setBookmarkStatus(result);
     }
   };
 
@@ -84,16 +103,29 @@ export const PostCard: React.FC<PostCardProps> = ({
                 </p>
               </div>
               
-              {isOwner && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handleDelete}
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 size={16} />
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {onToggleBookmark && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleToggleBookmark}
+                    className={`h-8 w-8 ${bookmarkStatus ? 'text-blue-500' : 'text-muted-foreground'}`}
+                  >
+                    <Bookmark size={16} className={bookmarkStatus ? 'fill-blue-500' : ''} />
+                  </Button>
+                )}
+                
+                {isOwner && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleDelete}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                )}
+              </div>
             </div>
             
             <div className="mt-2 whitespace-pre-wrap break-words">

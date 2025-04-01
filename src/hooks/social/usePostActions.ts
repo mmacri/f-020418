@@ -1,14 +1,15 @@
-
 import { useState } from 'react';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
 import { Post, Comment, Reaction, ReactionType } from '@/types/social';
 import { useToast } from '@/hooks/use-toast';
 import { extractUserProfileFromResult, isSupabaseError } from './utils';
+import { uploadFile } from '@/lib/file-upload';
 
 export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.SetStateAction<Post[]>>) => {
   const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
 
-  const createPost = async (content: string, imageUrl?: string) => {
+  const createPost = async (content: string, imageFile?: File, imageUrl?: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -20,10 +21,39 @@ export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.Set
         return null;
       }
       
+      let finalImageUrl = imageUrl;
+      if (imageFile) {
+        setIsUploading(true);
+        toast({
+          title: "Uploading image",
+          description: "Please wait while we upload your image"
+        });
+        
+        const { url, error: uploadError } = await uploadFile(imageFile, {
+          bucket: 'social-images',
+          folder: 'posts',
+          fileTypes: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+          maxSize: 5 * 1024 * 1024 // 5MB
+        });
+        
+        setIsUploading(false);
+        
+        if (uploadError) {
+          toast({
+            title: "Error",
+            description: uploadError,
+            variant: "destructive"
+          });
+          return null;
+        }
+        
+        finalImageUrl = url;
+      }
+      
       const newPost = {
         user_id: session.user.id,
         content,
-        image_url: imageUrl || null
+        image_url: finalImageUrl || null
       };
       
       const { data, error } = await supabase
@@ -60,6 +90,12 @@ export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.Set
       };
       
       setPosts(prev => [typedPost, ...prev]);
+      
+      toast({
+        title: "Success",
+        description: "Post created successfully"
+      });
+      
       return typedPost;
     } catch (error) {
       console.error('Error creating post:', error);
@@ -239,13 +275,12 @@ export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.Set
         }));
       }
       
-      // Fix: Properly cast the reaction type to ensure it matches the Reaction type
       const typedReaction: Reaction = {
         id: data.id,
         post_id: data.post_id || undefined,
         comment_id: data.comment_id || undefined,
         user_id: data.user_id,
-        type: data.type as ReactionType, // Ensure type is correctly cast to ReactionType
+        type: data.type as ReactionType,
         created_at: data.created_at
       };
       
@@ -261,10 +296,97 @@ export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.Set
     }
   };
 
+  const bookmarkPost = async (postId: string): Promise<boolean> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to bookmark posts",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      const { data: existingBookmark, error: checkError } = await supabase
+        .from('bookmarks')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('post_id', postId)
+        .maybeSingle();
+        
+      if (checkError) throw checkError;
+      
+      if (existingBookmark) {
+        const { error: deleteError } = await supabase
+          .from('bookmarks')
+          .delete()
+          .eq('id', existingBookmark.id);
+          
+        if (deleteError) throw deleteError;
+        
+        toast({
+          title: "Bookmark removed",
+          description: "Post removed from your bookmarks"
+        });
+        
+        return false;
+      }
+      
+      const { error } = await supabase
+        .from('bookmarks')
+        .insert({
+          user_id: session.user.id,
+          post_id: postId
+        });
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Bookmarked",
+        description: "Post added to your bookmarks"
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error bookmarking post:', error);
+      toast({
+        title: "Error",
+        description: "Failed to bookmark post",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const isBookmarked = async (postId: string): Promise<boolean> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return false;
+      
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('post_id', postId)
+        .maybeSingle();
+        
+      if (error) throw error;
+      
+      return !!data;
+    } catch (error) {
+      console.error('Error checking bookmark status:', error);
+      return false;
+    }
+  };
+
   return {
     createPost,
     deletePost,
     addComment,
-    addReaction
+    addReaction,
+    bookmarkPost,
+    isBookmarked,
+    isUploading
   };
 };

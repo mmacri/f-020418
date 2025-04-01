@@ -1,101 +1,88 @@
 
-import React from 'react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { socialSupabase as supabase } from "@/integrations/supabase/socialClient";
-import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { UserX } from "lucide-react";
+import { Link } from "react-router-dom";
 
-export const ProfileNotFound = ({ userId, isCurrentUser }: { userId?: string, isCurrentUser: boolean }) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
+interface ProfileNotFoundProps {
+  userId?: string;
+  isCurrentUser: boolean;
+  onCreateProfile?: (displayName: string) => Promise<any>;
+}
 
-  const createProfile = async () => {
-    if (!userId) {
-      toast({
-        title: "Error",
-        description: "Unable to identify user. Please try logging in again.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+export const ProfileNotFound: React.FC<ProfileNotFoundProps> = ({ 
+  userId, 
+  isCurrentUser,
+  onCreateProfile 
+}) => {
+  const [displayName, setDisplayName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const handleCreateProfile = async () => {
+    if (!displayName.trim() || !onCreateProfile) return;
+    
+    setIsSubmitting(true);
     try {
-      // Get the current user's details
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
-      const email = userData.user?.email || '';
-      const displayName = email.split('@')[0];
-
-      // Create a new profile
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: userId,
-          display_name: displayName,
-          is_public: false,
-          newsletter_subscribed: true,
-          bio: null,
-          avatar_url: null
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Your profile has been created!",
-      });
-
-      // Reload the page to show the new profile
-      window.location.reload();
-    } catch (error) {
-      console.error('Error creating profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create profile. Please try again later.",
-        variant: "destructive"
-      });
+      await onCreateProfile(displayName);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
+  
   return (
-    <div className="container mx-auto px-4 py-8 flex-grow">
-      <Alert variant="destructive" className="mb-4">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Profile Not Found</AlertTitle>
-        <AlertDescription>
-          {isCurrentUser 
-            ? "You don't have a social profile set up yet." 
-            : "Sorry, this profile doesn't exist or you don't have permission to view it."}
-        </AlertDescription>
-      </Alert>
-
-      {isCurrentUser && (
-        <div className="mt-4 space-y-4">
-          <p className="text-muted-foreground">
-            Would you like to create your profile now?
-          </p>
-          <div className="flex gap-3">
-            <Button onClick={createProfile}>
-              Create My Profile
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/')}>
-              Go Home
-            </Button>
-          </div>
-        </div>
-      )}
-      
-      {!isCurrentUser && (
-        <Button variant="outline" onClick={() => navigate('/')} className="mt-4">
-          Go Home
-        </Button>
-      )}
+    <div className="container mx-auto px-4 py-16">
+      <Card className="max-w-lg mx-auto">
+        <CardContent className="pt-6 pb-8 text-center">
+          <UserX className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
+          
+          {isCurrentUser ? (
+            <>
+              <p className="text-muted-foreground mb-8">
+                It looks like you don't have a profile set up yet. 
+                Create one now to start connecting with others.
+              </p>
+              
+              {onCreateProfile && (
+                <div className="space-y-4">
+                  <div className="max-w-md mx-auto">
+                    <Input
+                      placeholder="Enter your display name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="mb-4"
+                    />
+                    
+                    <Button 
+                      onClick={handleCreateProfile}
+                      disabled={!displayName.trim() || isSubmitting}
+                      className="w-full"
+                    >
+                      {isSubmitting ? "Creating Profile..." : "Create Profile"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground mb-8">
+                The profile you're looking for doesn't exist or has been removed.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <Button asChild>
+                  <Link to="/profile">Go to Your Profile</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/">Back to Home</Link>
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
-

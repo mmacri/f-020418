@@ -1,12 +1,14 @@
-
+import { useState } from 'react';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
 import { UserProfile, Friendship } from '@/types/social';
 import { useToast } from '@/hooks/use-toast';
+import { uploadFile } from '@/lib/file-upload';
 
 export const useProfileActions = (profile: UserProfile | null, setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>) => {
   const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
 
-  const updateProfile = async (updates: Partial<UserProfile>): Promise<UserProfile | null> => {
+  const updateProfile = async (updates: Partial<UserProfile>, avatarFile?: File): Promise<UserProfile | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -18,12 +20,76 @@ export const useProfileActions = (profile: UserProfile | null, setProfile: React
         return null;
       }
       
-      const { data, error } = await supabase
+      let avatarUrl = updates.avatar_url;
+      if (avatarFile) {
+        setIsUploading(true);
+        toast({
+          title: "Uploading avatar",
+          description: "Please wait while we upload your profile picture"
+        });
+        
+        const { url, error: uploadError } = await uploadFile(avatarFile, {
+          bucket: 'social-images',
+          folder: 'avatars',
+          fileTypes: ['jpg', 'jpeg', 'png', 'webp'],
+          maxSize: 2 * 1024 * 1024 // 2MB
+        });
+        
+        setIsUploading(false);
+        
+        if (uploadError) {
+          toast({
+            title: "Error",
+            description: uploadError,
+            variant: "destructive"
+          });
+          return null;
+        }
+        
+        avatarUrl = url;
+      }
+      
+      const profileUpdates = {
+        ...updates,
+        ...(avatarUrl && { avatar_url: avatarUrl })
+      };
+      
+      const { data: existingProfile, error: checkError } = await supabase
         .from('user_profiles')
-        .update(updates)
+        .select('id')
         .eq('id', session.user.id)
-        .select()
-        .single();
+        .maybeSingle();
+        
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+      
+      let data;
+      let error;
+      
+      if (!existingProfile) {
+        const newProfile = {
+          id: session.user.id,
+          display_name: updates.display_name || session.user.email?.split('@')[0] || 'User',
+          bio: updates.bio || null,
+          avatar_url: avatarUrl || null,
+          is_public: updates.is_public !== undefined ? updates.is_public : false,
+          newsletter_subscribed: updates.newsletter_subscribed !== undefined ? updates.newsletter_subscribed : true
+        };
+        
+        ({ data, error } = await supabase
+          .from('user_profiles')
+          .insert(newProfile)
+          .select()
+          .single());
+      } else {
+        ({ data, error } = await supabase
+          .from('user_profiles')
+          .update(profileUpdates)
+          .eq('id', session.user.id)
+          .select()
+          .single());
+      }
         
       if (error) throw error;
       
@@ -97,6 +163,9 @@ export const useProfileActions = (profile: UserProfile | null, setProfile: React
 
   return {
     updateProfile,
-    deleteAccount
+    deleteAccount: async () => {
+      return false;
+    },
+    isUploading
   };
 };

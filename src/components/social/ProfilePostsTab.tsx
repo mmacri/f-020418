@@ -10,10 +10,13 @@ interface ProfilePostsTabProps {
   profile: UserProfile;
   posts: Post[];
   isCurrentUser: boolean;
-  createPost: (content: string, imageUrl?: string) => Promise<any>;
+  createPost: (content: string, imageFile?: File) => Promise<any>;
   addComment: (postId: string, content: string) => Promise<any>;
   addReaction: (type: 'like' | 'heart' | 'thumbs_up' | 'thumbs_down', postId: string) => Promise<any>;
   deletePost: (postId: string) => Promise<boolean>;
+  bookmarkPost?: (postId: string) => Promise<boolean>;
+  isBookmarked?: (postId: string) => Promise<boolean>;
+  isUploading?: boolean;
 }
 
 export const ProfilePostsTab: React.FC<ProfilePostsTabProps> = ({
@@ -23,12 +26,19 @@ export const ProfilePostsTab: React.FC<ProfilePostsTabProps> = ({
   createPost,
   addComment,
   addReaction,
-  deletePost
+  deletePost,
+  bookmarkPost,
+  isBookmarked,
+  isUploading
 }) => {
   return (
     <div className="space-y-4">
       {isCurrentUser && (
-        <CreatePostForm profile={profile} onCreatePost={createPost} />
+        <CreatePostForm 
+          profile={profile} 
+          onCreatePost={createPost} 
+          isUploading={isUploading}
+        />
       )}
       
       {posts.length === 0 ? (
@@ -53,6 +63,7 @@ export const ProfilePostsTab: React.FC<ProfilePostsTabProps> = ({
               onAddComment={addComment}
               onAddReaction={addReaction}
               onDeletePost={deletePost}
+              onToggleBookmark={bookmarkPost}
             />
           ))}
         </div>

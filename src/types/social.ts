@@ -65,4 +65,12 @@ export interface Friendship {
   recipient?: UserProfile;
 }
 
+export interface Bookmark {
+  id: string;
+  user_id: string;
+  post_id: string;
+  created_at: string;
+  post?: Post;
+}
+
 export type ReactionType = 'like' | 'heart' | 'thumbs_up' | 'thumbs_down';
