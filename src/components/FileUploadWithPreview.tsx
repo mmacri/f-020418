@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { uploadFile } from '@/lib/file-upload';
 import { ImageWithFallback } from '@/lib/images';
+import { Loader2 } from 'lucide-react';
 
 export interface FileUploadWithPreviewProps {
   onFileChange: (url: string) => void;
@@ -28,6 +29,7 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Set initial preview based on currentImage prop
@@ -56,19 +58,24 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
 
     setError(null);
     setIsUploading(true);
+    setProgress(10); // Start progress
 
     try {
       // Create local preview
       const localPreview = URL.createObjectURL(file);
       setPreview(localPreview);
+      setProgress(30); // Update progress
 
       // Upload to storage
+      console.log(`Uploading file to bucket: ${bucket}, folder: ${folder}`);
       const { url, error } = await uploadFile(file, {
         bucket,
         folder,
         fileTypes: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
         maxSize: maxSize * 1024 * 1024
       });
+
+      setProgress(90); // Almost done
 
       if (error) {
         setError(error);
@@ -77,13 +84,20 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
         return;
       }
 
+      console.log('File uploaded successfully:', url);
+      setProgress(100); // Done
+
       // Pass the URL back to the parent component
       onFileChange(url);
     } catch (err) {
       console.error('Upload failed:', err);
       setError('Upload failed. Please try again.');
     } finally {
-      setIsUploading(false);
+      setTimeout(() => {
+        setIsUploading(false);
+        setProgress(0);
+      }, 1000); // Keep progress visible briefly
+      
       // Clear the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -119,6 +133,16 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
         {error && <p className="text-sm text-red-500">{error}</p>}
       </div>
 
+      {isUploading && (
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div 
+            className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+            style={{ width: `${progress}%` }}
+          ></div>
+          <p className="text-sm text-blue-600 mt-1">Uploading... {progress}%</p>
+        </div>
+      )}
+
       {preview && (
         <div className="space-y-2">
           <div className={`relative rounded-md overflow-hidden border bg-gray-50 ${aspectRatioClass}`}>
@@ -127,6 +151,11 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
               alt="Preview"
               className="w-full h-full object-contain"
             />
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
+              </div>
+            )}
           </div>
           <Button 
             variant="outline" 
@@ -134,13 +163,12 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
             onClick={clearPreview} 
             type="button"
             className="mt-2"
+            disabled={isUploading}
           >
             Clear Preview
           </Button>
         </div>
       )}
-
-      {isUploading && <p className="text-sm text-blue-500">Uploading...</p>}
     </div>
   );
 };

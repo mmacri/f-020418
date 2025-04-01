@@ -1,33 +1,28 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { localStorageKeys, imageUrls } from '@/lib/constants';
+import { imageUrls } from '@/lib/constants';
 import { ImageWithFallback } from '@/lib/images';
 
 interface HeroSectionProps {
   buttonText?: string;
   buttonLink?: string;
+  heroImageUrl?: string;
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ 
   buttonText = "Shop Recovery Gear", 
-  buttonLink = "/products" 
+  buttonLink = "/products",
+  heroImageUrl = imageUrls.HERO_DEFAULT
 }) => {
-  const [heroImageUrl, setHeroImageUrl] = useState<string>(imageUrls.HERO_DEFAULT);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   
-  useEffect(() => {
-    // Try to load the hero image from localStorage
-    const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE);
-    if (savedImage) {
-      setHeroImageUrl(savedImage);
-    }
-    
-    // Log for debugging
-    console.log('Hero image loaded:', savedImage || imageUrls.HERO_DEFAULT);
-  }, []);
+  const handleImageLoad = () => {
+    console.log('Hero image loaded successfully:', heroImageUrl);
+    setImageLoaded(true);
+  };
 
   return (
     <section className="relative bg-gradient-to-r from-indigo-700 to-purple-700 text-white py-24">
@@ -72,7 +67,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               fallbackSrc={imageUrls.HERO_DEFAULT}
               disableCacheBusting={false}
               type="hero"
-              onLoad={() => setImageLoaded(true)}
+              onLoad={handleImageLoad}
             />
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg">

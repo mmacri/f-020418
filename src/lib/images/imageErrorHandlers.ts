@@ -1,4 +1,3 @@
-
 /**
  * Handles image loading errors
  * @param imageSrc The source URL of the image that failed to load
@@ -6,6 +5,18 @@
 export const handleImageError = (imageSrc: string): void => {
   // Log the error for debugging purposes
   logImageError(imageSrc);
+  
+  // Broadcast an event that an image failed to load
+  try {
+    window.dispatchEvent(new CustomEvent('imageLoadError', { 
+      detail: { 
+        src: imageSrc,
+        timestamp: new Date().toISOString(),
+      } 
+    }));
+  } catch (e) {
+    console.error('Error dispatching image error event:', e);
+  }
 };
 
 /**
@@ -13,7 +24,28 @@ export const handleImageError = (imageSrc: string): void => {
  * @param imageSrc The source URL of the image that failed to load
  */
 export const logImageError = (imageSrc: string): void => {
-  console.warn(`Failed to load image: ${imageSrc}`);
+  const timestamp = new Date().toISOString();
+  const errorMessage = `Failed to load image at ${timestamp}: ${imageSrc}`;
+  console.warn(errorMessage);
+  
+  // Collect error data for later analysis
+  try {
+    const imageErrors = JSON.parse(localStorage.getItem('image_errors') || '[]');
+    imageErrors.push({
+      src: imageSrc,
+      timestamp,
+      page: window.location.pathname
+    });
+    
+    // Keep only the last 50 errors to prevent localStorage from filling up
+    if (imageErrors.length > 50) {
+      imageErrors.splice(0, imageErrors.length - 50);
+    }
+    
+    localStorage.setItem('image_errors', JSON.stringify(imageErrors));
+  } catch (e) {
+    console.error('Error logging image error to storage:', e);
+  }
 };
 
 /**

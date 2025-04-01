@@ -34,9 +34,12 @@ const HeroImageSettings: React.FC = () => {
       localStorage.setItem(localStorageKeys.USE_LOCAL_FALLBACKS, useLocalFallback.toString());
       setPreviewUrl(imageUrl);
       
+      // Trigger a custom event to notify other components that hero image has been updated
+      window.dispatchEvent(new CustomEvent('heroImageUpdated', { detail: { imageUrl } }));
+      
       toast({
         title: "Success",
-        description: "Hero image updated successfully",
+        description: "Hero image updated successfully. Refresh the home page to see changes.",
         variant: "default",
       });
     } catch (error) {
@@ -53,6 +56,10 @@ const HeroImageSettings: React.FC = () => {
     setImageUrl(imageUrls.HERO_DEFAULT);
     setPreviewUrl(imageUrls.HERO_DEFAULT);
     localStorage.setItem(localStorageKeys.HERO_IMAGE, imageUrls.HERO_DEFAULT);
+    
+    // Trigger a custom event to notify other components that hero image has been reset
+    window.dispatchEvent(new CustomEvent('heroImageUpdated', { detail: { imageUrl: imageUrls.HERO_DEFAULT } }));
+    
     toast({
       title: "Reset Complete",
       description: "Hero image has been reset to default",
@@ -60,6 +67,7 @@ const HeroImageSettings: React.FC = () => {
   };
 
   const handleFileUpload = (url: string) => {
+    console.log('Setting hero image from upload:', url);
     setImageUrl(url);
     setPreviewUrl(url);
   };
@@ -132,7 +140,7 @@ const HeroImageSettings: React.FC = () => {
               src={previewUrl}
               alt="Hero Preview"
               className="max-h-full max-w-full object-contain"
-              fallbackSrc={useLocalFallback ? imageUrls.PLACEHOLDER : imageUrls.HERO_DEFAULT}
+              fallbackSrc={useLocalFallback ? '/placeholder.svg' : imageUrls.HERO_DEFAULT}
               type="hero"
             />
           </div>

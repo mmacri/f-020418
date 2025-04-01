@@ -12,12 +12,23 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogPostsSection from '@/components/home/BlogPostsSection';
 import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/services/products/types';
+import { localStorageKeys, imageUrls } from '@/lib/constants';
 
 const Index = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [heroImage, setHeroImage] = useState<string>(imageUrls.HERO_DEFAULT);
+  
+  useEffect(() => {
+    // Try to load the hero image from localStorage
+    const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE);
+    if (savedImage) {
+      console.log('Loading hero image from localStorage:', savedImage);
+      setHeroImage(savedImage);
+    }
+  }, []);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -63,7 +74,11 @@ const Index = () => {
   
   return (
     <MainLayout>
-      <HeroSection buttonText="Shop All Categories" buttonLink="/categories" />
+      <HeroSection 
+        buttonText="Shop All Categories" 
+        buttonLink="/categories" 
+        heroImageUrl={heroImage}
+      />
       <CategoriesSection categories={categories} />
       <FeaturedProductsSection 
         products={featuredProducts} 
