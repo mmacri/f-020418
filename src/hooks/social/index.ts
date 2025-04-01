@@ -1,11 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { useProfileData } from './useProfileData';
+import { useProfilePosts } from './useProfilePosts';
+import { useProfileFriends } from './useProfileFriends';
+import { useProfileBookmarks } from './useProfileBookmarks';
 import { usePostActions } from './usePostActions';
 import { useProfileActions } from './useProfileActions';
 import { useFriendActions } from './useFriendActions';
 import { SocialProfileHook } from './types';
-import { UserProfile, Post, Comment, Reaction, Friendship, ReactionType, Bookmark } from '@/types/social';
+import { Post, Comment, Reaction, ReactionType } from '@/types/social';
 
 export const useSocialProfile = (userId?: string): SocialProfileHook => {
   const [isUploading, setIsUploading] = useState(false);
@@ -13,15 +16,37 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   // Get basic profile data
   const {
     profile,
-    posts,
-    pendingFriendRequests,
-    friends,
-    bookmarks,
-    isLoading,
+    isLoading: isProfileLoading,
     isCurrentUser,
     friendshipStatus,
     refetchProfile
   } = useProfileData(userId);
+
+  // Get posts data
+  const {
+    posts,
+    isLoading: isPostsLoading,
+    refetchPosts
+  } = useProfilePosts(userId);
+  
+  // Get friends data
+  const {
+    friends,
+    pendingFriendRequests,
+    isLoading: isFriendsLoading,
+    refetchFriends
+  } = useProfileFriends(userId, isCurrentUser);
+  
+  // Get bookmarks data
+  const {
+    bookmarks,
+    isLoading: isBookmarksLoading,
+    refetchBookmarks
+  } = useProfileBookmarks(userId, isCurrentUser);
+  
+  // Derive overall loading state
+  const isLoading = isProfileLoading || isPostsLoading || 
+                    isFriendsLoading || isBookmarksLoading;
 
   // Get post actions
   const postActions = usePostActions();
@@ -34,6 +59,7 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   // Get friend actions
   const friendActions = useFriendActions(friendshipStatus, () => {
     refetchProfile();
+    refetchFriends();
   });
 
   // Track uploading state from both actions
@@ -45,7 +71,7 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   const createPost = async (content: string, imageFile?: File, imageUrl?: string): Promise<Post | null> => {
     const newPost = await postActions.createPost(content, imageFile, imageUrl);
     if (newPost) {
-      refetchProfile();
+      refetchPosts();
     }
     return newPost;
   };
@@ -54,7 +80,7 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   const deletePost = async (postId: string): Promise<boolean> => {
     const success = await postActions.deletePost(postId);
     if (success) {
-      refetchProfile();
+      refetchPosts();
     }
     return success;
   };
@@ -63,7 +89,8 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   const addComment = async (postId: string, content: string): Promise<Comment | null> => {
     const newComment = await postActions.addComment(postId, content);
     if (newComment) {
-      refetchProfile();
+      refetchPosts();
+      refetchBookmarks(); // Refresh bookmarks too as they contain posts
     }
     return newComment;
   };
@@ -71,20 +98,20 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   // Combined reaction function that updates the UI
   const addReaction = async (type: ReactionType, postId?: string, commentId?: string): Promise<Reaction | null> => {
     const newReaction = await postActions.addReaction(type, postId, commentId);
-    refetchProfile();
+    if (newReaction) {
+      refetchPosts();
+      refetchBookmarks(); // Refresh bookmarks too as they contain posts
+    }
     return newReaction;
   };
 
   // Bookmark post function
   const bookmarkPost = async (postId: string): Promise<boolean> => {
     const result = await postActions.bookmarkPost(postId);
-    refetchProfile();
+    if (result) {
+      refetchBookmarks();
+    }
     return result;
-  };
-
-  // Check if post is bookmarked function
-  const isBookmarked = async (postId: string): Promise<boolean> => {
-    return await postActions.isBookmarked(postId);
   };
 
   return {
@@ -105,7 +132,7 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
     addComment,
     addReaction,
     bookmarkPost,
-    isBookmarked,
+    isBookmarked: postActions.isBookmarked,
     
     // Profile actions
     updateProfile: profileActions.updateProfile,
