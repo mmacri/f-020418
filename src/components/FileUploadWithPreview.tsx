@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,7 @@ export interface FileUploadWithPreviewProps {
   folder?: string;
   maxSize?: number; // in MB
   aspectRatio?: 'square' | 'landscape' | 'portrait';
-  className?: string; // Changed from string to optional string
+  className?: string;
 }
 
 const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
@@ -27,8 +27,15 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(currentImage || null);
+  const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Set initial preview based on currentImage prop
+  useEffect(() => {
+    if (currentImage) {
+      setPreview(currentImage);
+    }
+  }, [currentImage]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,6 +91,14 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
     }
   };
 
+  const clearPreview = () => {
+    setPreview(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const aspectRatioClass = 
     aspectRatio === 'landscape' ? 'aspect-video' : 
     aspectRatio === 'portrait' ? 'aspect-[3/4]' : 
@@ -105,12 +120,23 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
       </div>
 
       {preview && (
-        <div className={`relative rounded-md overflow-hidden border bg-gray-50 ${aspectRatioClass}`}>
-          <ImageWithFallback
-            src={preview}
-            alt="Preview"
-            className="w-full h-full object-contain"
-          />
+        <div className="space-y-2">
+          <div className={`relative rounded-md overflow-hidden border bg-gray-50 ${aspectRatioClass}`}>
+            <ImageWithFallback
+              src={preview}
+              alt="Preview"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={clearPreview} 
+            type="button"
+            className="mt-2"
+          >
+            Clear Preview
+          </Button>
         </div>
       )}
 

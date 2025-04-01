@@ -1,5 +1,5 @@
 
-import ProfileSettings from './ProfileSettings';
+import ProfileSettings from './profile';
 import PasswordSettings from './PasswordSettings';
 import PreferencesSettings from './PreferencesSettings';
 

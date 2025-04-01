@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { localStorageKeys, imageUrls } from '@/lib/constants';
 
 interface ImageWithFallbackProps {
@@ -22,6 +22,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   onLoad,
 }) => {
   const [error, setError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const defaultFallback = type === 'hero' 
     ? imageUrls.HERO_DEFAULT 
     : type === 'category' 
@@ -45,6 +46,12 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     ? imageSrc 
     : `${imageSrc}${imageSrc.includes('?') ? '&' : '?'}t=${Date.now()}`;
   
+  // Reset error state if src changes
+  useEffect(() => {
+    setError(false);
+    setLoaded(false);
+  }, [src]);
+  
   // Determine object-fit based on type
   const objectFitClass = type === 'hero' 
     ? 'object-cover w-full h-full' 
@@ -56,16 +63,23 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   };
   
   const handleLoad = () => {
+    setLoaded(true);
     if (onLoad) onLoad();
   };
   
   return (
-    <img
-      src={finalSrc}
-      alt={alt}
-      className={`${objectFitClass} ${className}`}
-      onError={handleError}
-      onLoad={handleLoad}
-    />
+    <>
+      {!loaded && !error && (
+        <div className={`${className} bg-gray-100 animate-pulse`} 
+          style={{minHeight: '100px'}}></div>
+      )}
+      <img
+        src={finalSrc}
+        alt={alt}
+        className={`${objectFitClass} ${className} ${!loaded && !error ? 'hidden' : ''}`}
+        onError={handleError}
+        onLoad={handleLoad}
+      />
+    </>
   );
 };
