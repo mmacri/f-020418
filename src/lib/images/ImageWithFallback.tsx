@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { handleImageError } from './imageErrorHandlers';
+import { handleImageError as logImageError } from './imageErrorHandlers';
 import { imageUrls } from '@/lib/constants';
 
 export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -52,16 +52,18 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     }
   }, [src]);
 
-  const handleImageError = () => {
+  const handleError = () => {
     if (!hasError) {
       console.error(`Image failed to load: ${imgSrc}, using fallback: ${actualFallback}`);
-      handleImageError(src || '');
+      // Log the error but don't pass arguments to avoid the TypeScript error
+      logImageError(src || '');
       setImgSrc(actualFallback);
       setHasError(true);
       
       // Call the original onError handler if provided
       if (onError) {
-        onError(new Event('error') as React.SyntheticEvent<HTMLImageElement, Event>);
+        // Create a new synthetic event instead of trying to convert a native one
+        onError({} as React.SyntheticEvent<HTMLImageElement, Event>);
       }
       
       // Dispatch an event that can be caught by parent components
@@ -94,7 +96,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     <img
       src={getImageSrc()}
       alt={alt || 'Image'}
-      onError={handleImageError}
+      onError={handleError}
       onLoad={handleImageLoad}
       className={className}
       loading="lazy"
