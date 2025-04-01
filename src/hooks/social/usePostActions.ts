@@ -165,7 +165,7 @@ export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.Set
     }
   };
   
-  const addReaction = async (type: ReactionType, postId?: string, commentId?: string) => {
+  const addReaction = async (type: ReactionType, postId?: string, commentId?: string): Promise<Reaction | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -239,7 +239,17 @@ export const usePostActions = (posts: Post[], setPosts: React.Dispatch<React.Set
         }));
       }
       
-      return data;
+      // Fix: Properly cast the reaction type to ensure it matches the Reaction type
+      const typedReaction: Reaction = {
+        id: data.id,
+        post_id: data.post_id || undefined,
+        comment_id: data.comment_id || undefined,
+        user_id: data.user_id,
+        type: data.type as ReactionType, // Ensure type is correctly cast to ReactionType
+        created_at: data.created_at
+      };
+      
+      return typedReaction;
     } catch (error) {
       console.error('Error adding reaction:', error);
       toast({
