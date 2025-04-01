@@ -5,6 +5,8 @@ import type { Database as OriginalDatabase } from '@/integrations/supabase/types
 // Augment the Database type with our custom types for RPC functions
 export type RPCFunctions = {
   public: {
+    Tables: OriginalDatabase['public']['Tables'];
+    Views: OriginalDatabase['public']['Views'];
     Functions: {
       get_bookmark_by_post_and_user: {
         Args: { p_user_id: string; p_post_id: string };
@@ -188,7 +190,7 @@ export type RPCFunctions = {
       };
     };
   };
-} & OriginalDatabase;
+};
 
 // Create a typed supabase client for RPC calls
 import { createClient } from '@supabase/supabase-js';
