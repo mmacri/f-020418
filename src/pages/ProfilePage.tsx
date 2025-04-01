@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FriendRequestCard } from "@/components/social/FriendRequestCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare, Users, Settings, UserCircle, AlertTriangle } from "lucide-react";
+import { UserProfile } from "@/types/social";
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -93,12 +94,29 @@ const ProfilePage = () => {
     );
   }
   
-  if (isEditing) {
+  const handleProfileUpdate = async (data: Partial<UserProfile>) => {
     const updated = await updateProfile(data);
     if (updated) {
       setIsEditing(false);
     }
     return updated !== null;
+  };
+  
+  if (isEditing) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="container mx-auto px-4 py-8 flex-grow">
+          <ProfileSettings 
+            profile={profile}
+            onSave={handleProfileUpdate}
+            onDeleteAccount={deleteAccount}
+            onCancel={() => setIsEditing(false)}
+          />
+        </div>
+        <Footer />
+      </div>
+    );
   }
   
   if (!profile.is_public && !isCurrentUser && friendshipStatus !== 'accepted') {

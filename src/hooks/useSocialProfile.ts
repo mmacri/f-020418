@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
 import { UserProfile, Post, Comment, Reaction, Friendship, ReactionType } from '@/types/social';
@@ -13,6 +12,17 @@ export const useSocialProfile = (profileId?: string) => {
   const [isCurrentUser, setIsCurrentUser] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'accepted' | 'requested'>('none');
   const { toast } = useToast();
+
+  const createEmptyUserProfile = (id: string = "", displayName: string = ""): UserProfile => ({
+    id,
+    display_name: displayName,
+    bio: null,
+    avatar_url: null,
+    is_public: false,
+    newsletter_subscribed: false,
+    created_at: '',
+    updated_at: ''
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -31,7 +41,6 @@ export const useSocialProfile = (profileId?: string) => {
         
         setIsCurrentUser(currentUserId === targetProfileId);
         
-        // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
           .select('*')
@@ -43,7 +52,6 @@ export const useSocialProfile = (profileId?: string) => {
           throw profileError;
         }
         
-        // Make sure the profile data matches our UserProfile type
         const userProfile: UserProfile = {
           id: profileData.id,
           display_name: profileData.display_name,
@@ -58,7 +66,6 @@ export const useSocialProfile = (profileId?: string) => {
         setProfile(userProfile);
         
         if (profileData.is_public || currentUserId === targetProfileId) {
-          // Fetch posts
           const { data: postsData, error: postsError } = await supabase
             .from('posts')
             .select(`
@@ -73,7 +80,6 @@ export const useSocialProfile = (profileId?: string) => {
             throw postsError;
           }
           
-          // Process posts to match our Post type
           const postsWithReactions = await Promise.all(postsData.map(async (post) => {
             const { data: reactionsData, error: reactionsError } = await supabase
               .from('reactions')
@@ -99,9 +105,8 @@ export const useSocialProfile = (profileId?: string) => {
               }
             });
             
-            // Cast the user property correctly from the join query
             let userProfile: UserProfile | undefined;
-            if (post.user && !post.user.error) {
+            if (post.user && !('error' in post.user)) {
               userProfile = {
                 id: post.user.id,
                 display_name: post.user.display_name,
@@ -112,9 +117,10 @@ export const useSocialProfile = (profileId?: string) => {
                 created_at: '',
                 updated_at: ''
               };
+            } else {
+              userProfile = createEmptyUserProfile("", "Unknown User");
             }
             
-            // Create a properly typed Post object
             const typedPost: Post = {
               id: post.id,
               user_id: post.user_id,
@@ -132,9 +138,7 @@ export const useSocialProfile = (profileId?: string) => {
           setPosts(postsWithReactions);
         }
         
-        // Handle friendship status checking
         if (currentUserId && currentUserId !== targetProfileId) {
-          // Check for sent friend requests
           const { data: sentRequestData } = await supabase
             .from('friendships')
             .select('*')
@@ -142,7 +146,6 @@ export const useSocialProfile = (profileId?: string) => {
             .eq('recipient_id', targetProfileId)
             .single();
             
-          // Check for received friend requests
           const { data: receivedRequestData } = await supabase
             .from('friendships')
             .select('*')
@@ -151,17 +154,14 @@ export const useSocialProfile = (profileId?: string) => {
             .single();
             
           if (sentRequestData) {
-            // Cast status to the expected type
             const status = sentRequestData.status as 'pending' | 'accepted' | 'rejected';
             setFriendshipStatus(status === 'accepted' ? 'accepted' : 'pending');
           } else if (receivedRequestData) {
-            // Cast status to the expected type
             const status = receivedRequestData.status as 'pending' | 'accepted' | 'rejected';
             setFriendshipStatus(status === 'accepted' ? 'accepted' : 'requested');
           }
         }
         
-        // Fetch pending friend requests for current user
         if (currentUserId === targetProfileId) {
           const { data: pendingRequests, error: pendingError } = await supabase
             .from('friendships')
@@ -175,11 +175,9 @@ export const useSocialProfile = (profileId?: string) => {
           if (pendingError) {
             console.error('Error fetching pending requests:', pendingError);
           } else if (pendingRequests) {
-            // Process pending requests to match our Friendship type
             const typedPendingRequests: Friendship[] = pendingRequests.map(request => {
-              // Cast the requestor property correctly
               let requestorProfile: UserProfile | undefined;
-              if (request.requestor && !request.requestor.error) {
+              if (request.requestor && !('error' in request.requestor)) {
                 requestorProfile = {
                   id: request.requestor.id,
                   display_name: request.requestor.display_name,
@@ -190,6 +188,8 @@ export const useSocialProfile = (profileId?: string) => {
                   created_at: '',
                   updated_at: ''
                 };
+              } else {
+                requestorProfile = createEmptyUserProfile("", "Unknown User");
               }
               
               return {
@@ -206,7 +206,6 @@ export const useSocialProfile = (profileId?: string) => {
             setPendingFriendRequests(typedPendingRequests);
           }
           
-          // Fetch friends as requestor
           const { data: friendsAsRequestor, error: requestorError } = await supabase
             .from('friendships')
             .select(`
@@ -216,7 +215,6 @@ export const useSocialProfile = (profileId?: string) => {
             .eq('requestor_id', currentUserId)
             .eq('status', 'accepted');
           
-          // Fetch friends as recipient
           const { data: friendsAsRecipient, error: recipientError } = await supabase
             .from('friendships')
             .select(`
@@ -234,14 +232,12 @@ export const useSocialProfile = (profileId?: string) => {
             console.error('Error fetching friends as recipient:', recipientError);
           }
           
-          // Process friends to match our Friendship type
           const processedFriends: Friendship[] = [];
           
           if (friendsAsRequestor) {
             friendsAsRequestor.forEach(friendship => {
-              // Cast the recipient property correctly
               let recipientProfile: UserProfile | undefined;
-              if (friendship.recipient && !friendship.recipient.error) {
+              if (friendship.recipient && !('error' in friendship.recipient)) {
                 recipientProfile = {
                   id: friendship.recipient.id,
                   display_name: friendship.recipient.display_name,
@@ -252,6 +248,8 @@ export const useSocialProfile = (profileId?: string) => {
                   created_at: '',
                   updated_at: ''
                 };
+              } else {
+                recipientProfile = createEmptyUserProfile("", "Unknown User");
               }
               
               processedFriends.push({
@@ -268,9 +266,8 @@ export const useSocialProfile = (profileId?: string) => {
           
           if (friendsAsRecipient) {
             friendsAsRecipient.forEach(friendship => {
-              // Cast the requestor property correctly
               let requestorProfile: UserProfile | undefined;
-              if (friendship.requestor && !friendship.requestor.error) {
+              if (friendship.requestor && !('error' in friendship.requestor)) {
                 requestorProfile = {
                   id: friendship.requestor.id,
                   display_name: friendship.requestor.display_name,
@@ -281,6 +278,8 @@ export const useSocialProfile = (profileId?: string) => {
                   created_at: '',
                   updated_at: ''
                 };
+              } else {
+                requestorProfile = createEmptyUserProfile("", "Unknown User");
               }
               
               processedFriends.push({
@@ -341,20 +340,16 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      // Process the post to match our Post type
-      let userProfile: UserProfile | undefined;
-      if (data.user && !data.user.error) {
-        userProfile = {
-          id: data.user.id,
-          display_name: data.user.display_name,
-          avatar_url: data.user.avatar_url,
-          bio: null,
-          is_public: false,
-          newsletter_subscribed: false,
-          created_at: '',
-          updated_at: ''
-        };
-      }
+      const userProfile: UserProfile | undefined = data.user && !('error' in data.user) ? {
+        id: data.user.id,
+        display_name: data.user.display_name,
+        avatar_url: data.user.avatar_url,
+        bio: null,
+        is_public: false,
+        newsletter_subscribed: false,
+        created_at: '',
+        updated_at: ''
+      } : createEmptyUserProfile(session.user.id, "User");
             
       const typedPost: Post = {
         id: data.id,
@@ -440,20 +435,16 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      // Process the comment to match our Comment type
-      let userProfile: UserProfile | undefined;
-      if (data.user && !data.user.error) {
-        userProfile = {
-          id: data.user.id,
-          display_name: data.user.display_name,
-          avatar_url: data.user.avatar_url,
-          bio: null,
-          is_public: false,
-          newsletter_subscribed: false,
-          created_at: '',
-          updated_at: ''
-        };
-      }
+      const userProfile: UserProfile | undefined = data.user && !('error' in data.user) ? {
+        id: data.user.id,
+        display_name: data.user.display_name,
+        avatar_url: data.user.avatar_url,
+        bio: null,
+        is_public: false,
+        newsletter_subscribed: false,
+        created_at: '',
+        updated_at: ''
+      } : createEmptyUserProfile(session.user.id, "User");
             
       const typedComment: Comment = {
         id: data.id,
@@ -503,7 +494,6 @@ export const useSocialProfile = (profileId?: string) => {
         throw new Error("Invalid reaction target");
       }
       
-      // Check if this reaction already exists
       const { data: existingReaction, error: checkError } = await supabase
         .from('reactions')
         .select('id')
@@ -515,7 +505,6 @@ export const useSocialProfile = (profileId?: string) => {
       if (checkError) throw checkError;
       
       if (existingReaction) {
-        // Delete the existing reaction
         const { error: deleteError } = await supabase
           .from('reactions')
           .delete()
@@ -537,7 +526,6 @@ export const useSocialProfile = (profileId?: string) => {
         return null;
       }
       
-      // Create a new reaction
       const newReaction = {
         post_id: postId,
         comment_id: commentId,
@@ -597,7 +585,6 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      // Process the profile to match our UserProfile type
       const userProfile: UserProfile = {
         id: data.id,
         display_name: data.display_name,
@@ -691,10 +678,8 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      // Filter out the responded request from pending requests
       setPendingFriendRequests(prev => prev.filter(req => req.id !== friendshipId));
       
-      // Create a properly typed friendship object
       const typedFriendship: Friendship = {
         id: data.id,
         requestor_id: data.requestor_id,
