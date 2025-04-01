@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { imageUrls } from '@/lib/constants';
 import { ImageWithFallback } from '@/lib/images';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface HeroSectionProps {
   buttonText?: string;
@@ -18,9 +19,30 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   heroImageUrl = imageUrls.HERO_DEFAULT
 }) => {
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
+  const [finalImageUrl, setFinalImageUrl] = useState<string>(heroImageUrl);
+  
+  useEffect(() => {
+    // Update the image URL when the prop changes
+    setFinalImageUrl(heroImageUrl);
+    
+    // Listen for hero image update events
+    const handleHeroImageUpdate = (e: CustomEvent) => {
+      if (e.detail && e.detail.imageUrl) {
+        console.log('Hero image updated via event:', e.detail.imageUrl);
+        setFinalImageUrl(e.detail.imageUrl);
+        setImageLoaded(false); // Reset loaded state when URL changes
+      }
+    };
+    
+    window.addEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
+    };
+  }, [heroImageUrl]);
   
   const handleImageLoad = () => {
-    console.log('Hero image loaded successfully:', heroImageUrl);
+    console.log('Hero image loaded successfully:', finalImageUrl);
     setImageLoaded(true);
   };
 
@@ -60,20 +82,21 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
           <div className="md:w-1/2 relative rounded-lg shadow-xl overflow-hidden bg-white/10 p-1">
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg z-10">
+                <Skeleton className="w-full h-full absolute" />
+                <p className="text-gray-500 z-20">Loading image...</p>
+              </div>
+            )}
             <ImageWithFallback 
-              src={heroImageUrl} 
+              src={finalImageUrl}
               alt="Recovery Equipment" 
-              className="rounded-lg w-full h-auto object-cover"
+              className={`rounded-lg w-full h-auto object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               fallbackSrc={imageUrls.HERO_DEFAULT}
               disableCacheBusting={false}
               type="hero"
               onLoad={handleImageLoad}
             />
-            {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg">
-                <p className="text-gray-500">Loading image...</p>
-              </div>
-            )}
           </div>
         </div>
       </div>

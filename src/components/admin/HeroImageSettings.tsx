@@ -32,14 +32,19 @@ const HeroImageSettings: React.FC = () => {
       // Save the hero image URL to localStorage
       localStorage.setItem(localStorageKeys.HERO_IMAGE, imageUrl);
       localStorage.setItem(localStorageKeys.USE_LOCAL_FALLBACKS, useLocalFallback.toString());
+      localStorage.setItem('hero_fallback_url', imageUrl);
       setPreviewUrl(imageUrl);
       
+      console.log('Hero image updated:', imageUrl);
+      
       // Trigger a custom event to notify other components that hero image has been updated
-      window.dispatchEvent(new CustomEvent('heroImageUpdated', { detail: { imageUrl } }));
+      window.dispatchEvent(new CustomEvent('heroImageUpdated', { 
+        detail: { imageUrl }
+      }));
       
       toast({
         title: "Success",
-        description: "Hero image updated successfully. Refresh the home page to see changes.",
+        description: "Hero image updated successfully. The home page will reflect the changes immediately.",
         variant: "default",
       });
     } catch (error) {
@@ -56,9 +61,12 @@ const HeroImageSettings: React.FC = () => {
     setImageUrl(imageUrls.HERO_DEFAULT);
     setPreviewUrl(imageUrls.HERO_DEFAULT);
     localStorage.setItem(localStorageKeys.HERO_IMAGE, imageUrls.HERO_DEFAULT);
+    localStorage.setItem('hero_fallback_url', imageUrls.HERO_DEFAULT);
     
     // Trigger a custom event to notify other components that hero image has been reset
-    window.dispatchEvent(new CustomEvent('heroImageUpdated', { detail: { imageUrl: imageUrls.HERO_DEFAULT } }));
+    window.dispatchEvent(new CustomEvent('heroImageUpdated', { 
+      detail: { imageUrl: imageUrls.HERO_DEFAULT }
+    }));
     
     toast({
       title: "Reset Complete",

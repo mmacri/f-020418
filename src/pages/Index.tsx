@@ -21,13 +21,35 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [heroImage, setHeroImage] = useState<string>(imageUrls.HERO_DEFAULT);
   
+  // Load the hero image from localStorage
   useEffect(() => {
-    // Try to load the hero image from localStorage
-    const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE);
-    if (savedImage) {
-      console.log('Loading hero image from localStorage:', savedImage);
-      setHeroImage(savedImage);
-    }
+    const loadHeroImage = () => {
+      try {
+        const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE);
+        if (savedImage) {
+          console.log('Loading hero image from localStorage:', savedImage);
+          setHeroImage(savedImage);
+        }
+      } catch (err) {
+        console.error('Error loading hero image from localStorage:', err);
+      }
+    };
+
+    loadHeroImage();
+    
+    // Listen for hero image updates
+    const handleHeroImageUpdate = (e: CustomEvent) => {
+      if (e.detail && e.detail.imageUrl) {
+        console.log('Hero image updated via event in Index page:', e.detail.imageUrl);
+        setHeroImage(e.detail.imageUrl);
+      }
+    };
+    
+    window.addEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
+    };
   }, []);
   
   useEffect(() => {
@@ -71,6 +93,8 @@ const Index = () => {
     
     fetchData();
   }, []);
+
+  console.log('Hero image in Index before passing to HeroSection:', heroImage);
   
   return (
     <MainLayout>

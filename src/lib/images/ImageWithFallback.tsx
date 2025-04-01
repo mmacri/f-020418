@@ -21,6 +21,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 }) => {
   const [imgSrc, setImgSrc] = useState<string | undefined>(src);
   const [hasError, setHasError] = useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   // Set default fallback based on image type
   const defaultFallback = () => {
@@ -45,6 +46,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     if (src) {
       setImgSrc(src);
       setHasError(false);
+      setIsLoaded(false);
     }
   }, [src]);
 
@@ -54,6 +56,21 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       console.log(`Image failed to load: ${src}, using fallback: ${actualFallback}`);
       setImgSrc(actualFallback);
       setHasError(true);
+      
+      // Dispatch an event that can be caught by parent components
+      window.dispatchEvent(new CustomEvent('imageError', { 
+        detail: { originalSrc: src, fallbackSrc: actualFallback, type } 
+      }));
+    }
+  };
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    setIsLoaded(true);
+    console.log(`Image loaded successfully: ${imgSrc}`);
+    
+    // Call the original onLoad handler if provided
+    if (onLoad) {
+      onLoad(e);
     }
   };
 
@@ -71,9 +88,9 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       src={getImageSrc()}
       alt={alt || 'Image'}
       onError={handleError}
+      onLoad={handleImageLoad}
       className={className}
       loading="lazy"
-      onLoad={onLoad}
       {...props}
     />
   );

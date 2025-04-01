@@ -12,6 +12,7 @@ export const handleImageError = (imageSrc: string): void => {
       detail: { 
         src: imageSrc,
         timestamp: new Date().toISOString(),
+        errorType: "load_failure"
       } 
     }));
   } catch (e) {
@@ -31,18 +32,25 @@ export const logImageError = (imageSrc: string): void => {
   // Collect error data for later analysis
   try {
     const imageErrors = JSON.parse(localStorage.getItem('image_errors') || '[]');
-    imageErrors.push({
-      src: imageSrc,
-      timestamp,
-      page: window.location.pathname
-    });
     
-    // Keep only the last 50 errors to prevent localStorage from filling up
-    if (imageErrors.length > 50) {
-      imageErrors.splice(0, imageErrors.length - 50);
+    // Don't log duplicates within the last 10 entries
+    const isDuplicate = imageErrors.slice(-10).some(err => err.src === imageSrc);
+    
+    if (!isDuplicate) {
+      imageErrors.push({
+        src: imageSrc,
+        timestamp,
+        page: window.location.pathname,
+        userAgent: navigator.userAgent
+      });
+      
+      // Keep only the last 50 errors to prevent localStorage from filling up
+      if (imageErrors.length > 50) {
+        imageErrors.splice(0, imageErrors.length - 50);
+      }
+      
+      localStorage.setItem('image_errors', JSON.stringify(imageErrors));
     }
-    
-    localStorage.setItem('image_errors', JSON.stringify(imageErrors));
   } catch (e) {
     console.error('Error logging image error to storage:', e);
   }
