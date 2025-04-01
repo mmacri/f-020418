@@ -1,8 +1,9 @@
 
-import { Database } from '@/integrations/supabase/types';
+// Import the Database type but rename it to avoid conflicts
+import type { Database as OriginalDatabase } from '@/integrations/supabase/types';
 
 // Augment the Database type with our custom types for RPC functions
-export type RPCFunctions = Database & {
+export type RPCFunctions = {
   Functions: {
     get_bookmark_by_post_and_user: {
       Args: { p_user_id: string; p_post_id: string };
@@ -184,11 +185,10 @@ export type RPCFunctions = Database & {
         };
       }>;
     };
-  };
-};
+  } & OriginalDatabase['Functions'];
+} & OriginalDatabase;
 
 // Create a typed supabase client for RPC calls
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '@/integrations/supabase/types';
 
 export type TypedSupabaseClient = ReturnType<typeof createClient<RPCFunctions>>;

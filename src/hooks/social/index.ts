@@ -27,14 +27,12 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   const postActions = usePostActions();
   
   // Get profile actions
-  const profileActions = useProfileActions(profile, setProfile => {
+  const profileActions = useProfileActions(profile, () => {
     refetchProfile();
   });
   
   // Get friend actions
-  const friendActions = useFriendActions(friendshipStatus, setFriendshipStatus, setPendingFriendRequests => {
-    refetchProfile();
-  }, setFriends => {
+  const friendActions = useFriendActions(friendshipStatus, () => {
     refetchProfile();
   });
 

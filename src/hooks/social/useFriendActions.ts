@@ -1,14 +1,11 @@
 
-import { useState } from 'react';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
 import { Friendship } from '@/types/social';
 import { useToast } from '@/hooks/use-toast';
 
 export const useFriendActions = (
   friendshipStatus: 'none' | 'pending' | 'accepted' | 'requested',
-  setFriendshipStatus: React.Dispatch<React.SetStateAction<'none' | 'pending' | 'accepted' | 'requested'>>,
-  setPendingFriendRequests: React.Dispatch<React.SetStateAction<Friendship[]>>,
-  setFriends: React.Dispatch<React.SetStateAction<Friendship[]>>
+  onStatusChange: () => void
 ) => {
   const { toast } = useToast();
 
@@ -36,7 +33,7 @@ export const useFriendActions = (
         
       if (error) throw error;
       
-      setFriendshipStatus('pending');
+      onStatusChange();
       toast({
         title: "Success",
         description: "Friend request sent"
@@ -76,7 +73,7 @@ export const useFriendActions = (
         
       if (error) throw error;
       
-      setPendingFriendRequests(prev => prev.filter(req => req.id !== friendshipId));
+      onStatusChange();
       
       const typedFriendship: Friendship = {
         id: data.id,
@@ -88,7 +85,6 @@ export const useFriendActions = (
       };
       
       if (accept) {
-        setFriends(prev => [...prev, typedFriendship]);
         toast({
           title: "Success",
           description: "Friend request accepted"
