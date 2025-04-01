@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -95,29 +94,13 @@ const ProfilePage = () => {
   }
   
   if (isEditing) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <div className="container mx-auto px-4 py-8 flex-grow">
-          <ProfileSettings 
-            profile={profile} 
-            onSave={async (data) => {
-              const updated = await updateProfile(data);
-              if (updated) {
-                setIsEditing(false);
-              }
-              return updated;
-            }}
-            onDeleteAccount={deleteAccount}
-            onCancel={() => setIsEditing(false)}
-          />
-        </div>
-        <Footer />
-      </div>
-    );
+    const updated = await updateProfile(data);
+    if (updated) {
+      setIsEditing(false);
+    }
+    return updated !== null;
   }
   
-  // If the profile is private and it's not the current user
   if (!profile.is_public && !isCurrentUser && friendshipStatus !== 'accepted') {
     return (
       <div className="min-h-screen flex flex-col">
@@ -269,7 +252,6 @@ const ProfilePage = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {friends.map((friendship) => {
-                  // Determine which user to display (not the current profile)
                   const friendProfile = friendship.requestor?.id === profile.id
                     ? friendship.recipient
                     : friendship.requestor;

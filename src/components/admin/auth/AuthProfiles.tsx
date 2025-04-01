@@ -1,260 +1,277 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
-import { socialSupabase as supabase } from "@/integrations/supabase/socialClient";
-import { User, Eye, EyeOff, Mail, MailCheck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
+import { toast } from 'sonner';
+import { MoreHorizontal, Shield, MessageCircle, UserPlus, UserX } from 'lucide-react';
+import { UserProfile } from '@/types/social';
 
-const AuthProfiles = () => {
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  const { toast } = useToast();
+export default function AuthProfiles() {
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchProfiles();
   }, []);
 
   const fetchProfiles = async () => {
-    setIsLoading(true);
     try {
-      // Fetch all user profiles
+      setLoading(true);
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
       if (error) throw error;
-
-      // For each profile, fetch additional data
-      const profilesWithData = await Promise.all((data || []).map(async (profile) => {
-        // Fetch post count
-        const { count: postCount, error: postError } = await supabase
-          .from('posts')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', profile.id);
-
-        if (postError) {
-          console.error('Error fetching post count:', postError);
-        }
-
-        // Fetch friend count
-        const { count: friendCount, error: friendError } = await supabase
-          .from('friendships')
-          .select('*', { count: 'exact', head: true })
-          .or(`requestor_id.eq.${profile.id},recipient_id.eq.${profile.id}`)
-          .eq('status', 'accepted');
-
-        if (friendError) {
-          console.error('Error fetching friend count:', friendError);
-        }
-
-        return {
-          ...profile,
-          postCount: postCount || 0,
-          friendCount: friendCount || 0
-        };
+      
+      // Cast data to UserProfile type
+      const typedProfiles: UserProfile[] = data.map(profile => ({
+        id: profile.id,
+        display_name: profile.display_name,
+        bio: profile.bio,
+        avatar_url: profile.avatar_url,
+        is_public: profile.is_public,
+        newsletter_subscribed: profile.newsletter_subscribed,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at
       }));
-
-      setProfiles(profilesWithData);
+      
+      setProfiles(typedProfiles);
     } catch (error) {
       console.error('Error fetching profiles:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load user profiles",
-        variant: "destructive"
-      });
+      toast.error('Failed to load profiles');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const toggleProfileVisibility = async (profileId: string, currentValue: boolean) => {
+  const fetchUserStats = async (userId: string) => {
+    try {
+      // Get post count
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('user_id', userId);
+        
+      if (postsError) throw postsError;
+      
+      // Get friendship count
+      const { data: friendshipsData, error: friendshipsError } = await supabase
+        .from('friendships')
+        .select('id')
+        .or(`requestor_id.eq.${userId},recipient_id.eq.${userId}`)
+        .eq('status', 'accepted');
+        
+      if (friendshipsError) throw friendshipsError;
+      
+      return {
+        posts: postsData.length,
+        friends: friendshipsData.length
+      };
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      return { posts: 0, friends: 0 };
+    }
+  };
+
+  const toggleProfileVisibility = async (profile: UserProfile) => {
     try {
       const { error } = await supabase
         .from('user_profiles')
-        .update({ is_public: !currentValue })
-        .eq('id', profileId);
-
+        .update({ is_public: !profile.is_public })
+        .eq('id', profile.id);
+        
       if (error) throw error;
-
-      // Update local state
-      setProfiles(prev => prev.map(profile => {
-        if (profile.id === profileId) {
-          return { ...profile, is_public: !currentValue };
-        }
-        return profile;
-      }));
-
-      toast({
-        title: "Profile Updated",
-        description: `Profile visibility set to ${!currentValue ? 'public' : 'private'}`,
-      });
+      
+      setProfiles(prevProfiles => 
+        prevProfiles.map(p => 
+          p.id === profile.id ? { ...p, is_public: !p.is_public } : p
+        )
+      );
+      
+      toast.success(`Profile visibility ${!profile.is_public ? 'public' : 'private'}`);
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile visibility",
-        variant: "destructive"
-      });
+      console.error('Error toggling profile visibility:', error);
+      toast.error('Failed to update profile');
     }
   };
 
-  const toggleNewsletter = async (profileId: string, currentValue: boolean) => {
+  const toggleNewsletterSubscription = async (profile: UserProfile) => {
     try {
       const { error } = await supabase
         .from('user_profiles')
-        .update({ newsletter_subscribed: !currentValue })
-        .eq('id', profileId);
-
+        .update({ newsletter_subscribed: !profile.newsletter_subscribed })
+        .eq('id', profile.id);
+        
       if (error) throw error;
-
-      // Update local state
-      setProfiles(prev => prev.map(profile => {
-        if (profile.id === profileId) {
-          return { ...profile, newsletter_subscribed: !currentValue };
-        }
-        return profile;
-      }));
-
-      toast({
-        title: "Profile Updated",
-        description: `Newsletter subscription ${!currentValue ? 'enabled' : 'disabled'}`,
-      });
+      
+      setProfiles(prevProfiles => 
+        prevProfiles.map(p => 
+          p.id === profile.id ? { ...p, newsletter_subscribed: !p.newsletter_subscribed } : p
+        )
+      );
+      
+      toast.success(`Newsletter subscription ${!profile.newsletter_subscribed ? 'enabled' : 'disabled'}`);
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update newsletter subscription",
-        variant: "destructive"
-      });
+      console.error('Error toggling newsletter subscription:', error);
+      toast.error('Failed to update profile');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-4">
+        <div className="h-8 w-1/3 bg-gray-200 rounded animate-pulse mb-4"></div>
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-12 bg-gray-100 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>User Profiles</CardTitle>
-        <CardDescription>
-          Manage user profiles and their settings
-        </CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {profiles.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">No user profiles found</p>
-            ) : (
-              profiles.map((profile) => (
-                <div key={profile.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                        {profile.avatar_url ? (
-                          <img 
-                            src={profile.avatar_url} 
-                            alt={profile.display_name} 
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "https://ext.same-assets.com/2651616194/3622592620.jpeg";
-                            }} 
-                          />
-                        ) : (
-                          <User className="h-6 w-6 text-gray-500" />
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{profile.display_name}</h3>
-                        <div className="flex space-x-2 text-sm text-muted-foreground">
-                          <span>{profile.postCount} posts</span>
-                          <span>•</span>
-                          <span>{profile.friendCount} friends</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Toggle
-                        pressed={profile.is_public}
-                        onPressedChange={() => toggleProfileVisibility(profile.id, profile.is_public)}
-                        aria-label="Toggle profile visibility"
-                        title={profile.is_public ? "Public Profile" : "Private Profile"}
-                      >
-                        {profile.is_public ? (
-                          <Eye size={14} className="mr-1" />
-                        ) : (
-                          <EyeOff size={14} className="mr-1" />
-                        )}
-                        {profile.is_public ? "Public" : "Private"}
-                      </Toggle>
-                      <Toggle
-                        pressed={profile.newsletter_subscribed}
-                        onPressedChange={() => toggleNewsletter(profile.id, profile.newsletter_subscribed)}
-                        aria-label="Toggle newsletter subscription"
-                        title={profile.newsletter_subscribed ? "Newsletter Subscribed" : "Newsletter Unsubscribed"}
-                      >
-                        {profile.newsletter_subscribed ? (
-                          <MailCheck size={14} className="mr-1" />
-                        ) : (
-                          <Mail size={14} className="mr-1" />
-                        )}
-                        {profile.newsletter_subscribed ? "Subscribed" : "Unsubscribed"}
-                      </Toggle>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setExpandedUser(expandedUser === profile.id ? null : profile.id)}
-                      >
-                        {expandedUser === profile.id ? "Hide Details" : "Show Details"}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {expandedUser === profile.id && (
-                    <div className="mt-4 pl-16">
-                      <Separator className="my-2" />
-                      <div className="grid grid-cols-2 gap-4 mt-3">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Created</p>
-                          <p className="text-sm">
-                            {new Date(profile.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
-                          <p className="text-sm">
-                            {new Date(profile.updated_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Profile ID</p>
-                          <p className="text-sm text-muted-foreground break-all">
-                            {profile.id}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Bio</p>
-                          <p className="text-sm text-muted-foreground">
-                            {profile.bio || "No bio provided"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Stats</TableHead>
+              <TableHead>Public Profile</TableHead>
+              <TableHead>Newsletter</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {profiles.map(profile => (
+              <ProfileRow 
+                key={profile.id} 
+                profile={profile} 
+                toggleVisibility={toggleProfileVisibility}
+                toggleNewsletter={toggleNewsletterSubscription}
+                fetchStats={fetchUserStats}
+              />
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
-};
+}
 
-export default AuthProfiles;
+interface ProfileRowProps {
+  profile: UserProfile;
+  toggleVisibility: (profile: UserProfile) => Promise<void>;
+  toggleNewsletter: (profile: UserProfile) => Promise<void>;
+  fetchStats: (userId: string) => Promise<{posts: number, friends: number}>;
+}
+
+function ProfileRow({ profile, toggleVisibility, toggleNewsletter, fetchStats }: ProfileRowProps) {
+  const [stats, setStats] = useState({ posts: 0, friends: 0 });
+  const [loadingStats, setLoadingStats] = useState(false);
+  
+  useEffect(() => {
+    const getStats = async () => {
+      setLoadingStats(true);
+      const userStats = await fetchStats(profile.id);
+      setStats(userStats);
+      setLoadingStats(false);
+    };
+    
+    getStats();
+  }, [profile.id, fetchStats]);
+  
+  return (
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center space-x-3">
+          <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+            {profile.avatar_url ? (
+              <img 
+                src={profile.avatar_url} 
+                alt={profile.display_name} 
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.display_name)}&background=random`;
+                }}
+              />
+            ) : (
+              <span className="text-sm font-medium">
+                {profile.display_name?.charAt(0).toUpperCase() || '?'}
+              </span>
+            )}
+          </div>
+          <div>
+            <div className="font-medium">{profile.display_name}</div>
+            <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+              {profile.bio || "No bio"}
+            </div>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        {loadingStats ? (
+          <div className="h-5 w-20 bg-gray-200 rounded animate-pulse"></div>
+        ) : (
+          <div className="flex space-x-3 text-sm">
+            <span className="flex items-center">
+              <MessageCircle size={14} className="mr-1" /> {stats.posts}
+            </span>
+            <span className="flex items-center">
+              <UserPlus size={14} className="mr-1" /> {stats.friends}
+            </span>
+          </div>
+        )}
+      </TableCell>
+      <TableCell>
+        <Switch 
+          checked={profile.is_public}
+          onCheckedChange={() => toggleVisibility(profile)}
+        />
+      </TableCell>
+      <TableCell>
+        <Switch 
+          checked={profile.newsletter_subscribed}
+          onCheckedChange={() => toggleNewsletter(profile)}
+        />
+      </TableCell>
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => window.open(`/profile/${profile.id}`, '_blank')}>
+              View Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600">
+              <UserX size={14} className="mr-2" /> Ban User
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+}

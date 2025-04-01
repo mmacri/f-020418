@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
 import { UserProfile, Post, Comment, Reaction, Friendship, ReactionType } from '@/types/social';
@@ -30,6 +31,7 @@ export const useSocialProfile = (profileId?: string) => {
         
         setIsCurrentUser(currentUserId === targetProfileId);
         
+        // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
           .select('*')
@@ -41,9 +43,22 @@ export const useSocialProfile = (profileId?: string) => {
           throw profileError;
         }
         
-        setProfile(profileData);
+        // Make sure the profile data matches our UserProfile type
+        const userProfile: UserProfile = {
+          id: profileData.id,
+          display_name: profileData.display_name,
+          bio: profileData.bio,
+          avatar_url: profileData.avatar_url,
+          is_public: profileData.is_public,
+          newsletter_subscribed: profileData.newsletter_subscribed,
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at
+        };
+        
+        setProfile(userProfile);
         
         if (profileData.is_public || currentUserId === targetProfileId) {
+          // Fetch posts
           const { data: postsData, error: postsError } = await supabase
             .from('posts')
             .select(`
@@ -58,6 +73,7 @@ export const useSocialProfile = (profileId?: string) => {
             throw postsError;
           }
           
+          // Process posts to match our Post type
           const postsWithReactions = await Promise.all(postsData.map(async (post) => {
             const { data: reactionsData, error: reactionsError } = await supabase
               .from('reactions')
@@ -77,19 +93,48 @@ export const useSocialProfile = (profileId?: string) => {
             };
             
             reactionsData.forEach((reaction) => {
-              reaction_counts[reaction.type as keyof typeof reaction_counts]++;
+              if (reaction.type && typeof reaction.type === 'string') {
+                const reactionType = reaction.type as ReactionType;
+                reaction_counts[reactionType]++;
+              }
             });
             
-            return {
-              ...post,
+            // Cast the user property correctly from the join query
+            let userProfile: UserProfile | undefined;
+            if (post.user && !post.user.error) {
+              userProfile = {
+                id: post.user.id,
+                display_name: post.user.display_name,
+                avatar_url: post.user.avatar_url,
+                bio: null,
+                is_public: false,
+                newsletter_subscribed: false,
+                created_at: '',
+                updated_at: ''
+              };
+            }
+            
+            // Create a properly typed Post object
+            const typedPost: Post = {
+              id: post.id,
+              user_id: post.user_id,
+              content: post.content,
+              image_url: post.image_url,
+              created_at: post.created_at,
+              updated_at: post.updated_at,
+              user: userProfile,
               reaction_counts
             };
+            
+            return typedPost;
           }));
           
           setPosts(postsWithReactions);
         }
         
+        // Handle friendship status checking
         if (currentUserId && currentUserId !== targetProfileId) {
+          // Check for sent friend requests
           const { data: sentRequestData } = await supabase
             .from('friendships')
             .select('*')
@@ -97,6 +142,7 @@ export const useSocialProfile = (profileId?: string) => {
             .eq('recipient_id', targetProfileId)
             .single();
             
+          // Check for received friend requests
           const { data: receivedRequestData } = await supabase
             .from('friendships')
             .select('*')
@@ -105,14 +151,19 @@ export const useSocialProfile = (profileId?: string) => {
             .single();
             
           if (sentRequestData) {
-            setFriendshipStatus(sentRequestData.status === 'accepted' ? 'accepted' : 'pending');
+            // Cast status to the expected type
+            const status = sentRequestData.status as 'pending' | 'accepted' | 'rejected';
+            setFriendshipStatus(status === 'accepted' ? 'accepted' : 'pending');
           } else if (receivedRequestData) {
-            setFriendshipStatus(receivedRequestData.status === 'accepted' ? 'accepted' : 'requested');
+            // Cast status to the expected type
+            const status = receivedRequestData.status as 'pending' | 'accepted' | 'rejected';
+            setFriendshipStatus(status === 'accepted' ? 'accepted' : 'requested');
           }
         }
         
+        // Fetch pending friend requests for current user
         if (currentUserId === targetProfileId) {
-          const { data: pendingRequests } = await supabase
+          const { data: pendingRequests, error: pendingError } = await supabase
             .from('friendships')
             .select(`
               *,
@@ -121,11 +172,42 @@ export const useSocialProfile = (profileId?: string) => {
             .eq('recipient_id', currentUserId)
             .eq('status', 'pending');
             
-          if (pendingRequests) {
-            setPendingFriendRequests(pendingRequests);
+          if (pendingError) {
+            console.error('Error fetching pending requests:', pendingError);
+          } else if (pendingRequests) {
+            // Process pending requests to match our Friendship type
+            const typedPendingRequests: Friendship[] = pendingRequests.map(request => {
+              // Cast the requestor property correctly
+              let requestorProfile: UserProfile | undefined;
+              if (request.requestor && !request.requestor.error) {
+                requestorProfile = {
+                  id: request.requestor.id,
+                  display_name: request.requestor.display_name,
+                  avatar_url: request.requestor.avatar_url,
+                  bio: null,
+                  is_public: false,
+                  newsletter_subscribed: false,
+                  created_at: '',
+                  updated_at: ''
+                };
+              }
+              
+              return {
+                id: request.id,
+                requestor_id: request.requestor_id,
+                recipient_id: request.recipient_id,
+                status: request.status as 'pending' | 'accepted' | 'rejected',
+                created_at: request.created_at,
+                updated_at: request.updated_at,
+                requestor: requestorProfile
+              };
+            });
+            
+            setPendingFriendRequests(typedPendingRequests);
           }
           
-          const { data: friendsAsRequestor } = await supabase
+          // Fetch friends as requestor
+          const { data: friendsAsRequestor, error: requestorError } = await supabase
             .from('friendships')
             .select(`
               *,
@@ -133,8 +215,9 @@ export const useSocialProfile = (profileId?: string) => {
             `)
             .eq('requestor_id', currentUserId)
             .eq('status', 'accepted');
-            
-          const { data: friendsAsRecipient } = await supabase
+          
+          // Fetch friends as recipient
+          const { data: friendsAsRecipient, error: recipientError } = await supabase
             .from('friendships')
             .select(`
               *,
@@ -143,12 +226,76 @@ export const useSocialProfile = (profileId?: string) => {
             .eq('recipient_id', currentUserId)
             .eq('status', 'accepted');
             
-          const allFriends = [
-            ...(friendsAsRequestor || []),
-            ...(friendsAsRecipient || [])
-          ];
+          if (requestorError) {
+            console.error('Error fetching friends as requestor:', requestorError);
+          }
           
-          setFriends(allFriends);
+          if (recipientError) {
+            console.error('Error fetching friends as recipient:', recipientError);
+          }
+          
+          // Process friends to match our Friendship type
+          const processedFriends: Friendship[] = [];
+          
+          if (friendsAsRequestor) {
+            friendsAsRequestor.forEach(friendship => {
+              // Cast the recipient property correctly
+              let recipientProfile: UserProfile | undefined;
+              if (friendship.recipient && !friendship.recipient.error) {
+                recipientProfile = {
+                  id: friendship.recipient.id,
+                  display_name: friendship.recipient.display_name,
+                  avatar_url: friendship.recipient.avatar_url,
+                  bio: null,
+                  is_public: false,
+                  newsletter_subscribed: false,
+                  created_at: '',
+                  updated_at: ''
+                };
+              }
+              
+              processedFriends.push({
+                id: friendship.id,
+                requestor_id: friendship.requestor_id,
+                recipient_id: friendship.recipient_id,
+                status: friendship.status as 'pending' | 'accepted' | 'rejected',
+                created_at: friendship.created_at,
+                updated_at: friendship.updated_at,
+                recipient: recipientProfile
+              });
+            });
+          }
+          
+          if (friendsAsRecipient) {
+            friendsAsRecipient.forEach(friendship => {
+              // Cast the requestor property correctly
+              let requestorProfile: UserProfile | undefined;
+              if (friendship.requestor && !friendship.requestor.error) {
+                requestorProfile = {
+                  id: friendship.requestor.id,
+                  display_name: friendship.requestor.display_name,
+                  avatar_url: friendship.requestor.avatar_url,
+                  bio: null,
+                  is_public: false,
+                  newsletter_subscribed: false,
+                  created_at: '',
+                  updated_at: ''
+                };
+              }
+              
+              processedFriends.push({
+                id: friendship.id,
+                requestor_id: friendship.requestor_id,
+                recipient_id: friendship.recipient_id,
+                status: friendship.status as 'pending' | 'accepted' | 'rejected',
+                created_at: friendship.created_at,
+                updated_at: friendship.updated_at,
+                requestor: requestorProfile
+              });
+            });
+          }
+          
+          setFriends(processedFriends);
         }
       } catch (error) {
         console.error('Error in profile loading:', error);
@@ -194,8 +341,39 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      setPosts(prev => [data, ...prev]);
-      return data;
+      // Process the post to match our Post type
+      let userProfile: UserProfile | undefined;
+      if (data.user && !data.user.error) {
+        userProfile = {
+          id: data.user.id,
+          display_name: data.user.display_name,
+          avatar_url: data.user.avatar_url,
+          bio: null,
+          is_public: false,
+          newsletter_subscribed: false,
+          created_at: '',
+          updated_at: ''
+        };
+      }
+            
+      const typedPost: Post = {
+        id: data.id,
+        user_id: data.user_id,
+        content: data.content,
+        image_url: data.image_url,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        user: userProfile,
+        reaction_counts: {
+          like: 0,
+          heart: 0,
+          thumbs_up: 0,
+          thumbs_down: 0
+        }
+      };
+      
+      setPosts(prev => [typedPost, ...prev]);
+      return typedPost;
     } catch (error) {
       console.error('Error creating post:', error);
       toast({
@@ -233,7 +411,7 @@ export const useSocialProfile = (profileId?: string) => {
     }
   };
   
-  const addComment = async (postId: string, content: string) => {
+  const addComment = async (postId: string, content: string): Promise<Comment | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -262,17 +440,42 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
+      // Process the comment to match our Comment type
+      let userProfile: UserProfile | undefined;
+      if (data.user && !data.user.error) {
+        userProfile = {
+          id: data.user.id,
+          display_name: data.user.display_name,
+          avatar_url: data.user.avatar_url,
+          bio: null,
+          is_public: false,
+          newsletter_subscribed: false,
+          created_at: '',
+          updated_at: ''
+        };
+      }
+            
+      const typedComment: Comment = {
+        id: data.id,
+        post_id: data.post_id,
+        user_id: data.user_id,
+        content: data.content,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        user: userProfile
+      };
+      
       setPosts(prev => prev.map(post => {
         if (post.id === postId) {
           return {
             ...post,
-            comments: [...(post.comments || []), data]
+            comments: [...(post.comments || []), typedComment]
           };
         }
         return post;
       }));
       
-      return data;
+      return typedComment;
     } catch (error) {
       console.error('Error adding comment:', error);
       toast({
@@ -284,7 +487,7 @@ export const useSocialProfile = (profileId?: string) => {
     }
   };
   
-  const addReaction = async (type: 'like' | 'heart' | 'thumbs_up' | 'thumbs_down', postId?: string, commentId?: string) => {
+  const addReaction = async (type: ReactionType, postId?: string, commentId?: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -300,13 +503,7 @@ export const useSocialProfile = (profileId?: string) => {
         throw new Error("Invalid reaction target");
       }
       
-      const newReaction = {
-        post_id: postId,
-        comment_id: commentId,
-        user_id: session.user.id,
-        type
-      };
-      
+      // Check if this reaction already exists
       const { data: existingReaction, error: checkError } = await supabase
         .from('reactions')
         .select('id')
@@ -318,6 +515,7 @@ export const useSocialProfile = (profileId?: string) => {
       if (checkError) throw checkError;
       
       if (existingReaction) {
+        // Delete the existing reaction
         const { error: deleteError } = await supabase
           .from('reactions')
           .delete()
@@ -327,7 +525,7 @@ export const useSocialProfile = (profileId?: string) => {
         
         if (postId) {
           setPosts(prev => prev.map(post => {
-            if (post.id === postId) {
+            if (post.id === postId && post.reaction_counts) {
               const newCounts = { ...post.reaction_counts };
               newCounts[type]--;
               return { ...post, reaction_counts: newCounts };
@@ -339,6 +537,14 @@ export const useSocialProfile = (profileId?: string) => {
         return null;
       }
       
+      // Create a new reaction
+      const newReaction = {
+        post_id: postId,
+        comment_id: commentId,
+        user_id: session.user.id,
+        type
+      };
+      
       const { data, error } = await supabase
         .from('reactions')
         .insert(newReaction)
@@ -349,7 +555,7 @@ export const useSocialProfile = (profileId?: string) => {
       
       if (postId) {
         setPosts(prev => prev.map(post => {
-          if (post.id === postId) {
+          if (post.id === postId && post.reaction_counts) {
             const newCounts = { ...post.reaction_counts };
             newCounts[type]++;
             return { ...post, reaction_counts: newCounts };
@@ -370,7 +576,7 @@ export const useSocialProfile = (profileId?: string) => {
     }
   };
   
-  const updateProfile = async (updates: Partial<UserProfile>) => {
+  const updateProfile = async (updates: Partial<UserProfile>): Promise<UserProfile | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -391,13 +597,25 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      setProfile(data);
+      // Process the profile to match our UserProfile type
+      const userProfile: UserProfile = {
+        id: data.id,
+        display_name: data.display_name,
+        bio: data.bio,
+        avatar_url: data.avatar_url,
+        is_public: data.is_public,
+        newsletter_subscribed: data.newsletter_subscribed,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      
+      setProfile(userProfile);
       toast({
         title: "Success",
         description: "Profile updated successfully"
       });
       
-      return data;
+      return userProfile;
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -439,7 +657,16 @@ export const useSocialProfile = (profileId?: string) => {
         description: "Friend request sent"
       });
       
-      return data;
+      const typedFriendship: Friendship = {
+        id: data.id,
+        requestor_id: data.requestor_id,
+        recipient_id: data.recipient_id,
+        status: data.status as 'pending' | 'accepted' | 'rejected',
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      
+      return typedFriendship;
     } catch (error) {
       console.error('Error sending friend request:', error);
       toast({
@@ -464,10 +691,21 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
+      // Filter out the responded request from pending requests
       setPendingFriendRequests(prev => prev.filter(req => req.id !== friendshipId));
       
+      // Create a properly typed friendship object
+      const typedFriendship: Friendship = {
+        id: data.id,
+        requestor_id: data.requestor_id,
+        recipient_id: data.recipient_id,
+        status: data.status as 'pending' | 'accepted' | 'rejected',
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      
       if (accept) {
-        setFriends(prev => [...prev, data]);
+        setFriends(prev => [...prev, typedFriendship]);
         toast({
           title: "Success",
           description: "Friend request accepted"
@@ -479,7 +717,7 @@ export const useSocialProfile = (profileId?: string) => {
         });
       }
       
-      return data;
+      return typedFriendship;
     } catch (error) {
       console.error('Error responding to friend request:', error);
       toast({
