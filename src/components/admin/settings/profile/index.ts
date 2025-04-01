@@ -10,3 +10,6 @@ export {
   RoleInformation,
   ProfileAvatar
 };
+
+// Also adding a default export for backward compatibility
+export default ProfileSettings;
