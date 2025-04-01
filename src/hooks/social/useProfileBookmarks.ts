@@ -90,7 +90,10 @@ export const useProfileBookmarks = (userId?: string, isCurrentUser: boolean = fa
         // Process comments with proper typing
         const comments = commentsData ? commentsData.map(comment => {
           let commentUser: UserProfile;
-          if (comment.user && typeof comment.user === 'object' && comment.user !== null && !('error' in comment.user)) {
+          if (comment.user && 
+              typeof comment.user === 'object' && 
+              comment.user !== null && 
+              !('error' in comment.user)) {
             commentUser = comment.user as UserProfile;
           } else {
             // We'll use a placeholder user if relation fails
