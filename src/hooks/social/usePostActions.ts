@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
@@ -53,6 +54,23 @@ export const usePostActions = () => {
       }
       
       toast.success('Post created successfully');
+      
+      // Handle potential error response
+      if (!data.user || typeof data.user === 'string' || 'error' in data.user) {
+        console.error('Error fetching user profile for post:', data.user);
+        // Create a default user profile object to avoid type errors
+        data.user = {
+          id: userId,
+          display_name: 'Unknown User',
+          bio: null,
+          avatar_url: null,
+          is_public: false,
+          newsletter_subscribed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      }
+      
       return {
         ...data,
         user: data.user,
@@ -131,6 +149,23 @@ export const usePostActions = () => {
       }
       
       toast.success('Comment added successfully');
+      
+      // Handle potential error response for user
+      if (!data.user || typeof data.user === 'string' || 'error' in data.user) {
+        console.error('Error fetching user profile for comment:', data.user);
+        // Create a default user profile object to avoid type errors
+        data.user = {
+          id: userId,
+          display_name: 'Unknown User',
+          bio: null,
+          avatar_url: null,
+          is_public: false,
+          newsletter_subscribed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      }
+      
       return {
         ...data,
         user: data.user,
@@ -251,12 +286,11 @@ export const usePostActions = () => {
       
       const userId = sessionData.session.user.id;
       
-      const { data: existingBookmark, error: checkError } = await supabase
-        .from('bookmarks')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('post_id', postId)
-        .maybeSingle();
+      // Use raw SQL query to check if bookmark exists
+      const { data: existingBookmark, error: checkError } = await supabase.rpc('get_bookmark_by_post_and_user', {
+        p_user_id: userId,
+        p_post_id: postId
+      });
       
       if (checkError) {
         console.error('Error checking bookmark:', checkError);
@@ -264,11 +298,12 @@ export const usePostActions = () => {
         return false;
       }
       
-      if (existingBookmark) {
-        const { error: deleteError } = await supabase
-          .from('bookmarks')
-          .delete()
-          .eq('id', existingBookmark.id);
+      if (existingBookmark && existingBookmark.length > 0) {
+        // Use raw SQL to delete bookmark
+        const { error: deleteError } = await supabase.rpc('delete_bookmark', {
+          p_user_id: userId,
+          p_post_id: postId
+        });
         
         if (deleteError) {
           console.error('Error removing bookmark:', deleteError);
@@ -280,12 +315,11 @@ export const usePostActions = () => {
         return false;
       }
       
-      const { error: insertError } = await supabase
-        .from('bookmarks')
-        .insert({
-          user_id: userId,
-          post_id: postId
-        });
+      // Use raw SQL to insert bookmark
+      const { error: insertError } = await supabase.rpc('insert_bookmark', {
+        p_user_id: userId,
+        p_post_id: postId
+      });
       
       if (insertError) {
         console.error('Error adding bookmark:', insertError);
@@ -312,19 +346,18 @@ export const usePostActions = () => {
       
       const userId = sessionData.session.user.id;
       
-      const { data, error } = await supabase
-        .from('bookmarks')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('post_id', postId)
-        .maybeSingle();
+      // Use raw SQL query to check if bookmark exists
+      const { data, error } = await supabase.rpc('get_bookmark_by_post_and_user', {
+        p_user_id: userId,
+        p_post_id: postId
+      });
       
       if (error) {
         console.error('Error checking bookmark status:', error);
         return false;
       }
       
-      return !!data;
+      return data && data.length > 0;
     } catch (error) {
       console.error('Error in isBookmarked:', error);
       return false;

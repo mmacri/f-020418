@@ -59,7 +59,9 @@ export const ProfilePostsTab: React.FC<ProfilePostsTabProps> = ({
         ...prev,
         [postId]: isNowBookmarked
       }));
+      return isNowBookmarked;
     }
+    return false;
   };
 
   return (
