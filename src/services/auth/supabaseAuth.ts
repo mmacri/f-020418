@@ -52,6 +52,9 @@ export const login = async (email: string, password: string): Promise<{
       // Store auth token in localStorage for compatibility with existing code
       localStorage.setItem('authToken', data.session?.access_token || '');
       
+      // Also store the user object in localStorage for fallback
+      localStorage.setItem('currentUser', JSON.stringify(userObject));
+      
       toast.success(`Welcome back, ${userObject.name}!`);
       
       return {
@@ -81,8 +84,9 @@ export const logout = async (): Promise<void> => {
     
     toast.success("You have been successfully logged out.");
     
-    // Remove token from localStorage
+    // Remove token and user from localStorage
     localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
   } catch (error) {
     console.error("Logout error:", error);
     toast.error("Failed to log out. Please try again.");
@@ -108,7 +112,7 @@ export const getUser = async (): Promise<User | null> => {
       }
       
       if (profileData) {
-        return {
+        const user = {
           id: typeof data.user.id === 'string' && data.user.id.length > 8 
             ? parseInt(data.user.id.substring(0, 8), 16) || 1 
             : 1,
@@ -119,6 +123,21 @@ export const getUser = async (): Promise<User | null> => {
           createdAt: profileData.created_at || new Date().toISOString(),
           updatedAt: profileData.updated_at || new Date().toISOString()
         };
+        
+        // Update localStorage
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        
+        return user;
+      }
+    }
+    
+    // If no Supabase user, try to get from localStorage
+    const userJson = localStorage.getItem('currentUser');
+    if (userJson) {
+      try {
+        return JSON.parse(userJson);
+      } catch (e) {
+        console.error("Error parsing user from localStorage:", e);
       }
     }
     

@@ -4,7 +4,8 @@ import {
   login as authLogin, 
   logout as authLogout, 
   getUser, 
-  isAuthenticated as checkIsAuthenticated 
+  isAuthenticated as checkIsAuthenticated,
+  isAdmin as checkIsAdmin
 } from '@/services/auth';
 import { User } from '@/services/userService';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ interface UseAuthenticationResult {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
@@ -21,6 +23,7 @@ export const useAuthentication = (): UseAuthenticationResult => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   // Function to get current user data
   const fetchUser = useCallback(async () => {
@@ -50,6 +53,14 @@ export const useAuthentication = (): UseAuthenticationResult => {
         
         console.log("Fetched user data:", currentUser);
         setUser(currentUser);
+        
+        // Update localStorage for fallback
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        // Check if user is admin
+        const adminStatus = currentUser.role === 'admin' || await checkIsAdmin();
+        setIsUserAdmin(adminStatus);
+        
         return true;
       }
       
@@ -57,12 +68,33 @@ export const useAuthentication = (): UseAuthenticationResult => {
       const legacyUser = await getUser();
       if (legacyUser) {
         setUser(legacyUser);
+        
+        // Check if user is admin
+        const adminStatus = legacyUser.role === 'admin' || await checkIsAdmin();
+        setIsUserAdmin(adminStatus);
+        
         return true;
       }
       
       return false;
     } catch (error) {
       console.error('Error fetching user:', error);
+      // Try getting from localStorage as a fallback
+      const userJson = localStorage.getItem('currentUser');
+      if (userJson) {
+        try {
+          const cachedUser = JSON.parse(userJson);
+          setUser(cachedUser);
+          
+          // Check if user is admin
+          const adminStatus = cachedUser.role === 'admin';
+          setIsUserAdmin(adminStatus);
+          
+          return true;
+        } catch (e) {
+          console.error('Error parsing cached user:', e);
+        }
+      }
       return false;
     }
   }, []);
@@ -85,6 +117,7 @@ export const useAuthentication = (): UseAuthenticationResult => {
         } else {
           setUser(null);
           setIsAuthenticated(false);
+          setIsUserAdmin(false);
         }
         
         // Set up auth state listener
@@ -101,6 +134,7 @@ export const useAuthentication = (): UseAuthenticationResult => {
             } else {
               setUser(null);
               setIsAuthenticated(false);
+              setIsUserAdmin(false);
             }
           }
         );
@@ -139,6 +173,11 @@ export const useAuthentication = (): UseAuthenticationResult => {
         if (result.success && result.user) {
           setUser(result.user);
           setIsAuthenticated(true);
+          setIsUserAdmin(result.user.role === 'admin');
+          
+          // Update localStorage
+          localStorage.setItem('currentUser', JSON.stringify(result.user));
+          
           return true;
         }
         return false;
@@ -170,6 +209,8 @@ export const useAuthentication = (): UseAuthenticationResult => {
       
       setUser(null);
       setIsAuthenticated(false);
+      setIsUserAdmin(false);
+      
       console.log("Logout successful");
     } catch (error) {
       console.error('Logout error:', error);
@@ -180,6 +221,7 @@ export const useAuthentication = (): UseAuthenticationResult => {
     isAuthenticated,
     isLoading,
     user,
+    isAdmin: isUserAdmin,
     login,
     logout
   };

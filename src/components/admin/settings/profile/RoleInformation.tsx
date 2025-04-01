@@ -1,8 +1,7 @@
 
 import React from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck } from "lucide-react";
 import { User } from "@/services/userService";
+import { ShieldCheck } from "lucide-react";
 
 interface RoleInformationProps {
   user: User;
@@ -15,12 +14,12 @@ const RoleInformation: React.FC<RoleInformationProps> = ({ user }) => {
       <div>
         <p className="font-medium text-primary">
           {user.role === "admin" ? "Administrator" : 
-           user.role === "editor" ? "Editor" : "Regular User"}
+          user.role === "editor" ? "Editor" : "Regular User"}
         </p>
         <p className="text-sm text-muted-foreground">
           {user.role === "admin" ? "Full access to all areas of the platform." : 
-           user.role === "editor" ? "Can manage content but not system settings." : 
-           "Limited access to platform features."}
+          user.role === "editor" ? "Can manage content but not system settings." : 
+          "Limited access to platform features."}
         </p>
       </div>
     </div>

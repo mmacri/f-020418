@@ -18,15 +18,13 @@ import { publishScheduledPosts } from '@/services/blog';
 import { toast } from 'sonner';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { isAdmin as checkIsAdmin } from '@/services/auth';
 
 const AdminPage = () => {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, user } = useAuthentication();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAuthenticated, isLoading, user, isAdmin } = useAuthentication();
   const [activeTab, setActiveTab] = useState(tab || "dashboard");
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
 
   useEffect(() => {
     const checkScheduledPosts = async () => {
@@ -40,38 +38,15 @@ const AdminPage = () => {
       }
     };
 
-    const checkAdminStatus = async () => {
-      setCheckingAdmin(true);
-      try {
-        if (!isAuthenticated || isLoading) {
-          console.log("User not authenticated for admin check or still loading auth");
-          setIsAdmin(false);
-          return;
-        }
-
-        const hasAdminRole = await checkIsAdmin();
-        console.log("Admin check result:", hasAdminRole);
-        setIsAdmin(hasAdminRole);
-        
-        if (hasAdminRole) {
-          await checkScheduledPosts();
-        }
-      } catch (error) {
-        console.error("Error in admin check:", error);
-        setIsAdmin(false);
-      } finally {
-        setCheckingAdmin(false);
-      }
-    };
-
-    if (!isLoading) {
-      checkAdminStatus();
+    // Check scheduled posts when page loads if user is authenticated
+    if (isAuthenticated && isAdmin && !isLoading) {
+      checkScheduledPosts();
     }
     
     if (tab) {
       setActiveTab(tab);
     }
-  }, [isAuthenticated, isLoading, tab, user]);
+  }, [isAuthenticated, isLoading, tab, user, isAdmin]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -80,7 +55,7 @@ const AdminPage = () => {
 
   console.log("Admin page state:", { isLoading, checkingAdmin, isAuthenticated, isAdmin, user });
 
-  if (isLoading || checkingAdmin) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

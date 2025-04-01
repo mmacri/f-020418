@@ -2,7 +2,6 @@
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { User, LogOut, Settings, Heart, ShoppingBag, UserCircle } from "lucide-react";
-import { isAdmin, logout } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,6 +31,9 @@ export const UserMenu = ({ user, onLogout }: UserMenuProps) => {
       .substring(0, 2);
   };
 
+  const isAdmin = user?.role === 'admin';
+  console.log("UserMenu - User role:", user?.role, "Is admin:", isAdmin);
+
   return user ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -54,6 +56,7 @@ export const UserMenu = ({ user, onLogout }: UserMenuProps) => {
         <DropdownMenuLabel className="flex flex-col">
           <span className="font-semibold">{user.name || "User"}</span>
           <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+          {isAdmin && <span className="text-xs text-blue-600 mt-1">Administrator</span>}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-2 cursor-pointer">
@@ -68,7 +71,7 @@ export const UserMenu = ({ user, onLogout }: UserMenuProps) => {
           <Heart size={16} aria-hidden="true" />
           <span>Saved Products</span>
         </DropdownMenuItem>
-        {isAdmin() && (
+        {isAdmin && (
           <DropdownMenuItem onClick={() => navigate('/admin')} className="gap-2 cursor-pointer">
             <Settings size={16} aria-hidden="true" />
             <span>Admin Dashboard</span>

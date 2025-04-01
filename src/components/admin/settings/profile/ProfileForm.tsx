@@ -6,10 +6,9 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Save } from "lucide-react";
 import { User, updateUserProfile } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
-import ProfileAvatar from "./ProfileAvatar";
+import { Save } from "lucide-react";
 
 // Profile form schema
 const profileFormSchema = z.object({
@@ -74,7 +73,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <Form {...profileForm}>
       <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
@@ -126,7 +125,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
           )}
         />
         
-        <ProfileAvatar avatarUrl={user.avatar} />
+        {user.avatar && (
+          <div className="mt-2">
+            <p className="text-sm font-medium mb-2">Current Avatar:</p>
+            <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-200">
+              <img 
+                src={user.avatar} 
+                alt="Profile avatar" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://ext.same-assets.com/2651616194/3622592620.jpeg";
+                }}
+              />
+            </div>
+          </div>
+        )}
         
         <div>
           <Button 

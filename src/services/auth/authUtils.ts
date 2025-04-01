@@ -39,7 +39,9 @@ export const isAdmin = async (): Promise<boolean> => {
       
       if (profileError) {
         console.error("Error checking admin status:", profileError);
-        return false;
+        // Fall back to localStorage method if there's an error with Supabase check
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        return user?.role === 'admin';
       }
       
       const isAdminUser = profileData?.role === 'admin';
@@ -53,7 +55,13 @@ export const isAdmin = async (): Promise<boolean> => {
     return isLegacyAdmin;
   } catch (error) {
     console.error("Admin check error:", error);
-    return false;
+    // Fall back to localStorage check in case of error
+    try {
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      return user?.role === 'admin';
+    } catch (e) {
+      return false;
+    }
   }
 };
 
