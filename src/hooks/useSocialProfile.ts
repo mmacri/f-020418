@@ -28,6 +28,23 @@ export const useSocialProfile = (profileId?: string) => {
     return obj && typeof obj === 'object' && 'error' in obj;
   };
 
+  const extractUserProfileFromResult = (result: any, userId: string, fallbackName: string = "Unknown User"): UserProfile => {
+    if (!result || isSupabaseError(result)) {
+      return createEmptyUserProfile(userId, fallbackName);
+    }
+    
+    return {
+      id: result.id || userId,
+      display_name: result.display_name || fallbackName,
+      avatar_url: result.avatar_url || null,
+      bio: result.bio || null,
+      is_public: !!result.is_public,
+      newsletter_subscribed: !!result.newsletter_subscribed,
+      created_at: result.created_at || '',
+      updated_at: result.updated_at || ''
+    };
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       setIsLoading(true);
@@ -109,21 +126,7 @@ export const useSocialProfile = (profileId?: string) => {
               }
             });
             
-            let userProfile: UserProfile;
-            if (post.user && !isSupabaseError(post.user)) {
-              userProfile = {
-                id: post.user.id,
-                display_name: post.user.display_name,
-                avatar_url: post.user.avatar_url,
-                bio: null,
-                is_public: false,
-                newsletter_subscribed: false,
-                created_at: '',
-                updated_at: ''
-              };
-            } else {
-              userProfile = createEmptyUserProfile(post.user_id, "Unknown User");
-            }
+            const userProfile = extractUserProfileFromResult(post.user, post.user_id);
             
             const typedPost: Post = {
               id: post.id,
@@ -139,7 +142,7 @@ export const useSocialProfile = (profileId?: string) => {
             return typedPost;
           }));
           
-          setPosts(postsWithReactions);
+          setPosts(postsWithReactions as Post[]);
         }
         
         if (currentUserId && currentUserId !== targetProfileId) {
@@ -180,21 +183,11 @@ export const useSocialProfile = (profileId?: string) => {
             console.error('Error fetching pending requests:', pendingError);
           } else if (pendingRequests) {
             const typedPendingRequests: Friendship[] = pendingRequests.map(request => {
-              let requestorProfile: UserProfile;
-              if (request.requestor && !isSupabaseError(request.requestor)) {
-                requestorProfile = {
-                  id: request.requestor.id,
-                  display_name: request.requestor.display_name,
-                  avatar_url: request.requestor.avatar_url,
-                  bio: null,
-                  is_public: false,
-                  newsletter_subscribed: false,
-                  created_at: '',
-                  updated_at: ''
-                };
-              } else {
-                requestorProfile = createEmptyUserProfile(request.requestor_id, "Unknown User");
-              }
+              const requestorProfile = extractUserProfileFromResult(
+                request.requestor, 
+                request.requestor_id, 
+                "Unknown User"
+              );
               
               return {
                 id: request.id,
@@ -240,21 +233,11 @@ export const useSocialProfile = (profileId?: string) => {
           
           if (friendsAsRequestor) {
             friendsAsRequestor.forEach(friendship => {
-              let recipientProfile: UserProfile;
-              if (friendship.recipient && !isSupabaseError(friendship.recipient)) {
-                recipientProfile = {
-                  id: friendship.recipient.id,
-                  display_name: friendship.recipient.display_name,
-                  avatar_url: friendship.recipient.avatar_url,
-                  bio: null,
-                  is_public: false,
-                  newsletter_subscribed: false,
-                  created_at: '',
-                  updated_at: ''
-                };
-              } else {
-                recipientProfile = createEmptyUserProfile(friendship.recipient_id, "Unknown User");
-              }
+              const recipientProfile = extractUserProfileFromResult(
+                friendship.recipient, 
+                friendship.recipient_id, 
+                "Unknown User"
+              );
               
               processedFriends.push({
                 id: friendship.id,
@@ -270,21 +253,11 @@ export const useSocialProfile = (profileId?: string) => {
           
           if (friendsAsRecipient) {
             friendsAsRecipient.forEach(friendship => {
-              let requestorProfile: UserProfile;
-              if (friendship.requestor && !isSupabaseError(friendship.requestor)) {
-                requestorProfile = {
-                  id: friendship.requestor.id,
-                  display_name: friendship.requestor.display_name,
-                  avatar_url: friendship.requestor.avatar_url,
-                  bio: null,
-                  is_public: false,
-                  newsletter_subscribed: false,
-                  created_at: '',
-                  updated_at: ''
-                };
-              } else {
-                requestorProfile = createEmptyUserProfile(friendship.requestor_id, "Unknown User");
-              }
+              const requestorProfile = extractUserProfileFromResult(
+                friendship.requestor, 
+                friendship.requestor_id, 
+                "Unknown User"
+              );
               
               processedFriends.push({
                 id: friendship.id,
@@ -344,16 +317,11 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      const userProfile: UserProfile | undefined = data.user && !('error' in data.user) ? {
-        id: data.user.id,
-        display_name: data.user.display_name,
-        avatar_url: data.user.avatar_url,
-        bio: null,
-        is_public: false,
-        newsletter_subscribed: false,
-        created_at: '',
-        updated_at: ''
-      } : createEmptyUserProfile(session.user.id, "User");
+      const userProfile = extractUserProfileFromResult(
+        data.user && !isSupabaseError(data.user) ? data.user : null, 
+        session.user.id, 
+        "User"
+      );
             
       const typedPost: Post = {
         id: data.id,
@@ -439,16 +407,11 @@ export const useSocialProfile = (profileId?: string) => {
         
       if (error) throw error;
       
-      const userProfile: UserProfile | undefined = data.user && !('error' in data.user) ? {
-        id: data.user.id,
-        display_name: data.user.display_name,
-        avatar_url: data.user.avatar_url,
-        bio: null,
-        is_public: false,
-        newsletter_subscribed: false,
-        created_at: '',
-        updated_at: ''
-      } : createEmptyUserProfile(session.user.id, "User");
+      const userProfile = extractUserProfileFromResult(
+        data.user && !isSupabaseError(data.user) ? data.user : null, 
+        session.user.id, 
+        "User"
+      );
             
       const typedComment: Comment = {
         id: data.id,
