@@ -27,10 +27,16 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   const postActions = usePostActions();
   
   // Get profile actions
-  const profileActions = useProfileActions(refetchProfile);
+  const profileActions = useProfileActions(profile, setProfile => {
+    refetchProfile();
+  });
   
   // Get friend actions
-  const friendActions = useFriendActions(refetchProfile);
+  const friendActions = useFriendActions(friendshipStatus, setFriendshipStatus, setPendingFriendRequests => {
+    refetchProfile();
+  }, setFriends => {
+    refetchProfile();
+  });
 
   // Track uploading state from both actions
   useEffect(() => {

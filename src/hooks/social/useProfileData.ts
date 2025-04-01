@@ -98,7 +98,7 @@ export const useProfileData = (userId?: string) => {
       
       if (postsError) {
         console.error('Error fetching posts:', postsError);
-      } else if (postsData) {
+      } else if (postsData && Array.isArray(postsData)) {
         setPosts(postsData.map(post => ({
           ...post,
           reaction_counts: post.reaction_counts || {
@@ -130,7 +130,7 @@ export const useProfileData = (userId?: string) => {
         
         if (friendRequestsError) {
           console.error('Error fetching friend requests:', friendRequestsError);
-        } else if (friendRequestsData) {
+        } else if (friendRequestsData && Array.isArray(friendRequestsData)) {
           setPendingFriendRequests(friendRequestsData as Friendship[]);
         }
         
@@ -141,7 +141,7 @@ export const useProfileData = (userId?: string) => {
         
         if (bookmarksError) {
           console.error('Error fetching bookmarks:', bookmarksError);
-        } else if (bookmarksData) {
+        } else if (bookmarksData && Array.isArray(bookmarksData)) {
           const processedBookmarks = bookmarksData.map(bookmark => ({
             id: bookmark.id,
             user_id: bookmark.user_id,
@@ -187,7 +187,7 @@ export const useProfileData = (userId?: string) => {
           
           if (friendshipError) {
             console.error('Error checking friendship status:', friendshipError);
-          } else if (friendshipData && friendshipData.length > 0) {
+          } else if (friendshipData && Array.isArray(friendshipData) && friendshipData.length > 0) {
             setFriendshipStatus(friendshipData[0].status as 'none' | 'pending' | 'accepted' | 'requested');
           }
         }
@@ -200,8 +200,8 @@ export const useProfileData = (userId?: string) => {
       
       if (friendshipsError) {
         console.error('Error fetching friendships:', friendshipsError);
-      } else if (friendshipsData) {
-        setFriends(friendshipsData as Friendship[]);
+      } else if (friendshipsData && Array.isArray(friendshipsData)) {
+        setFriends(friendshipsData as unknown as Friendship[]);
       }
       
     } catch (error) {

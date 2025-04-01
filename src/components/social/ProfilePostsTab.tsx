@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
@@ -52,7 +51,7 @@ export const ProfilePostsTab: React.FC<ProfilePostsTabProps> = ({
   }, [posts, isBookmarked]);
   
   // Handle bookmark toggle
-  const handleToggleBookmark = async (postId: string) => {
+  const handleToggleBookmark = async (postId: string): Promise<boolean> => {
     if (bookmarkPost) {
       const isNowBookmarked = await bookmarkPost(postId);
       setPostBookmarkStates(prev => ({

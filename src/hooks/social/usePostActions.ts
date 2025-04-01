@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
-import { Post, Comment, Reaction, ReactionType } from '@/types/social';
+import { Post, Comment, Reaction, ReactionType, UserProfile } from '@/types/social';
 import { uploadProfileImage, uploadPostImage } from './utils';
 
 export const usePostActions = () => {
@@ -55,11 +54,11 @@ export const usePostActions = () => {
       
       toast.success('Post created successfully');
       
-      // Handle potential error response
-      if (!data.user || typeof data.user === 'string' || 'error' in data.user) {
-        console.error('Error fetching user profile for post:', data.user);
-        // Create a default user profile object to avoid type errors
-        data.user = {
+      // Create default user data if user data is missing
+      let userData: UserProfile;
+      
+      if (!data.user || typeof data.user === 'string' || 'error' in (data.user as any)) {
+        userData = {
           id: userId,
           display_name: 'Unknown User',
           bio: null,
@@ -69,11 +68,13 @@ export const usePostActions = () => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
+      } else {
+        userData = data.user as UserProfile;
       }
       
       return {
         ...data,
-        user: data.user,
+        user: userData,
         reactions: [],
         comments: [],
         reaction_counts: {
@@ -150,11 +151,11 @@ export const usePostActions = () => {
       
       toast.success('Comment added successfully');
       
-      // Handle potential error response for user
-      if (!data.user || typeof data.user === 'string' || 'error' in data.user) {
-        console.error('Error fetching user profile for comment:', data.user);
-        // Create a default user profile object to avoid type errors
-        data.user = {
+      // Create default user data if user data is missing
+      let userData: UserProfile;
+      
+      if (!data.user || typeof data.user === 'string' || 'error' in (data.user as any)) {
+        userData = {
           id: userId,
           display_name: 'Unknown User',
           bio: null,
@@ -164,11 +165,13 @@ export const usePostActions = () => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
+      } else {
+        userData = data.user as UserProfile;
       }
       
       return {
         ...data,
-        user: data.user,
+        user: userData,
         reactions: [],
         reaction_counts: {
           like: 0,
@@ -286,7 +289,7 @@ export const usePostActions = () => {
       
       const userId = sessionData.session.user.id;
       
-      // Use raw SQL query to check if bookmark exists
+      // Use RPC function to check if bookmark exists
       const { data: existingBookmark, error: checkError } = await supabase.rpc('get_bookmark_by_post_and_user', {
         p_user_id: userId,
         p_post_id: postId
@@ -298,8 +301,9 @@ export const usePostActions = () => {
         return false;
       }
       
-      if (existingBookmark && existingBookmark.length > 0) {
-        // Use raw SQL to delete bookmark
+      // Check if bookmark exists
+      if (existingBookmark && Array.isArray(existingBookmark) && existingBookmark.length > 0) {
+        // Use RPC function to delete bookmark
         const { error: deleteError } = await supabase.rpc('delete_bookmark', {
           p_user_id: userId,
           p_post_id: postId
@@ -315,7 +319,7 @@ export const usePostActions = () => {
         return false;
       }
       
-      // Use raw SQL to insert bookmark
+      // Use RPC function to insert bookmark
       const { error: insertError } = await supabase.rpc('insert_bookmark', {
         p_user_id: userId,
         p_post_id: postId
@@ -346,7 +350,7 @@ export const usePostActions = () => {
       
       const userId = sessionData.session.user.id;
       
-      // Use raw SQL query to check if bookmark exists
+      // Use RPC function to check if bookmark exists
       const { data, error } = await supabase.rpc('get_bookmark_by_post_and_user', {
         p_user_id: userId,
         p_post_id: postId
@@ -357,7 +361,7 @@ export const usePostActions = () => {
         return false;
       }
       
-      return data && data.length > 0;
+      return Array.isArray(data) && data.length > 0;
     } catch (error) {
       console.error('Error in isBookmarked:', error);
       return false;
