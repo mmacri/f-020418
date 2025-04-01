@@ -33,7 +33,7 @@ export const useProfileFriends = (userId?: string, isCurrentUser: boolean = fals
           let requestorProfile: UserProfile;
           let recipientProfile: UserProfile;
           
-          if (friendship.requestor && typeof friendship.requestor === 'object' && !('error' in friendship.requestor)) {
+          if (friendship.requestor && typeof friendship.requestor === 'object' && !('error' in friendship.requestor!)) {
             requestorProfile = friendship.requestor as UserProfile;
           } else {
             // Fallback for missing requestor
@@ -49,7 +49,7 @@ export const useProfileFriends = (userId?: string, isCurrentUser: boolean = fals
             };
           }
           
-          if (friendship.recipient && typeof friendship.recipient === 'object' && !('error' in friendship.recipient)) {
+          if (friendship.recipient && typeof friendship.recipient === 'object' && !('error' in friendship.recipient!)) {
             recipientProfile = friendship.recipient as UserProfile;
           } else {
             // Fallback for missing recipient
@@ -92,7 +92,7 @@ export const useProfileFriends = (userId?: string, isCurrentUser: boolean = fals
           const processedRequests = friendRequestsData.map(request => {
             let requestorProfile: UserProfile;
             
-            if (request.requestor && typeof request.requestor === 'object' && !('error' in request.requestor)) {
+            if (request.requestor && typeof request.requestor === 'object' && !('error' in request.requestor!)) {
               requestorProfile = request.requestor as UserProfile;
             } else {
               // Fallback for missing requestor
