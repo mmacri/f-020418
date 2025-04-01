@@ -19,6 +19,7 @@ const HeroImageSettings: React.FC = () => {
   useEffect(() => {
     // Load the existing hero image URL from localStorage
     const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE) || imageUrls.HERO_DEFAULT;
+    console.log('HeroImageSettings loading saved image:', savedImage);
     setImageUrl(savedImage);
     setPreviewUrl(savedImage);
     
@@ -26,6 +27,17 @@ const HeroImageSettings: React.FC = () => {
     const useLocal = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
     setUseLocalFallback(useLocal);
   }, []);
+
+  const broadcastHeroImageUpdate = (url: string) => {
+    console.log('Broadcasting hero image update:', url);
+    
+    // Trigger a custom event to notify other components that hero image has been updated
+    const event = new CustomEvent('heroImageUpdated', { 
+      detail: { imageUrl: url }
+    });
+    
+    window.dispatchEvent(event);
+  };
 
   const handleSave = () => {
     try {
@@ -35,12 +47,10 @@ const HeroImageSettings: React.FC = () => {
       localStorage.setItem('hero_fallback_url', imageUrl);
       setPreviewUrl(imageUrl);
       
-      console.log('Hero image updated:', imageUrl);
+      console.log('Hero image updated in localStorage:', imageUrl);
       
-      // Trigger a custom event to notify other components that hero image has been updated
-      window.dispatchEvent(new CustomEvent('heroImageUpdated', { 
-        detail: { imageUrl }
-      }));
+      // Broadcast the update to other components
+      broadcastHeroImageUpdate(imageUrl);
       
       toast({
         title: "Success",
@@ -58,15 +68,14 @@ const HeroImageSettings: React.FC = () => {
   };
 
   const handleReset = () => {
-    setImageUrl(imageUrls.HERO_DEFAULT);
-    setPreviewUrl(imageUrls.HERO_DEFAULT);
-    localStorage.setItem(localStorageKeys.HERO_IMAGE, imageUrls.HERO_DEFAULT);
-    localStorage.setItem('hero_fallback_url', imageUrls.HERO_DEFAULT);
+    const defaultImage = imageUrls.HERO_DEFAULT;
+    setImageUrl(defaultImage);
+    setPreviewUrl(defaultImage);
+    localStorage.setItem(localStorageKeys.HERO_IMAGE, defaultImage);
+    localStorage.setItem('hero_fallback_url', defaultImage);
     
-    // Trigger a custom event to notify other components that hero image has been reset
-    window.dispatchEvent(new CustomEvent('heroImageUpdated', { 
-      detail: { imageUrl: imageUrls.HERO_DEFAULT }
-    }));
+    // Broadcast the update to other components
+    broadcastHeroImageUpdate(defaultImage);
     
     toast({
       title: "Reset Complete",
@@ -78,6 +87,10 @@ const HeroImageSettings: React.FC = () => {
     console.log('Setting hero image from upload:', url);
     setImageUrl(url);
     setPreviewUrl(url);
+    
+    // Immediately broadcast the update (don't wait for Save)
+    localStorage.setItem(localStorageKeys.HERO_IMAGE, url);
+    broadcastHeroImageUpdate(url);
   };
 
   return (

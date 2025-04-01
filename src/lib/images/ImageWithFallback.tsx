@@ -17,6 +17,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   type = 'product',
   disableCacheBusting = false,
   onLoad,
+  onError,
   ...props
 }) => {
   const [imgSrc, setImgSrc] = useState<string | undefined>(src);
@@ -47,15 +48,21 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       setImgSrc(src);
       setHasError(false);
       setIsLoaded(false);
+      console.log(`Image source updated: ${src}`);
     }
   }, [src]);
 
-  const handleError = () => {
+  const handleImageError = () => {
     if (!hasError) {
+      console.error(`Image failed to load: ${imgSrc}, using fallback: ${actualFallback}`);
       handleImageError(src || '');
-      console.log(`Image failed to load: ${src}, using fallback: ${actualFallback}`);
       setImgSrc(actualFallback);
       setHasError(true);
+      
+      // Call the original onError handler if provided
+      if (onError) {
+        onError(new Event('error') as React.SyntheticEvent<HTMLImageElement, Event>);
+      }
       
       // Dispatch an event that can be caught by parent components
       window.dispatchEvent(new CustomEvent('imageError', { 
@@ -87,7 +94,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     <img
       src={getImageSrc()}
       alt={alt || 'Image'}
-      onError={handleError}
+      onError={handleImageError}
       onLoad={handleImageLoad}
       className={className}
       loading="lazy"

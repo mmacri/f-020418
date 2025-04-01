@@ -22,6 +22,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   const [finalImageUrl, setFinalImageUrl] = useState<string>(heroImageUrl);
   
   useEffect(() => {
+    console.log('HeroSection mounted with image URL:', heroImageUrl);
     // Update the image URL when the prop changes
     setFinalImageUrl(heroImageUrl);
     
@@ -44,6 +45,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   const handleImageLoad = () => {
     console.log('Hero image loaded successfully:', finalImageUrl);
     setImageLoaded(true);
+  };
+
+  const handleImageError = () => {
+    console.error('Hero image failed to load:', finalImageUrl);
+    setImageLoaded(true); // Still mark as loaded to remove loading indicator
   };
 
   return (
@@ -93,9 +99,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               alt="Recovery Equipment" 
               className={`rounded-lg w-full h-auto object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               fallbackSrc={imageUrls.HERO_DEFAULT}
-              disableCacheBusting={false}
               type="hero"
               onLoad={handleImageLoad}
+              onError={handleImageError}
             />
           </div>
         </div>

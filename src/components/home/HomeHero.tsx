@@ -4,25 +4,49 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { localStorageKeys } from '@/lib/constants';
+import { ImageWithFallback } from '@/lib/images';
 
 const DEFAULT_HERO_IMAGE = "https://ext.same-assets.com/1001010126/massage-gun-category.jpg";
 const LOCAL_FALLBACK_IMAGE = "/placeholder.svg";
 
 const HomeHero: React.FC = () => {
   const [heroImage, setHeroImage] = useState<string>("");
+  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   
   useEffect(() => {
     // Load hero image from localStorage
     const savedHeroImage = localStorage.getItem(localStorageKeys.HERO_IMAGE) || DEFAULT_HERO_IMAGE;
+    console.log('HomeHero loading image from localStorage:', savedHeroImage);
     setHeroImage(savedHeroImage);
+    
+    // Listen for hero image updates
+    const handleHeroImageUpdate = (e: CustomEvent) => {
+      if (e.detail && e.detail.imageUrl) {
+        console.log('HomeHero received hero image update:', e.detail.imageUrl);
+        setHeroImage(e.detail.imageUrl);
+        setImageLoaded(false);
+      }
+    };
+    
+    window.addEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
+    };
   }, []);
   
   const handleHeroImageError = () => {
     // Check if we should use local fallback
+    console.error('Hero image failed to load:', heroImage);
     const useLocalFallback = localStorage.getItem(localStorageKeys.USE_LOCAL_FALLBACKS) === 'true';
     const fallbackImage = useLocalFallback ? LOCAL_FALLBACK_IMAGE : DEFAULT_HERO_IMAGE;
     setHeroImage(fallbackImage);
-    console.log("Hero image failed to load. Using fallback image.");
+    setImageLoaded(true);
+  };
+  
+  const handleImageLoad = () => {
+    console.log('HomeHero image loaded successfully:', heroImage);
+    setImageLoaded(true);
   };
   
   return (
@@ -64,12 +88,16 @@ const HomeHero: React.FC = () => {
           </Button>
         </div>
       </div>
-      {/* Hidden image for preloading and error handling */}
-      <img 
+      
+      {/* Hidden image for preloading with proper handlers */}
+      <ImageWithFallback 
         src={heroImage} 
         alt="" 
         className="hidden" 
         onError={handleHeroImageError}
+        onLoad={handleImageLoad}
+        fallbackSrc={DEFAULT_HERO_IMAGE}
+        type="hero"
       />
     </section>
   );
