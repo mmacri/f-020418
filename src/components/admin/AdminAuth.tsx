@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminAuthStatus from './AdminAuthStatus';
+import AuthPermissions from './auth/AuthPermissions';
+import AuthUsers from './auth/AuthUsers';
+import AuthSettings from './auth/AuthSettings';
 import { useAuthentication } from '@/hooks/useAuthentication';
 import { Badge } from '@/components/ui/badge';
 import { Shield, KeyRound, Users, Settings } from 'lucide-react';
@@ -13,6 +16,7 @@ interface AdminAuthProps {
 
 const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthSuccess }) => {
   const { isAuthenticated, isLoading, user } = useAuthentication();
+  const [activeTab, setActiveTab] = useState<string>("status");
 
   // Call onAuthSuccess if provided and user is authenticated
   React.useEffect(() => {
@@ -34,7 +38,7 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthSuccess }) => {
 
       <Card className="border shadow-sm">
         <CardContent className="pt-6">
-          <Tabs defaultValue="status" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="mb-4 w-full justify-start">
               <TabsTrigger value="status" className="flex items-center gap-1.5">
                 <Shield className="h-4 w-4" />
@@ -59,72 +63,15 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthSuccess }) => {
             </TabsContent>
             
             <TabsContent value="permissions">
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Permissions</CardTitle>
-                  <CardDescription>
-                    Manage user roles and permissions across the platform
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="py-6">
-                  <div className="text-center text-muted-foreground space-y-4">
-                    <p>User permissions management coming soon.</p>
-                    <p className="text-sm">Future functionality will include:</p>
-                    <ul className="text-left text-sm list-disc list-inside space-y-1">
-                      <li>Role-based access control</li>
-                      <li>Custom permission groups</li>
-                      <li>API access management</li>
-                      <li>Activity logging & auditing</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
+              <AuthPermissions />
             </TabsContent>
             
             <TabsContent value="users">
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Management</CardTitle>
-                  <CardDescription>
-                    View and manage users registered on the platform
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="py-6">
-                  <div className="text-center text-muted-foreground space-y-4">
-                    <p>User management features coming soon.</p>
-                    <p className="text-sm">Future functionality will include:</p>
-                    <ul className="text-left text-sm list-disc list-inside space-y-1">
-                      <li>User search and filtering</li>
-                      <li>User creation and invitation</li>
-                      <li>Account suspension and deletion</li>
-                      <li>Bulk user operations</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
+              <AuthUsers />
             </TabsContent>
             
             <TabsContent value="settings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Authentication Settings</CardTitle>
-                  <CardDescription>
-                    Configure authentication methods and security policies
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="py-6">
-                  <div className="text-center text-muted-foreground space-y-4">
-                    <p>Authentication settings coming soon.</p>
-                    <p className="text-sm">Future functionality will include:</p>
-                    <ul className="text-left text-sm list-disc list-inside space-y-1">
-                      <li>Social login configuration</li>
-                      <li>Two-factor authentication settings</li>
-                      <li>Password policies</li>
-                      <li>Session timeout configuration</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
+              <AuthSettings />
             </TabsContent>
           </Tabs>
         </CardContent>
