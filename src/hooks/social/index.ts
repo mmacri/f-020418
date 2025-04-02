@@ -66,7 +66,6 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   });
 
   // Friend actions
-  // The error was here - we need to call useFriendActions without arguments to match its definition
   const {
     sendFriendRequest,
     respondToFriendRequest

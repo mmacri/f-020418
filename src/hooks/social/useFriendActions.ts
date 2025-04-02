@@ -3,10 +3,7 @@ import { socialSupabase as supabase } from '@/integrations/supabase/socialClient
 import { Friendship } from '@/types/social';
 import { useToast } from '@/hooks/use-toast';
 
-export const useFriendActions = (
-  friendshipStatus: 'none' | 'pending' | 'accepted' | 'requested',
-  onStatusChange: () => void
-) => {
+export const useFriendActions = () => {
   const { toast } = useToast();
 
   const sendFriendRequest = async (recipientId: string) => {
@@ -33,7 +30,6 @@ export const useFriendActions = (
         
       if (error) throw error;
       
-      onStatusChange();
       toast({
         title: "Success",
         description: "Friend request sent"
@@ -72,8 +68,6 @@ export const useFriendActions = (
         .single();
         
       if (error) throw error;
-      
-      onStatusChange();
       
       const typedFriendship: Friendship = {
         id: data.id,
