@@ -28,11 +28,7 @@ const Index = () => {
         const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE);
         if (savedImage) {
           console.log('Loading hero image from localStorage:', savedImage);
-          // Add a cache bust parameter to ensure fresh load
-          const cacheBustUrl = savedImage.includes('?') 
-            ? `${savedImage}&_cb=${Date.now()}` 
-            : `${savedImage}?_cb=${Date.now()}`;
-          setHeroImage(cacheBustUrl);
+          setHeroImage(savedImage);
         }
       } catch (err) {
         console.error('Error loading hero image from localStorage:', err);

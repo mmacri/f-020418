@@ -28,38 +28,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     // Update the image URL when the prop changes
     if (heroImageUrl) {
       setFinalImageUrl(heroImageUrl);
-      setImageLoaded(false); // Reset loaded state when URL changes
     }
     
     // Listen for hero image update events
     const handleHeroImageUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.imageUrl) {
         console.log('Hero image updated via event:', e.detail.imageUrl);
-        
-        // Explicitly force cache busting for hero image updates
-        const newImageUrl = e.detail.imageUrl;
-        setFinalImageUrl(newImageUrl);
-        setImageLoaded(false); // Reset loaded state when URL changes
+        setFinalImageUrl(e.detail.imageUrl);
         setLoadAttempt(prev => prev + 1); // Force reload
       }
     };
     
     window.addEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
-    
-    // Preload the hero image
-    const preloadImage = new Image();
-    preloadImage.src = finalImageUrl;
-    preloadImage.onload = () => {
-      console.log('Hero image preloaded successfully:', finalImageUrl);
-    };
-    preloadImage.onerror = () => {
-      console.error('Hero image preload failed:', finalImageUrl);
-      // If preload fails, try the default image
-      if (finalImageUrl !== imageUrls.HERO_DEFAULT) {
-        setFinalImageUrl(imageUrls.HERO_DEFAULT);
-        setLoadAttempt(prev => prev + 1);
-      }
-    };
     
     return () => {
       window.removeEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
@@ -121,14 +101,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
           <div className="md:w-1/2 relative rounded-lg shadow-xl overflow-hidden bg-white/10 p-1">
+            {/* Show skeleton by default, hide when image is loaded */}
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg z-10">
                 <Skeleton className="w-full h-full absolute" />
-                <p className="text-gray-500 z-20">Loading image...</p>
               </div>
             )}
             <ImageWithFallback 
-              key={`hero-image-${loadAttempt}`} // Force rerender on load attempt change
+              key={`hero-image-${loadAttempt}`}
               src={finalImageUrl}
               alt="Recovery Equipment" 
               className={`rounded-lg w-full h-auto object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -137,7 +117,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               onLoad={handleImageLoad}
               onError={handleImageError}
               fetchPriority="high"
-              disableCacheBusting={false}
+              disableCacheBusting={true}
             />
           </div>
         </div>

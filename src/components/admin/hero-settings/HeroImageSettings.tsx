@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -33,12 +32,9 @@ const HeroImageSettings: React.FC = () => {
     localStorage.setItem(localStorageKeys.HERO_IMAGE, url);
     localStorage.setItem('hero_fallback_url', url);
     
-    // Add timestamp to URL to force reload
-    const cacheBustUrl = url.includes('?') ? `${url}&_t=${Date.now()}` : `${url}?_t=${Date.now()}`;
-    
     // Trigger a custom event to notify other components that hero image has been updated
     const event = new CustomEvent('heroImageUpdated', { 
-      detail: { imageUrl: cacheBustUrl }
+      detail: { imageUrl: url }
     });
     
     window.dispatchEvent(event);
