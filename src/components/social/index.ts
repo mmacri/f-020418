@@ -11,6 +11,7 @@ export { ProfileLoadingSkeleton } from './ProfileLoadingSkeleton';
 export { ProfileNotFound } from './ProfileNotFound';
 export { PrivateProfileView } from './PrivateProfileView';
 export { SuperAdminDashboard } from './SuperAdminDashboard';
+export { AdminSocialFeed } from './AdminSocialFeed';
 
 // Profile tabs
 export { ProfileAboutTab } from './ProfileAboutTab';

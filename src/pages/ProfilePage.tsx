@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Routes, Route } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useSocialProfile } from "@/hooks/useSocialProfile";
@@ -14,6 +14,7 @@ import { SuperAdminDashboard } from "@/components/social/SuperAdminDashboard";
 import { ProfileErrorAlert } from "@/components/social/ProfileErrorAlert";
 import { ProfileEditForm } from "@/components/social/ProfileEditForm";
 import { ProfileTabsView } from "@/components/social/ProfileTabsView";
+import { AdminSocialFeed } from "@/components/social/AdminSocialFeed";
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
