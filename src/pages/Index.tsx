@@ -21,16 +21,11 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [heroImage, setHeroImage] = useState<string>(imageUrls.HERO_DEFAULT);
   
-  // Preload hero image before anything else
+  // Immediately load the hero image
   useEffect(() => {
-    // Immediately try to load the hero image from localStorage
     const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE);
     if (savedImage) {
       setHeroImage(savedImage);
-      
-      // Preload the image
-      const img = new Image();
-      img.src = savedImage;
     }
     
     // Listen for hero image updates

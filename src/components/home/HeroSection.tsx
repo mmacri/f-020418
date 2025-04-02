@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { imageUrls } from '@/lib/constants';
 import { ImageWithFallback } from '@/lib/images';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 interface HeroSectionProps {
   buttonText?: string;
@@ -20,23 +21,47 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 }) => {
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const [finalImageUrl, setFinalImageUrl] = useState<string>(heroImageUrl || imageUrls.HERO_DEFAULT);
+  const { toast } = useToast();
   
+  // Preload the hero image as soon as component mounts
   useEffect(() => {
-    // Preload the hero image as soon as the component mounts
-    const preloadImage = new Image();
-    preloadImage.src = finalImageUrl;
-    preloadImage.onload = () => setImageLoaded(true);
+    // Always start with a known-good image
+    const defaultImage = imageUrls.HERO_DEFAULT;
     
-    // If the heroImageUrl prop changes, update finalImageUrl
+    // Set the image URL immediately to avoid flickering
     if (heroImageUrl && heroImageUrl !== finalImageUrl) {
       setFinalImageUrl(heroImageUrl);
+    } else if (!heroImageUrl) {
+      setFinalImageUrl(defaultImage);
     }
+    
+    // Pre-load the hero image
+    const img = new Image();
+    img.src = finalImageUrl;
+    img.onload = () => {
+      setImageLoaded(true);
+    };
+    img.onerror = () => {
+      console.error('Failed to preload hero image:', finalImageUrl);
+      // If current image fails, fallback to default image
+      if (finalImageUrl !== defaultImage) {
+        setFinalImageUrl(defaultImage);
+        // Try loading the default image
+        const fallbackImg = new Image();
+        fallbackImg.src = defaultImage;
+        fallbackImg.onload = () => setImageLoaded(true);
+      } else {
+        // Even the default failed, but show something anyway
+        setImageLoaded(true);
+      }
+    };
     
     // Listen for hero image update events
     const handleHeroImageUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.imageUrl) {
         console.log('Hero image updated via event:', e.detail.imageUrl);
         setFinalImageUrl(e.detail.imageUrl);
+        setImageLoaded(false); // Reset loading state for new image
       }
     };
     
@@ -56,6 +81,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     // Use default image on error and set loaded to true to remove skeleton
     if (finalImageUrl !== imageUrls.HERO_DEFAULT) {
       setFinalImageUrl(imageUrls.HERO_DEFAULT);
+      toast({
+        title: "Image could not be loaded",
+        description: "Using fallback image instead",
+        variant: "destructive",
+      });
     }
     setImageLoaded(true);
   };

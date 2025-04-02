@@ -44,7 +44,7 @@ export const imageUrls = {
   DEFAULT_FALLBACK: '/placeholder.svg',
   
   // Hero images
-  HERO_DEFAULT: 'https://ext.same-assets.com/1001010126/massage-gun-category.jpg',
+  HERO_DEFAULT: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
   
   // Category defaults
   CATEGORY_DEFAULT: 'https://ext.same-assets.com/30303031/foam-roller-category.jpg',

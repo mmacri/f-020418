@@ -28,9 +28,10 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const cacheKey = useRef<string>(`img_cache_${src}`);
+  const isHeroImage = type === 'hero';
 
   // Determine loading attribute based on type and priority
-  const loadingAttribute = loading || (type === 'hero' || priority === 'high') ? 'eager' : 'lazy';
+  const loadingAttribute = loading || isHeroImage || priority === 'high' ? 'eager' : 'lazy';
 
   // Set default fallback based on image type
   const defaultFallback = () => {
@@ -50,38 +51,40 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   const actualFallback = fallbackSrc || defaultFallback();
 
-  // Pre-load the image if it's high priority
+  // Initialize and preload the image
   useEffect(() => {
-    if (type === 'hero' || priority === 'high') {
+    if (!src) return;
+    
+    // For hero images, we always use the source directly without checking cache
+    if (isHeroImage) {
+      setImgSrc(src);
+      setHasError(false);
+      setIsLoaded(false);
+      
+      // Preload image
       const img = new Image();
-      img.src = src || '';
+      img.src = src;
       img.onload = () => {
         setIsLoaded(true);
       };
       img.onerror = () => {
         if (!hasError) {
+          console.error(`Hero image failed to preload: ${src}`);
           setImgSrc(actualFallback);
           setHasError(true);
+          
+          // Try loading the fallback
+          const fallbackImg = new Image();
+          fallbackImg.src = actualFallback;
+          fallbackImg.onload = () => setIsLoaded(true);
         }
       };
+      return;
     }
-  }, [src, actualFallback, type, priority, hasError]);
-
-  // Set up image source on initial render and when src changes
-  useEffect(() => {
-    if (!src) return;
     
     // Skip blob URLs and data URLs since they don't need caching
     if (src.startsWith('blob:') || src.startsWith('data:')) {
       setImgSrc(src);
-      return;
-    }
-
-    // For hero images, we always attempt to load them fresh
-    if (type === 'hero') {
-      setImgSrc(src);
-      setHasError(false);
-      setIsLoaded(false);
       return;
     }
     
@@ -99,7 +102,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     setImgSrc(src);
     setHasError(false);
     setIsLoaded(false);
-  }, [src, actualFallback, type]);
+  }, [src, actualFallback, isHeroImage, hasError]);
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError) {
@@ -107,7 +110,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       
       // Cache the error status to avoid future requests for the same broken image
       // Don't cache hero image errors as we want to retry them
-      if (src && !src.startsWith('blob:') && !src.startsWith('data:') && type !== 'hero') {
+      if (src && !src.startsWith('blob:') && !src.startsWith('data:') && !isHeroImage) {
         localStorage.setItem(cacheKey.current, 'error');
       }
       
@@ -137,10 +140,11 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     }
   };
 
-  // Add cache busting parameter if needed
+  // Get final image source, skipping cache busting for hero images
   const getImageSrc = () => {
-    // Skip cache busting for hero images, blob URLs, data URLs
-    if (disableCacheBusting || !imgSrc || imgSrc.startsWith('blob:') || imgSrc.startsWith('data:') || type === 'hero') {
+    // Skip cache busting for these cases
+    if (disableCacheBusting || !imgSrc || imgSrc.startsWith('blob:') || 
+        imgSrc.startsWith('data:') || isHeroImage) {
       return imgSrc;
     }
     
@@ -163,8 +167,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       onLoad={handleImageLoad}
       className={className}
       loading={loadingAttribute}
-      decoding={type === 'hero' ? 'sync' : 'async'}
-      fetchPriority={type === 'hero' ? 'high' : (priority === 'high' ? 'high' : 'auto')}
+      decoding={isHeroImage ? 'sync' : 'async'}
+      fetchPriority={isHeroImage || priority === 'high' ? 'high' : 'auto'}
       {...props}
     />
   );
