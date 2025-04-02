@@ -31,8 +31,10 @@ export const AdminSocialFeed: React.FC = () => {
 
   const handleDelete = async (postId: string) => {
     if (window.confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-      await deletePost(postId);
+      const success = await deletePost(postId);
+      return success;
     }
+    return false;
   };
 
   const handleViewPost = (postId: string) => {
