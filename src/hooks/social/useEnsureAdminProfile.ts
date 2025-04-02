@@ -8,6 +8,8 @@ import { useAuthentication } from '@/hooks/useAuthentication';
  * Hook to ensure that admin users have a social profile
  * This is needed because admins might exist in the admin profiles table
  * but not have a corresponding entry in the social user_profiles table
+ * 
+ * Note: The super admin (admin@recoveryessentials.com) is exempted from this process
  */
 export const useEnsureAdminProfile = () => {
   const { user, isAdmin } = useAuthentication();
@@ -18,6 +20,13 @@ export const useEnsureAdminProfile = () => {
   useEffect(() => {
     const checkAndCreateProfile = async () => {
       if (!user?.id || !isAdmin) return;
+      
+      // Skip profile creation for super admin account (admin@recoveryessentials.com)
+      if (user.email === 'admin@recoveryessentials.com') {
+        console.log('Skipping profile creation for super admin account');
+        setIsComplete(true);
+        return;
+      }
       
       try {
         setIsCreating(true);

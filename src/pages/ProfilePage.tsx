@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useSocialProfile } from "@/hooks/useSocialProfile";
 import { ProfileHeader } from "@/components/social/ProfileHeader";
 import { ProfileSettings } from "@/components/social/ProfileSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, MessageSquare, Users, UserCircle, Bookmark } from "lucide-react";
+import { AlertCircle, MessageSquare, Users, UserCircle, Bookmark, Settings, Shield } from "lucide-react";
 import { UserProfile } from "@/types/social";
 import { ProfileLoadingSkeleton } from "@/components/social/ProfileLoadingSkeleton";
 import { ProfileNotFound } from "@/components/social/ProfileNotFound";
@@ -21,6 +21,7 @@ import { useEnsureAdminProfile } from "@/hooks/social/useEnsureAdminProfile";
 import { useAuthentication } from "@/hooks/useAuthentication";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +30,10 @@ const ProfilePage = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const { isAdmin, user } = useAuthentication();
   
-  // Ensure admin has a social profile
+  // Check if the current user is the super admin
+  const isSuperAdmin = isAdmin && user?.email === 'admin@recoveryessentials.com';
+  
+  // Ensure admin has a social profile (skips for super admin)
   const { isCreating, isComplete, error: profileCreationError } = useEnsureAdminProfile();
   
   const {
@@ -64,6 +68,7 @@ const ProfilePage = () => {
   useEffect(() => {
     if (isAdmin) {
       console.log('Admin user detected:', user?.id);
+      console.log('Is super admin:', isSuperAdmin);
       console.log('Profile creation status:', { isCreating, isComplete, error: profileCreationError });
     }
     
@@ -72,7 +77,7 @@ const ProfilePage = () => {
     } else if (!isLoading) {
       console.log('No profile loaded and not loading');
     }
-  }, [isAdmin, user, isCreating, isComplete, profileCreationError, profile, isLoading]);
+  }, [isAdmin, user, isCreating, isComplete, profileCreationError, profile, isLoading, isSuperAdmin]);
   
   const handleCreatePost = async (content: string, imageFile?: File) => {
     return createPost(content, imageFile);
@@ -101,6 +106,73 @@ const ProfilePage = () => {
   const handleRetryProfileCreation = async () => {
     window.location.reload();
   };
+
+  // If this is the super admin (admin@recoveryessentials.com) viewing their own profile
+  if (isSuperAdmin && !id) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-grow container mx-auto px-4 py-8">
+          <Card className="mb-8">
+            <CardHeader className="bg-primary/10">
+              <div className="flex items-center gap-3">
+                <Shield className="h-8 w-8 text-primary" />
+                <div>
+                  <CardTitle>Super Admin Dashboard</CardTitle>
+                  <CardDescription>
+                    This account is designated as the super administrator without a social profile
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <Alert className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Super Administrator Account</AlertTitle>
+                <AlertDescription>
+                  This is the main administrative account for Recovery Essentials. As the super admin, 
+                  you can manage all social profiles and content but don't have your own social profile.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
+                <Link to="/admin" className="no-underline">
+                  <Card className="hover:bg-accent/10 transition-colors cursor-pointer h-full">
+                    <CardHeader>
+                      <Settings className="h-5 w-5 mb-2 text-primary" />
+                      <CardTitle className="text-lg">Admin Dashboard</CardTitle>
+                      <CardDescription>Manage site settings and content</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+                
+                <Link to="/admin/auth" className="no-underline">
+                  <Card className="hover:bg-accent/10 transition-colors cursor-pointer h-full">
+                    <CardHeader>
+                      <Users className="h-5 w-5 mb-2 text-primary" />
+                      <CardTitle className="text-lg">User Management</CardTitle>
+                      <CardDescription>Manage user accounts and permissions</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+                
+                <Link to="/" className="no-underline">
+                  <Card className="hover:bg-accent/10 transition-colors cursor-pointer h-full">
+                    <CardHeader>
+                      <MessageSquare className="h-5 w-5 mb-2 text-primary" />
+                      <CardTitle className="text-lg">Social Feed</CardTitle>
+                      <CardDescription>View and moderate social content</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">

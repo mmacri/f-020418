@@ -12,10 +12,13 @@ import { SocialProfileHook } from './types';
 import { useAuthentication } from '@/hooks/useAuthentication';
 
 export const useSocialProfile = (userId?: string): SocialProfileHook => {
-  const { isAdmin } = useAuthentication();
+  const { isAdmin, user } = useAuthentication();
   const { hasAccess: adminHasAccess, error: adminAccessError } = useAdminSocialAccess();
   const [error, setError] = useState<string | null>(null);
 
+  // Check if this is the special super admin account that shouldn't have a social profile
+  const isSuperAdmin = isAdmin && user?.email === 'admin@recoveryessentials.com';
+  
   // If admin but no ID is provided, we're likely on the admin's own profile page
   const targetUserId = userId || undefined;
 
@@ -88,14 +91,16 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
 
   // Combine errors
   useEffect(() => {
-    if (profileError) {
+    if (isSuperAdmin && !profile) {
+      setError("This admin account is a super admin and doesn't have a social profile. It's designed to manage all social profiles.");
+    } else if (profileError) {
       setError(profileError);
     } else if (adminAccessError && isAdmin) {
       setError(adminAccessError);
     } else {
       setError(null);
     }
-  }, [profileError, adminAccessError, isAdmin]);
+  }, [profileError, adminAccessError, isAdmin, isSuperAdmin, profile]);
 
   return {
     // Profile state
