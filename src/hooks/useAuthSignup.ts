@@ -27,6 +27,41 @@ export const useAuthSignup = () => {
       
       // User was created successfully
       if (data?.user?.id) {
+        console.log("User created successfully with ID:", data.user.id);
+        
+        // Create a profile entry for the new user
+        try {
+          // First check if profile already exists
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (!existingProfile) {
+            console.log("Creating new profile for user:", data.user.id);
+            // Create a profile for the new user
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({ 
+                id: data.user.id,
+                display_name: displayName || email.split('@')[0],
+                email: email,
+                role: 'user' // Default role is user, admin can upgrade later
+              });
+            
+            if (profileError) {
+              console.error('Error creating profile:', profileError);
+            } else {
+              console.log("Profile created successfully");
+            }
+          } else {
+            console.log("Profile already exists for user");
+          }
+        } catch (profileError) {
+          console.error('Failed to check or create profile:', profileError);
+        }
+        
         // Create welcome post from admin
         try {
           await createWelcomePost(data.user.id);
@@ -56,7 +91,7 @@ export const useAuthSignup = () => {
       
       toast({
         title: "Account created!",
-        description: "Welcome to the community. You're now signed in."
+        description: "Welcome to the community. Please check your email to confirm your account before logging in."
       });
       
       return data;
