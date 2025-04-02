@@ -69,7 +69,7 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   const {
     sendFriendRequest,
     respondToFriendRequest
-  } = useFriendActions(profile, refetchFriends);
+  } = useFriendActions(friendshipStatus, refetchFriends);
 
   // Profile actions
   const {
