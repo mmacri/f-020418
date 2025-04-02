@@ -62,7 +62,7 @@ const SuperAdminHome: React.FC = () => {
             </Card>
           </Link>
           
-          <Link to="/profile/social-feed" className="no-underline">
+          <Link to="/social-feed" className="no-underline">
             <Card className="hover:bg-accent/10 transition-colors cursor-pointer h-full">
               <CardHeader>
                 <MessageSquare className="h-5 w-5 mb-2 text-primary" />
