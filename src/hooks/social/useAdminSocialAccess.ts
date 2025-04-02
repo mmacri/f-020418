@@ -22,11 +22,14 @@ export const useAdminSocialAccess = () => {
     const checkAdminAccess = async () => {
       setIsChecking(true);
       try {
+        // Convert user.id to string if it's a number to ensure compatibility with Supabase
+        const userId = typeof user.id === 'number' ? user.id.toString() : user.id;
+        
         // Check if the admin's user_id exists in user_profiles
         const { data, error } = await supabase
           .from('user_profiles')
           .select('id')
-          .eq('id', user.id)
+          .eq('id', userId)
           .single();
         
         if (error) {

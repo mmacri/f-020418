@@ -21,11 +21,14 @@ export const useEnsureAdminProfile = () => {
       try {
         setIsCreating(true);
         
+        // Convert user.id to string if it's a number
+        const userId = typeof user.id === 'number' ? user.id.toString() : user.id;
+        
         // Check if user already has a social profile
         const { data: existingProfile, error: profileError } = await supabase
           .from('user_profiles')
           .select('id')
-          .eq('id', user.id)
+          .eq('id', userId)
           .single();
         
         // If profile exists, we're done
@@ -44,7 +47,7 @@ export const useEnsureAdminProfile = () => {
         const { error: createError } = await supabase
           .from('user_profiles')
           .insert({
-            id: user.id,
+            id: userId,
             display_name: user.name || 'Admin',
             is_public: true,
             newsletter_subscribed: true,
