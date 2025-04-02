@@ -1,4 +1,3 @@
-
 /**
  * Optimizes images before upload by resizing and compressing them
  */
@@ -33,7 +32,7 @@ export const QUALITY_SETTINGS = {
  */
 export const optimizeImage = async (
   file: File,
-  type: 'product' | 'category' | 'blog' | 'hero' = 'default'
+  type: 'product' | 'category' | 'blog' | 'hero' = 'product'
 ): Promise<Blob> => {
   // Skip optimization for small files and SVGs
   if (file.size < 50 * 1024 || file.type === 'image/svg+xml') {

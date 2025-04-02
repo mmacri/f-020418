@@ -10,7 +10,7 @@ import {
   BookOpen,
   Image
 } from "lucide-react";
-import HeroImageSettings from "./HeroImageSettings";
+import { HeroImageSettings } from "./hero-settings";
 import { ImageSettingsPanel } from "./image-settings";
 import BlogSettingsPanel from "./blog/BlogSettingsPanel";
 import { ProfileSettings, PasswordSettings, PreferencesSettings } from "./settings";
