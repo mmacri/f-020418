@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
@@ -34,7 +33,6 @@ const FileUploadWithPreview = ({
   const [progress, setProgress] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Update preview when currentImage changes
   useEffect(() => {
     if (currentImage) {
       setPreview(currentImage);
@@ -48,7 +46,6 @@ const FileUploadWithPreview = ({
       return;
     }
 
-    // Basic validation
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxSize) {
       setError(`File size exceeds ${maxSize}MB limit`);
@@ -62,15 +59,12 @@ const FileUploadWithPreview = ({
     
     setError(null);
     
-    // Create local preview
     const objectUrl = URL.createObjectURL(file);
     setPreview(objectUrl);
     
-    // Start upload
     setIsUploading(true);
     setProgress(0);
 
-    // Simulate progress - this would be replaced with real progress in a production app
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         const newProgress = prev + Math.random() * 10;
@@ -98,7 +92,6 @@ const FileUploadWithPreview = ({
       } else {
         console.log('Upload successful:', result.url);
         setProgress(100);
-        // Small delay to show 100% progress
         setTimeout(() => {
           onFileChange(result.url);
         }, 300);
@@ -219,4 +212,3 @@ const FileUploadWithPreview = ({
 };
 
 export default FileUploadWithPreview;
-export type { FileUploadWithPreviewProps };
