@@ -73,9 +73,9 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
     setProgress(10); // Start progress
 
     try {
-      // Create local preview immediately
-      const localPreview = URL.createObjectURL(file);
-      setPreview(localPreview);
+      // Create local preview immediately for better UX
+      const localPreviewUrl = URL.createObjectURL(file);
+      setPreview(localPreviewUrl);
       setProgress(30); // Update progress
 
       // Upload to storage
@@ -101,13 +101,21 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
           description: error,
           variant: "destructive",
         });
-        URL.revokeObjectURL(localPreview);
+        // Clean up the object URL to avoid memory leaks
+        URL.revokeObjectURL(localPreviewUrl);
         setPreview(currentImage || null);
         return;
       }
 
       console.log('File uploaded successfully:', url);
+      
+      // Clean up the object URL to avoid memory leaks
+      URL.revokeObjectURL(localPreviewUrl);
+      
+      // Update the preview with the actual remote URL
+      setPreview(url);
       setProgress(100); // Done
+      
       toast({
         title: "Upload complete",
         description: "Your image was uploaded successfully.",

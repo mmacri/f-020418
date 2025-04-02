@@ -15,7 +15,7 @@ export const uploadFile = async (
 ): Promise<{ url: string; error: string | null }> => {
   try {
     const {
-      bucket = 'blog-images',
+      bucket = 'product-images',
       folder = '',
       fileTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'],
       maxSize = 5 * 1024 * 1024 // 5MB default
@@ -67,6 +67,8 @@ export const uploadFile = async (
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
       .getPublicUrl(filePath);
+
+    console.log('File uploaded successfully:', publicUrl);
 
     return {
       url: publicUrl,

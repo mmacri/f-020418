@@ -84,13 +84,21 @@ const HeroImageSettings: React.FC = () => {
   };
 
   const handleFileUpload = (url: string) => {
+    if (!url) return;
+    
     console.log('Setting hero image from upload:', url);
     setImageUrl(url);
     setPreviewUrl(url);
     
-    // Immediately broadcast the update (don't wait for Save)
+    // Immediately save and broadcast the update
     localStorage.setItem(localStorageKeys.HERO_IMAGE, url);
+    localStorage.setItem('hero_fallback_url', url);
     broadcastHeroImageUpdate(url);
+    
+    toast({
+      title: "Image Updated",
+      description: "Hero image has been updated successfully.",
+    });
   };
 
   return (
@@ -124,6 +132,9 @@ const HeroImageSettings: React.FC = () => {
                 Enter a valid URL for the hero image. Recommended size: 1920x600px.
               </p>
             </div>
+            <Button onClick={handleSave} className="mt-2">
+              Save URL
+            </Button>
           </TabsContent>
           
           <TabsContent value="upload" className="space-y-4 mt-4">

@@ -25,6 +25,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     console.log('HeroSection mounted with image URL:', heroImageUrl);
     // Update the image URL when the prop changes
     setFinalImageUrl(heroImageUrl);
+    setImageLoaded(false); // Reset loaded state when URL changes
     
     // Listen for hero image update events
     const handleHeroImageUpdate = (e: CustomEvent) => {
@@ -49,6 +50,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
   const handleImageError = () => {
     console.error('Hero image failed to load:', finalImageUrl);
+    // Use default image on error
+    if (finalImageUrl !== imageUrls.HERO_DEFAULT) {
+      setFinalImageUrl(imageUrls.HERO_DEFAULT);
+    }
     setImageLoaded(true); // Still mark as loaded to remove loading indicator
   };
 
