@@ -7,6 +7,7 @@ export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImag
   fallbackSrc?: string;
   type?: keyof typeof import('@/lib/images/imageOptimizer').MAX_DIMENSIONS;
   disableCacheBusting?: boolean;
+  priority?: 'high' | 'low' | 'auto';
 }
 
 export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
@@ -16,8 +17,10 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   className,
   type = 'product',
   disableCacheBusting = false,
+  priority = 'auto',
   onLoad,
   onError,
+  loading,
   ...props
 }) => {
   const [imgSrc, setImgSrc] = useState<string | undefined>(src);
@@ -25,6 +28,9 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const cacheKey = useRef<string>(`img_cache_${src}`);
+
+  // Determine loading attribute based on type and priority
+  const loadingAttribute = loading || (type === 'hero' || priority === 'high') ? 'eager' : 'lazy';
 
   // Set default fallback based on image type
   const defaultFallback = () => {
@@ -44,6 +50,23 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   const actualFallback = fallbackSrc || defaultFallback();
 
+  // Pre-load the image if it's high priority
+  useEffect(() => {
+    if (type === 'hero' || priority === 'high') {
+      const img = new Image();
+      img.src = src || '';
+      img.onload = () => {
+        setIsLoaded(true);
+      };
+      img.onerror = () => {
+        if (!hasError) {
+          setImgSrc(actualFallback);
+          setHasError(true);
+        }
+      };
+    }
+  }, [src, actualFallback, type, priority, hasError]);
+
   // Set up image source on initial render and when src changes
   useEffect(() => {
     if (!src) return;
@@ -54,25 +77,28 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       return;
     }
 
-    // Check local storage for cached image status - only for non-hero images
-    if (type !== 'hero') {
-      const cachedStatus = localStorage.getItem(cacheKey.current);
-      if (cachedStatus === 'error') {
-        // If we previously had an error with this image, use fallback immediately
-        console.log(`Using cached fallback for ${src}`);
-        setImgSrc(actualFallback);
-        setHasError(true);
-        setIsLoaded(true);
-        return;
-      }
+    // For hero images, we always attempt to load them fresh
+    if (type === 'hero') {
+      setImgSrc(src);
+      setHasError(false);
+      setIsLoaded(false);
+      return;
     }
     
-    // For hero images, we always attempt to load them fresh
+    // Check local storage for cached image status for non-hero images
+    const cachedStatus = localStorage.getItem(cacheKey.current);
+    if (cachedStatus === 'error') {
+      // If we previously had an error with this image, use fallback immediately
+      console.log(`Using cached fallback for ${src}`);
+      setImgSrc(actualFallback);
+      setHasError(true);
+      setIsLoaded(true);
+      return;
+    }
+    
     setImgSrc(src);
     setHasError(false);
     setIsLoaded(false);
-    
-    console.log(`Image source updated: ${src}`);
   }, [src, actualFallback, type]);
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
@@ -104,7 +130,6 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     setIsLoaded(true);
-    console.log(`Image loaded successfully: ${imgSrc}`);
     
     // Call the original onLoad handler if provided
     if (onLoad) {
@@ -114,13 +139,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   // Add cache busting parameter if needed
   const getImageSrc = () => {
-    // Skip cache busting if explicitly disabled
-    if (disableCacheBusting) {
-      return imgSrc;
-    }
-    
-    // Skip cache busting for blob URLs, data URLs, hero images (which need consistent URLs)
-    if (!imgSrc || imgSrc.startsWith('blob:') || imgSrc.startsWith('data:') || type === 'hero') {
+    // Skip cache busting for hero images, blob URLs, data URLs
+    if (disableCacheBusting || !imgSrc || imgSrc.startsWith('blob:') || imgSrc.startsWith('data:') || type === 'hero') {
       return imgSrc;
     }
     
@@ -142,8 +162,9 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       onError={handleError}
       onLoad={handleImageLoad}
       className={className}
-      loading={type === 'hero' ? 'eager' : 'lazy'}
+      loading={loadingAttribute}
       decoding={type === 'hero' ? 'sync' : 'async'}
+      fetchPriority={type === 'hero' ? 'high' : (priority === 'high' ? 'high' : 'auto')}
       {...props}
     />
   );

@@ -21,26 +21,21 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [heroImage, setHeroImage] = useState<string>(imageUrls.HERO_DEFAULT);
   
-  // Load the hero image from localStorage
+  // Preload hero image before anything else
   useEffect(() => {
-    const loadHeroImage = () => {
-      try {
-        const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE);
-        if (savedImage) {
-          console.log('Loading hero image from localStorage:', savedImage);
-          setHeroImage(savedImage);
-        }
-      } catch (err) {
-        console.error('Error loading hero image from localStorage:', err);
-      }
-    };
-
-    loadHeroImage();
+    // Immediately try to load the hero image from localStorage
+    const savedImage = localStorage.getItem(localStorageKeys.HERO_IMAGE);
+    if (savedImage) {
+      setHeroImage(savedImage);
+      
+      // Preload the image
+      const img = new Image();
+      img.src = savedImage;
+    }
     
     // Listen for hero image updates
     const handleHeroImageUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.imageUrl) {
-        console.log('Hero image updated via event in Index page:', e.detail.imageUrl);
         setHeroImage(e.detail.imageUrl);
       }
     };
@@ -78,8 +73,6 @@ const Index = () => {
               }
             })
             .select();
-            
-          console.log('Homepage view tracked:', analyticsData);
         } catch (analyticsError) {
           console.error('Error tracking homepage view:', analyticsError);
         }
@@ -93,8 +86,6 @@ const Index = () => {
     
     fetchData();
   }, []);
-
-  console.log('Hero image in Index before passing to HeroSection:', heroImage);
   
   return (
     <MainLayout>

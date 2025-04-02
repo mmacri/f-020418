@@ -20,13 +20,15 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 }) => {
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const [finalImageUrl, setFinalImageUrl] = useState<string>(heroImageUrl || imageUrls.HERO_DEFAULT);
-  const [loadAttempt, setLoadAttempt] = useState<number>(0);
   
   useEffect(() => {
-    console.log('HeroSection mounted with image URL:', heroImageUrl);
+    // Preload the hero image as soon as the component mounts
+    const preloadImage = new Image();
+    preloadImage.src = finalImageUrl;
+    preloadImage.onload = () => setImageLoaded(true);
     
-    // Update the image URL when the prop changes
-    if (heroImageUrl) {
+    // If the heroImageUrl prop changes, update finalImageUrl
+    if (heroImageUrl && heroImageUrl !== finalImageUrl) {
       setFinalImageUrl(heroImageUrl);
     }
     
@@ -35,7 +37,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       if (e.detail && e.detail.imageUrl) {
         console.log('Hero image updated via event:', e.detail.imageUrl);
         setFinalImageUrl(e.detail.imageUrl);
-        setLoadAttempt(prev => prev + 1); // Force reload
       }
     };
     
@@ -44,25 +45,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     return () => {
       window.removeEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
     };
-  }, [heroImageUrl]);
+  }, [heroImageUrl, finalImageUrl]);
   
   const handleImageLoad = () => {
-    console.log('Hero image loaded successfully:', finalImageUrl);
     setImageLoaded(true);
   };
 
   const handleImageError = () => {
     console.error('Hero image failed to load:', finalImageUrl);
-    // Use default image on error
+    // Use default image on error and set loaded to true to remove skeleton
     if (finalImageUrl !== imageUrls.HERO_DEFAULT) {
-      console.log('Falling back to default hero image');
       setFinalImageUrl(imageUrls.HERO_DEFAULT);
-      setLoadAttempt(prev => prev + 1); // Force reload with fallback
-    } else {
-      // We're already using the fallback and it's still failing
-      // Mark as loaded to remove the loading indicator
-      setImageLoaded(true);
     }
+    setImageLoaded(true);
   };
 
   return (
@@ -101,14 +96,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
           <div className="md:w-1/2 relative rounded-lg shadow-xl overflow-hidden bg-white/10 p-1">
-            {/* Show skeleton by default, hide when image is loaded */}
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg z-10">
                 <Skeleton className="w-full h-full absolute" />
               </div>
             )}
             <ImageWithFallback 
-              key={`hero-image-${loadAttempt}`}
               src={finalImageUrl}
               alt="Recovery Equipment" 
               className={`rounded-lg w-full h-auto object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -116,6 +109,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               type="hero"
               onLoad={handleImageLoad}
               onError={handleImageError}
+              priority="high"
+              loading="eager"
               fetchPriority="high"
               disableCacheBusting={true}
             />
