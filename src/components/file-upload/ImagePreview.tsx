@@ -11,7 +11,7 @@ interface ImagePreviewProps {
   aspectRatio: 'square' | 'landscape' | 'portrait';
 }
 
-export const ImagePreview: React.FC<ImagePreviewProps> = ({
+const ImagePreview: React.FC<ImagePreviewProps> = ({
   preview,
   isUploading,
   onClear,
@@ -31,6 +31,8 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
           src={preview}
           alt="Preview"
           className="w-full h-full object-contain"
+          type="product"
+          disableCacheBusting={false}
         />
         {isUploading && (
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">

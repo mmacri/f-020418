@@ -43,8 +43,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const actualFallback = fallbackSrc || defaultFallback();
 
   useEffect(() => {
-    // Reset error state and update source when src prop changes
-    if (src) {
+    // Skip blob URLs since they cause issues with ImageWithFallback
+    if (src && !src.startsWith('blob:')) {
       setImgSrc(src);
       setHasError(false);
       setIsLoaded(false);
@@ -55,14 +55,14 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const handleError = () => {
     if (!hasError) {
       console.error(`Image failed to load: ${imgSrc}, using fallback: ${actualFallback}`);
-      // Log the error but don't pass arguments to avoid the TypeScript error
-      logImageError(src || '');
+      // Log the error but don't pass arguments to avoid TypeScript error
+      logImageError(imgSrc || '');
       setImgSrc(actualFallback);
       setHasError(true);
       
       // Call the original onError handler if provided
       if (onError) {
-        // Create a new synthetic event instead of trying to convert a native one
+        // Create a new synthetic event
         onError({} as React.SyntheticEvent<HTMLImageElement, Event>);
       }
       
@@ -85,7 +85,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   // Add cache busting parameter if needed
   const getImageSrc = () => {
-    if (disableCacheBusting || !imgSrc) return imgSrc;
+    if (disableCacheBusting || !imgSrc || imgSrc.startsWith('blob:')) return imgSrc;
     
     const cacheBuster = `_cb=${Date.now()}`;
     const separator = imgSrc.includes('?') ? '&' : '?';

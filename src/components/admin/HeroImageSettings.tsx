@@ -29,6 +29,8 @@ const HeroImageSettings: React.FC = () => {
   }, []);
 
   const broadcastHeroImageUpdate = (url: string) => {
+    if (!url) return;
+    
     console.log('Broadcasting hero image update:', url);
     
     // Save immediately to localStorage
@@ -45,6 +47,15 @@ const HeroImageSettings: React.FC = () => {
 
   const handleSave = () => {
     try {
+      if (!imageUrl) {
+        toast({
+          title: "Error",
+          description: "Please enter a valid image URL",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Save the hero image URL to localStorage
       localStorage.setItem(localStorageKeys.HERO_IMAGE, imageUrl);
       localStorage.setItem(localStorageKeys.USE_LOCAL_FALLBACKS, useLocalFallback.toString());
@@ -170,13 +181,15 @@ const HeroImageSettings: React.FC = () => {
         <div className="flex flex-col space-y-2">
           <span className="text-sm font-medium">Preview</span>
           <div className="border rounded-md p-2 bg-gray-50 h-48 flex items-center justify-center overflow-hidden">
-            <ImageWithFallback
-              src={previewUrl}
-              alt="Hero Preview"
-              className="max-h-full max-w-full object-contain"
-              fallbackSrc={useLocalFallback ? '/placeholder.svg' : imageUrls.HERO_DEFAULT}
-              type="hero"
-            />
+            {previewUrl && (
+              <ImageWithFallback
+                src={previewUrl}
+                alt="Hero Preview"
+                className="max-h-full max-w-full object-contain"
+                fallbackSrc={useLocalFallback ? '/placeholder.svg' : imageUrls.HERO_DEFAULT}
+                type="hero"
+              />
+            )}
           </div>
         </div>
 

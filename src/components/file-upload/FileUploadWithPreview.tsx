@@ -73,7 +73,8 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
     try {
       // Create local preview immediately for better UX
       const localPreviewUrl = URL.createObjectURL(file);
-      setPreview(localPreviewUrl);
+      // Don't set the preview yet, wait for upload to avoid showing blob URLs that cause errors
+      
       setProgress(30); // Update progress
 
       // Upload to storage
@@ -101,7 +102,6 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
         });
         // Clean up the object URL to avoid memory leaks
         URL.revokeObjectURL(localPreviewUrl);
-        setPreview(currentImage || null);
         return;
       }
 
