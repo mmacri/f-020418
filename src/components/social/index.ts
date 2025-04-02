@@ -18,6 +18,10 @@ export { ProfilePostsTab } from './ProfilePostsTab';
 export { ProfileFriendsTab } from './ProfileFriendsTab';
 export { ProfileBookmarksTab } from './ProfileBookmarksTab';
 
+// Tab components
+export { ProfileTabList } from './tabs/ProfileTabList';
+export { ProfileTabContent } from './tabs/ProfileTabContent';
+
 // Post components
 export { PostHeader } from './post/PostHeader';
 export { PostContent } from './post/PostContent';
