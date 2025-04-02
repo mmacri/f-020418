@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { handleImageError as logImageError } from './imageErrorHandlers';
 import { imageUrls } from '@/lib/constants';
 
@@ -23,6 +22,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const [imgSrc, setImgSrc] = useState<string | undefined>(src);
   const [hasError, setHasError] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const cacheKey = useRef<string>(`img_cache_${src}`);
 
   // Set default fallback based on image type
   const defaultFallback = () => {
@@ -42,19 +43,42 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   const actualFallback = fallbackSrc || defaultFallback();
 
+  // Check for cached images
   useEffect(() => {
-    // Skip blob URLs since they cause issues with ImageWithFallback
-    if (src && !src.startsWith('blob:')) {
+    if (!src) return;
+    
+    // Skip blob URLs and data URLs since they don't need caching
+    if (src.startsWith('blob:') || src.startsWith('data:')) {
+      setImgSrc(src);
+      return;
+    }
+
+    // Check local storage for cached image status
+    const cachedStatus = localStorage.getItem(cacheKey.current);
+    if (cachedStatus === 'error') {
+      // If we previously had an error with this image, use fallback immediately
+      console.log(`Using cached fallback for ${src}`);
+      setImgSrc(actualFallback);
+      setHasError(true);
+      setIsLoaded(true);
+    } else {
+      // Otherwise use the source image
       setImgSrc(src);
       setHasError(false);
       setIsLoaded(false);
       console.log(`Image source updated: ${src}`);
     }
-  }, [src]);
+  }, [src, actualFallback]);
 
   const handleError = () => {
     if (!hasError) {
       console.error(`Image failed to load: ${imgSrc}, using fallback: ${actualFallback}`);
+      
+      // Cache the error status to avoid future requests for the same broken image
+      if (src && !src.startsWith('blob:') && !src.startsWith('data:')) {
+        localStorage.setItem(cacheKey.current, 'error');
+      }
+      
       // Log the error but don't pass arguments to avoid TypeScript error
       logImageError(imgSrc || '');
       setImgSrc(actualFallback);
@@ -85,7 +109,15 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   // Add cache busting parameter if needed
   const getImageSrc = () => {
-    if (disableCacheBusting || !imgSrc || imgSrc.startsWith('blob:')) return imgSrc;
+    // Skip cache busting for blob URLs, data URLs, or if disabled
+    if (disableCacheBusting || !imgSrc || imgSrc.startsWith('blob:') || imgSrc.startsWith('data:')) {
+      return imgSrc;
+    }
+    
+    // Only add cache busting for external URLs, not for local assets
+    if (imgSrc.startsWith('/')) {
+      return imgSrc;
+    }
     
     const cacheBuster = `_cb=${Date.now()}`;
     const separator = imgSrc.includes('?') ? '&' : '?';
@@ -94,12 +126,14 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   return (
     <img
+      ref={imgRef}
       src={getImageSrc()}
       alt={alt || 'Image'}
       onError={handleError}
       onLoad={handleImageLoad}
       className={className}
       loading="lazy"
+      decoding="async"
       {...props}
     />
   );

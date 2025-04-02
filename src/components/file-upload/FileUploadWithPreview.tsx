@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { uploadFile } from '@/lib/file-upload';
 import { useToast } from '@/hooks/use-toast';
@@ -71,24 +70,37 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
     setProgress(10); // Start progress
 
     try {
-      // Create local preview immediately for better UX
+      // Show temporary preview immediately for better UX
       const localPreviewUrl = URL.createObjectURL(file);
-      // Don't set the preview yet, wait for upload to avoid showing blob URLs that cause errors
+      // Only set temporary preview if we don't already have an image
+      if (!preview) {
+        setPreview(localPreviewUrl);
+      }
       
       setProgress(30); // Update progress
 
-      // Upload to storage
+      // Upload to storage with image type based on aspect ratio
       console.log(`Uploading file to bucket: ${bucket}, folder: ${folder}`);
       toast({
         title: "Uploading image",
-        description: "Your image is being uploaded...",
+        description: "Your image is being uploaded and optimized...",
       });
+
+      // Determine image type based on bucket and aspect ratio
+      const imageType = bucket === 'blog-images' 
+        ? 'blog'
+        : bucket === 'category-images'
+          ? 'category'
+          : folder === 'hero'
+            ? 'hero'
+            : 'product';
 
       const { url, error } = await uploadFile(file, {
         bucket,
         folder,
         fileTypes: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-        maxSize: maxSize * 1024 * 1024
+        maxSize: maxSize * 1024 * 1024,
+        imageType
       });
 
       setProgress(90); // Almost done
@@ -100,17 +112,23 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
           description: error,
           variant: "destructive",
         });
-        // Clean up the object URL to avoid memory leaks
+        
+        // Clean up the object URL
         URL.revokeObjectURL(localPreviewUrl);
+        
+        // Keep existing preview if there was an error
+        if (currentImage) {
+          setPreview(currentImage);
+        }
         return;
       }
 
       console.log('File uploaded successfully:', url);
       
-      // Clean up the object URL to avoid memory leaks
+      // Clean up the temporary object URL
       URL.revokeObjectURL(localPreviewUrl);
       
-      // Update the preview with the actual remote URL
+      // Now that we have the real URL, update the preview
       setPreview(url);
       setProgress(100); // Done
       
@@ -148,6 +166,9 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    
+    // Let parent component know the image was cleared
+    onFileChange('');
   };
 
   return (

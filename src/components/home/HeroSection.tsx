@@ -34,12 +34,22 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     const handleHeroImageUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.imageUrl) {
         console.log('Hero image updated via event:', e.detail.imageUrl);
-        setFinalImageUrl(e.detail.imageUrl);
+        
+        // Add timestamp to URL to prevent browser caching if not a local URL
+        const newImageUrl = e.detail.imageUrl.startsWith('/') 
+          ? e.detail.imageUrl 
+          : `${e.detail.imageUrl}${e.detail.imageUrl.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+        
+        setFinalImageUrl(newImageUrl);
         setImageLoaded(false); // Reset loaded state when URL changes
       }
     };
     
     window.addEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
+    
+    // Preload the hero image
+    const preloadImage = new Image();
+    preloadImage.src = finalImageUrl;
     
     return () => {
       window.removeEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
@@ -112,6 +122,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               type="hero"
               onLoad={handleImageLoad}
               onError={handleImageError}
+              fetchPriority="high"
             />
           </div>
         </div>

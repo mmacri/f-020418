@@ -1,12 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
+import { optimizeImage, shouldOptimizeImage } from "@/lib/images/imageOptimizer";
 
 interface UploadOptions {
   bucket?: string;
   folder?: string;
   fileTypes?: string[];
   maxSize?: number;
+  imageType?: 'product' | 'category' | 'blog' | 'hero';
+  skipOptimization?: boolean;
 }
 
 export const uploadFile = async (
@@ -18,7 +21,9 @@ export const uploadFile = async (
       bucket = 'product-images',
       folder = '',
       fileTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-      maxSize = 5 * 1024 * 1024 // 5MB default
+      maxSize = 5 * 1024 * 1024, // 5MB default
+      imageType = 'product',
+      skipOptimization = false
     } = options;
 
     // Validate file type
@@ -39,6 +44,15 @@ export const uploadFile = async (
       };
     }
 
+    // Optimize image if it's an image and optimization isn't skipped
+    let fileToUpload: File | Blob = file;
+    
+    if (!skipOptimization && shouldOptimizeImage(file) && file.type.startsWith('image/')) {
+      console.log(`Optimizing image before upload: ${file.name} (${Math.round(file.size / 1024)}KB)`);
+      fileToUpload = await optimizeImage(file, imageType);
+      console.log(`Optimization complete: ${Math.round(fileToUpload.size / 1024)}KB`);
+    }
+
     // Create a unique file name
     const uniqueFileName = `${uuidv4()}.${fileExt}`;
     const filePath = folder 
@@ -50,9 +64,10 @@ export const uploadFile = async (
     // Upload file to Supabase Storage
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, {
+      .upload(filePath, fileToUpload, {
         cacheControl: '3600',
-        upsert: false
+        upsert: false,
+        contentType: file.type // Preserve original content type
       });
 
     if (error) {

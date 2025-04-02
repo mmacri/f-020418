@@ -24,6 +24,9 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
     aspectRatio === 'portrait' ? 'aspect-[3/4]' : 
     'aspect-square';
 
+  // Determine if this is a blob URL that needs special handling
+  const isBlobUrl = preview.startsWith('blob:');
+
   return (
     <div className="space-y-2">
       <div className={`relative rounded-md overflow-hidden border bg-gray-50 ${aspectRatioClass}`}>
@@ -32,7 +35,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
           alt="Preview"
           className="w-full h-full object-contain"
           type="product"
-          disableCacheBusting={false}
+          disableCacheBusting={isBlobUrl} // Disable cache busting for blob URLs
         />
         {isUploading && (
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
@@ -47,6 +50,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
         type="button"
         className="mt-2"
         disabled={isUploading}
+        aria-label="Clear image preview"
       >
         Clear Preview
       </Button>
