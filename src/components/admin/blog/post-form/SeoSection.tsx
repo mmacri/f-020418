@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { generateSeoSuggestions } from '@/services/blog';
 import { useToast } from '@/hooks/use-toast';
+import { BlogPost } from '@/services/blog';
 
 export const SeoSection: React.FC = () => {
   const { toast } = useToast();
@@ -40,13 +41,27 @@ export const SeoSection: React.FC = () => {
       return;
     }
 
-    const tempPost = {
-      ...getValues(),
+    // Create a temporary BlogPost object with required fields
+    const tempPost: BlogPost = {
       id: 0,
+      title: getValues('title') || '',
+      slug: getValues('slug') || '',
+      excerpt: getValues('excerpt') || '',
+      content: getValues('content') || '',
+      published: true,
+      date: getValues('date') || new Date().toLocaleDateString(),
       createdAt: '',
       updatedAt: '',
-      published: true,
-      date: new Date().toLocaleDateString()
+      categoryId: getValues('category_id'),
+      category: getValues('category'),
+      author: getValues('author') || 'Admin',
+      image: getValues('image'),
+      image_url: getValues('image_url'),
+      tags: getValues('tags') || [],
+      featured: getValues('featured') || false,
+      seoTitle: getValues('seoTitle'),
+      seoDescription: getValues('seoDescription'),
+      seoKeywords: getValues('seoKeywords') || []
     };
 
     const seoSuggestions = generateSeoSuggestions(tempPost);

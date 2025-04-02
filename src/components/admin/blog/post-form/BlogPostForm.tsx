@@ -70,9 +70,23 @@ const BlogPostForm: React.FC<BlogPostFormProps> = ({
     try {
       // Prepare the data for the API
       const formData: BlogPostInput = {
-        ...data,
-        // Map category_id to category if applicable
-        category: categories.find(c => c.id === data.category_id)?.name || data.category
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        published: data.published,
+        category: categories.find(c => c.id === data.category_id)?.name || data.category || 'General',
+        category_id: data.category_id,
+        image: data.image,
+        image_url: data.image_url,
+        date: data.date,
+        author: data.author,
+        featured: data.featured,
+        scheduledDate: data.scheduledDate,
+        tags: data.tags,
+        seoTitle: data.seoTitle,
+        seoDescription: data.seoDescription,
+        seoKeywords: data.seoKeywords
       };
       
       await onSubmit(formData);

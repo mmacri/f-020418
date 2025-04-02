@@ -1,3 +1,4 @@
+
 /**
  * Optimizes images before upload by resizing and compressing them
  */
@@ -47,24 +48,24 @@ export const optimizeImage = async (
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
       
-      const { width: maxWidth, height: maxHeight } = 
-        MAX_DIMENSIONS[type] || MAX_DIMENSIONS.default;
-      const quality = QUALITY_SETTINGS[type] || QUALITY_SETTINGS.default;
+      // Use type-safe access to the dimensions
+      const dimensions = MAX_DIMENSIONS[type] || MAX_DIMENSIONS.product;
+      const quality = QUALITY_SETTINGS[type] || QUALITY_SETTINGS.product;
       
       // Calculate new dimensions while preserving aspect ratio
       let newWidth = img.width;
       let newHeight = img.height;
       
       // Only resize if the image is larger than the maximum dimensions
-      if (img.width > maxWidth || img.height > maxHeight) {
-        if (img.width / img.height > maxWidth / maxHeight) {
+      if (img.width > dimensions.width || img.height > dimensions.height) {
+        if (img.width / img.height > dimensions.width / dimensions.height) {
           // Width is the limiting factor
-          newWidth = maxWidth;
-          newHeight = Math.floor(img.height * (maxWidth / img.width));
+          newWidth = dimensions.width;
+          newHeight = Math.floor(img.height * (dimensions.width / img.width));
         } else {
           // Height is the limiting factor
-          newHeight = maxHeight;
-          newWidth = Math.floor(img.width * (maxHeight / img.height));
+          newHeight = dimensions.height;
+          newWidth = Math.floor(img.width * (dimensions.height / img.height));
         }
       }
       
