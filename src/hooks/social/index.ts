@@ -66,7 +66,6 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   });
 
   // Friend actions
-  // Fix: Pass friendshipStatus as the first argument and the callback as the second
   const {
     sendFriendRequest,
     respondToFriendRequest
