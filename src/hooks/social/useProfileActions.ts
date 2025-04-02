@@ -6,8 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/lib/file-upload';
 
 export const useProfileActions = (
-  profile: UserProfile | null, 
-  setProfile: (profile: UserProfile | null) => void
+  profile: UserProfile | null,
+  refetchProfile: () => void
 ) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
@@ -108,7 +108,9 @@ export const useProfileActions = (
         updated_at: data.updated_at
       };
       
-      setProfile(userProfile);
+      // Call the refetchProfile function instead of directly setting the profile
+      refetchProfile();
+      
       toast({
         title: "Success",
         description: "Profile updated successfully"
