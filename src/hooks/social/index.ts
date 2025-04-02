@@ -66,6 +66,7 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
   });
 
   // Friend actions
+  // Call useFriendActions without any arguments
   const {
     sendFriendRequest,
     respondToFriendRequest
