@@ -21,7 +21,7 @@ import BlogCommentsManager from './blog/BlogCommentsManager';
 import BlogSettingsPanel from './blog/BlogSettingsPanel';
 import { ProfileSettings, PasswordSettings, PreferencesSettings } from './settings';
 import { ImageSettingsPanel } from './image-settings';
-import HeroImageSettings from './HeroImageSettings';
+import { HeroImageSettings } from './hero-settings';
 import { AuthPermissions, AuthUsers, AuthSettings } from './auth';
 
 export {
