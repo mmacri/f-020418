@@ -31,6 +31,10 @@ const HeroImageSettings: React.FC = () => {
   const broadcastHeroImageUpdate = (url: string) => {
     console.log('Broadcasting hero image update:', url);
     
+    // Save immediately to localStorage
+    localStorage.setItem(localStorageKeys.HERO_IMAGE, url);
+    localStorage.setItem('hero_fallback_url', url);
+    
     // Trigger a custom event to notify other components that hero image has been updated
     const event = new CustomEvent('heroImageUpdated', { 
       detail: { imageUrl: url }
@@ -91,8 +95,6 @@ const HeroImageSettings: React.FC = () => {
     setPreviewUrl(url);
     
     // Immediately save and broadcast the update
-    localStorage.setItem(localStorageKeys.HERO_IMAGE, url);
-    localStorage.setItem('hero_fallback_url', url);
     broadcastHeroImageUpdate(url);
     
     toast({

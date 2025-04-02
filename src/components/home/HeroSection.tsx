@@ -19,7 +19,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   heroImageUrl = imageUrls.HERO_DEFAULT
 }) => {
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
-  const [finalImageUrl, setFinalImageUrl] = useState<string>(heroImageUrl);
+  const [finalImageUrl, setFinalImageUrl] = useState<string>(heroImageUrl || imageUrls.HERO_DEFAULT);
   
   useEffect(() => {
     console.log('HeroSection mounted with image URL:', heroImageUrl);
