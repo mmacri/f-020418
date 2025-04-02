@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { handleImageError as logImageError } from './imageErrorHandlers';
 import { imageUrls } from '@/lib/constants';
 
 export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
-  type?: 'product' | 'category' | 'blog' | 'hero';
+  type?: keyof typeof import('@/lib/images/imageOptimizer').MAX_DIMENSIONS;
   disableCacheBusting?: boolean;
 }
 
@@ -70,7 +71,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     }
   }, [src, actualFallback]);
 
-  const handleError = () => {
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError) {
       console.error(`Image failed to load: ${imgSrc}, using fallback: ${actualFallback}`);
       
@@ -86,8 +87,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       
       // Call the original onError handler if provided
       if (onError) {
-        // Create a new synthetic event
-        onError({} as React.SyntheticEvent<HTMLImageElement, Event>);
+        onError(e);
       }
       
       // Dispatch an event that can be caught by parent components

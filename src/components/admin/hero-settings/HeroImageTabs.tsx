@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import FileUploadWithPreview from '@/components/file-upload/FileUploadWithPreview';
 
@@ -20,7 +20,7 @@ const HeroImageTabs: React.FC<HeroImageTabsProps> = ({
   imageUrl,
   setImageUrl,
   handleSave,
-  handleFileUpload,
+  handleFileUpload
 }) => {
   return (
     <Tabs defaultValue={uploadTab} onValueChange={setUploadTab} className="w-full">
@@ -58,6 +58,7 @@ const HeroImageTabs: React.FC<HeroImageTabsProps> = ({
           folder="hero"
           maxSize={5}
           aspectRatio="landscape"
+          imageType="hero"
         />
         <p className="text-xs text-muted-foreground">
           Upload a hero image. Recommended size: 1920x600px. Maximum file size: 5MB.

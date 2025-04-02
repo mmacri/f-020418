@@ -8,7 +8,7 @@ interface UploadOptions {
   folder?: string;
   fileTypes?: string[];
   maxSize?: number;
-  imageType?: 'product' | 'category' | 'blog' | 'hero';
+  imageType?: keyof typeof import('@/lib/images/imageOptimizer').MAX_DIMENSIONS;
   skipOptimization?: boolean;
 }
 

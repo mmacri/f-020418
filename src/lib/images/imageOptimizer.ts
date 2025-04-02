@@ -33,7 +33,7 @@ export const QUALITY_SETTINGS = {
  */
 export const optimizeImage = async (
   file: File,
-  type: 'product' | 'category' | 'blog' | 'hero' = 'product'
+  type: keyof typeof MAX_DIMENSIONS = 'product'
 ): Promise<Blob> => {
   // Skip optimization for small files and SVGs
   if (file.size < 50 * 1024 || file.type === 'image/svg+xml') {

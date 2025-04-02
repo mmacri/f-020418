@@ -1,198 +1,222 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { uploadFile } from '@/lib/file-upload';
-import { useToast } from '@/hooks/use-toast';
-import FileInput from './FileInput';
-import UploadProgress from './UploadProgress';
-import ImagePreview from './ImagePreview';
+
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { uploadFile } from "@/lib/file-upload";
 
 export interface FileUploadWithPreviewProps {
   onFileChange: (url: string) => void;
   currentImage?: string;
-  bucket: 'product-images' | 'category-images' | 'blog-images';
-  folder?: string;
-  maxSize?: number; // in MB
-  aspectRatio?: 'square' | 'landscape' | 'portrait';
   className?: string;
+  accept?: string;
+  maxSize?: number;
+  bucket?: string;
+  folder?: string;
+  aspectRatio?: "square" | "landscape" | "portrait";
+  imageType?: "product" | "category" | "blog" | "hero";
 }
 
-const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
+const FileUploadWithPreview = ({
   onFileChange,
   currentImage,
-  bucket,
-  folder = 'uploads',
-  maxSize = 2,
-  aspectRatio = 'square',
-  className = '',
-}) => {
-  const [isUploading, setIsUploading] = useState(false);
+  className,
+  accept = "image/*",
+  maxSize = 5,
+  bucket = "product-images",
+  folder = "",
+  aspectRatio = "square",
+  imageType = "product"
+}: FileUploadWithPreviewProps) => {
+  const [preview, setPreview] = useState<string | null>(currentImage || null);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
-  // Set initial preview based on currentImage prop
+  // Update preview when currentImage changes
   useEffect(() => {
     if (currentImage) {
       setPreview(currentImage);
     }
   }, [currentImage]);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file size
-    if (file.size > maxSize * 1024 * 1024) {
-      setError(`File is too large. Maximum size is ${maxSize}MB.`);
-      toast({
-        title: "File too large",
-        description: `Maximum file size is ${maxSize}MB.`,
-        variant: "destructive",
-      });
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    
+    if (!file) {
       return;
     }
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      setError('Invalid file type. Please upload an image (JPEG, PNG, GIF, or WEBP).');
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a JPEG, PNG, GIF, or WEBP image.",
-        variant: "destructive",
-      });
+    // Basic validation
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > maxSize) {
+      setError(`File size exceeds ${maxSize}MB limit`);
       return;
     }
-
+    
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+    
     setError(null);
+    
+    // Create local preview
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+    
+    // Start upload
     setIsUploading(true);
-    setProgress(10); // Start progress
+    setProgress(0);
+
+    // Simulate progress - this would be replaced with real progress in a production app
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        const newProgress = prev + Math.random() * 10;
+        return newProgress >= 90 ? 90 : newProgress;
+      });
+    }, 200);
 
     try {
-      // Show temporary preview immediately for better UX
-      const localPreviewUrl = URL.createObjectURL(file);
-      // Only set temporary preview if we don't already have an image
-      if (!preview) {
-        setPreview(localPreviewUrl);
-      }
+      console.log(`Uploading file to ${bucket}/${folder} as type ${imageType}`);
       
-      setProgress(30); // Update progress
-
-      // Upload to storage with image type based on aspect ratio
-      console.log(`Uploading file to bucket: ${bucket}, folder: ${folder}`);
-      toast({
-        title: "Uploading image",
-        description: "Your image is being uploaded and optimized...",
-      });
-
-      // Determine image type based on bucket and aspect ratio
-      const imageType = bucket === 'blog-images' 
-        ? 'blog'
-        : bucket === 'category-images'
-          ? 'category'
-          : folder === 'hero'
-            ? 'hero'
-            : 'product';
-
-      const { url, error } = await uploadFile(file, {
+      const result = await uploadFile(file, {
         bucket,
         folder,
         fileTypes: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
         maxSize: maxSize * 1024 * 1024,
         imageType
       });
-
-      setProgress(90); // Almost done
-
-      if (error) {
-        setError(error);
-        toast({
-          title: "Upload failed",
-          description: error,
-          variant: "destructive",
-        });
-        
-        // Clean up the object URL
-        URL.revokeObjectURL(localPreviewUrl);
-        
-        // Keep existing preview if there was an error
-        if (currentImage) {
-          setPreview(currentImage);
-        }
-        return;
-      }
-
-      console.log('File uploaded successfully:', url);
       
-      // Clean up the temporary object URL
-      URL.revokeObjectURL(localPreviewUrl);
+      clearInterval(progressInterval);
       
-      // Now that we have the real URL, update the preview
-      setPreview(url);
-      setProgress(100); // Done
-      
-      toast({
-        title: "Upload complete",
-        description: "Your image was uploaded successfully.",
-      });
-
-      // Pass the URL back to the parent component
-      onFileChange(url);
-    } catch (err) {
-      console.error('Upload failed:', err);
-      setError('Upload failed. Please try again.');
-      toast({
-        title: "Upload failed",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setTimeout(() => {
-        setIsUploading(false);
+      if (result.error) {
+        console.error('Upload error:', result.error);
+        setError(result.error);
         setProgress(0);
-      }, 1000); // Keep progress visible briefly
-      
-      // Clear the file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      } else {
+        console.log('Upload successful:', result.url);
+        setProgress(100);
+        // Small delay to show 100% progress
+        setTimeout(() => {
+          onFileChange(result.url);
+        }, 300);
       }
+    } catch (err: any) {
+      clearInterval(progressInterval);
+      console.error('Upload failed:', err);
+      setError(err.message || 'Upload failed');
+      setProgress(0);
+    } finally {
+      setIsUploading(false);
+      URL.revokeObjectURL(objectUrl);
     }
   };
 
-  const clearPreview = () => {
+  const clearFile = () => {
     setPreview(null);
     setError(null);
+    setProgress(0);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
-    
-    // Let parent component know the image was cleared
-    onFileChange('');
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <FileInput 
-        onChange={handleFileSelect} 
-        disabled={isUploading} 
-        error={error} 
-        inputRef={fileInputRef} 
-      />
+    <div className={cn("space-y-4", className)}>
+      <div 
+        className={cn(
+          "border-2 border-dashed rounded-lg p-4 text-center hover:bg-muted/50 transition-colors",
+          error ? "border-destructive" : "border-muted-foreground/25",
+          isUploading ? "opacity-70 cursor-wait" : "cursor-pointer"
+        )}
+        onClick={() => !isUploading && fileInputRef.current?.click()}
+      >
+        {preview ? (
+          <div className="relative w-full aspect-video bg-muted/20">
+            <img 
+              src={preview} 
+              alt="File preview" 
+              className="h-full max-h-[300px] mx-auto object-contain" 
+            />
+            {!isUploading && (
+              <Button 
+                type="button" 
+                variant="destructive" 
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearFile();
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="py-8 flex flex-col items-center gap-2">
+            <div className="bg-muted rounded-full p-3">
+              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-medium">
+                Click to upload {isUploading ? '(uploading...)' : 'or drag and drop'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                SVG, PNG, JPG or GIF (max. {maxSize}MB)
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {isUploading && (
+          <div className="mt-2">
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-300 ease-in-out" 
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {progress < 100 ? `Uploading... ${Math.round(progress)}%` : 'Upload complete!'}
+            </p>
+          </div>
+        )}
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={accept}
+          onChange={handleFileChange}
+          disabled={isUploading}
+          className="hidden"
+        />
+      </div>
       
-      <UploadProgress 
-        progress={progress} 
-        isVisible={isUploading} 
-      />
+      {error && <p className="text-destructive text-sm">{error}</p>}
       
-      <ImagePreview 
-        preview={preview} 
-        isUploading={isUploading} 
-        onClear={clearPreview} 
-        aspectRatio={aspectRatio} 
-      />
+      {isUploading && (
+        <div className="flex justify-center">
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm"
+            disabled={!isUploading}
+            onClick={(e) => {
+              e.stopPropagation();
+              clearFile();
+            }}
+          >
+            <X className="h-4 w-4 mr-2" />
+            Cancel Upload
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
 
 export default FileUploadWithPreview;
+export type { FileUploadWithPreviewProps };

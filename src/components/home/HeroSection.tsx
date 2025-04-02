@@ -20,6 +20,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 }) => {
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const [finalImageUrl, setFinalImageUrl] = useState<string>(heroImageUrl || imageUrls.HERO_DEFAULT);
+  const [loadAttempt, setLoadAttempt] = useState<number>(0);
   
   useEffect(() => {
     console.log('HeroSection mounted with image URL:', heroImageUrl);
@@ -42,6 +43,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         
         setFinalImageUrl(newImageUrl);
         setImageLoaded(false); // Reset loaded state when URL changes
+        setLoadAttempt(prev => prev + 1); // Force reload
       }
     };
     
@@ -50,6 +52,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     // Preload the hero image
     const preloadImage = new Image();
     preloadImage.src = finalImageUrl;
+    preloadImage.onload = () => {
+      console.log('Hero image preloaded successfully:', finalImageUrl);
+    };
+    preloadImage.onerror = () => {
+      console.error('Hero image preload failed:', finalImageUrl);
+    };
     
     return () => {
       window.removeEventListener('heroImageUpdated', handleHeroImageUpdate as EventListener);
@@ -67,9 +75,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     if (finalImageUrl !== imageUrls.HERO_DEFAULT) {
       console.log('Falling back to default hero image');
       setFinalImageUrl(imageUrls.HERO_DEFAULT);
+      setLoadAttempt(prev => prev + 1); // Force reload with fallback
+    } else {
+      // We're already using the fallback and it's still failing
+      // Mark as loaded to remove the loading indicator
+      setImageLoaded(true);
     }
-    // Mark as loaded even if using fallback, to remove loading indicator
-    setImageLoaded(true);
   };
 
   return (
@@ -115,6 +126,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
             )}
             <ImageWithFallback 
+              key={`hero-image-${loadAttempt}`} // Force rerender on load attempt change
               src={finalImageUrl}
               alt="Recovery Equipment" 
               className={`rounded-lg w-full h-auto object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -123,6 +135,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               onLoad={handleImageLoad}
               onError={handleImageError}
               fetchPriority="high"
+              disableCacheBusting={false}
             />
           </div>
         </div>
