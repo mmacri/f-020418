@@ -67,6 +67,12 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       setImgSrc(src);
       setHasError(false);
       setIsLoaded(false);
+      
+      // Reset cache on new source - this helps with refreshing the image when it's updated
+      if (localStorage.getItem(cacheKey.current) === 'error') {
+        localStorage.removeItem(cacheKey.current);
+      }
+      
       console.log(`Image source updated: ${src}`);
     }
   }, [src, actualFallback]);

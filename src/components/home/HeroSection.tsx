@@ -36,11 +36,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       if (e.detail && e.detail.imageUrl) {
         console.log('Hero image updated via event:', e.detail.imageUrl);
         
-        // Add timestamp to URL to prevent browser caching if not a local URL
-        const newImageUrl = e.detail.imageUrl.startsWith('/') 
-          ? e.detail.imageUrl 
-          : `${e.detail.imageUrl}${e.detail.imageUrl.includes('?') ? '&' : '?'}_t=${Date.now()}`;
-        
+        // Explicitly force cache busting for hero image updates
+        const newImageUrl = e.detail.imageUrl;
         setFinalImageUrl(newImageUrl);
         setImageLoaded(false); // Reset loaded state when URL changes
         setLoadAttempt(prev => prev + 1); // Force reload
@@ -57,6 +54,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     };
     preloadImage.onerror = () => {
       console.error('Hero image preload failed:', finalImageUrl);
+      // If preload fails, try the default image
+      if (finalImageUrl !== imageUrls.HERO_DEFAULT) {
+        setFinalImageUrl(imageUrls.HERO_DEFAULT);
+        setLoadAttempt(prev => prev + 1);
+      }
     };
     
     return () => {
