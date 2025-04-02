@@ -1,10 +1,14 @@
+
 import { useState } from 'react';
 import { socialSupabase as supabase } from '@/integrations/supabase/socialClient';
-import { UserProfile, Friendship } from '@/types/social';
+import { UserProfile } from '@/types/social';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/lib/file-upload';
 
-export const useProfileActions = (profile: UserProfile | null, setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>) => {
+export const useProfileActions = (
+  profile: UserProfile | null, 
+  setProfile: (profile: UserProfile | null) => void
+) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -163,9 +167,7 @@ export const useProfileActions = (profile: UserProfile | null, setProfile: React
 
   return {
     updateProfile,
-    deleteAccount: async () => {
-      return false;
-    },
+    deleteAccount,
     isUploading
   };
 };

@@ -24,8 +24,8 @@ export const useAdminSocialAccess = () => {
       setIsChecking(true);
       setError(null);
       try {
-        // Convert user.id to string if it's a number to ensure compatibility with Supabase
-        const userId = typeof user.id === 'number' ? user.id.toString() : user.id;
+        // Convert user.id to string to ensure compatibility with Supabase
+        const userId = String(user.id);
         
         console.log('Checking admin social access for user ID:', userId);
         

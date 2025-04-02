@@ -23,8 +23,8 @@ export const useEnsureAdminProfile = () => {
         setIsCreating(true);
         setError(null);
         
-        // Convert user.id to string if it's a number
-        const userId = typeof user.id === 'number' ? user.id.toString() : user.id;
+        // Convert user.id to string for Supabase
+        const userId = String(user.id);
         
         console.log('Admin profile check - User ID:', userId);
         

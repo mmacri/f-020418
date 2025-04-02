@@ -9,11 +9,13 @@ export const useProfileData = (userId?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'accepted' | 'requested'>('none');
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch profile data
   const fetchProfile = useCallback(async (profileId?: string) => {
     try {
       setIsLoading(true);
+      setError(null);
       
       if (!profileId) {
         // If no userId provided, get the current user's profile
@@ -21,6 +23,7 @@ export const useProfileData = (userId?: string) => {
         
         if (sessionError || !sessionData.session) {
           console.error('Error getting session:', sessionError);
+          setError(sessionError?.message || 'Failed to get user session');
           setIsLoading(false);
           return;
         }
@@ -42,6 +45,11 @@ export const useProfileData = (userId?: string) => {
       
       if (profileError) {
         console.error('Error fetching profile:', profileError);
+        if (profileError.code === 'PGRST116') {
+          setError('Profile not found');
+        } else {
+          setError(`Failed to load profile: ${profileError.message}`);
+        }
         toast.error('Failed to load profile data');
         setIsLoading(false);
         return;
@@ -53,6 +61,7 @@ export const useProfileData = (userId?: string) => {
         
         if (authUserError || !authUserData.user) {
           console.error('Error fetching auth user:', authUserError);
+          setError('User not found');
           toast.error('User not found');
           setIsLoading(false);
           return;
@@ -73,6 +82,7 @@ export const useProfileData = (userId?: string) => {
           
           if (createProfileError) {
             console.error('Error creating profile:', createProfileError);
+            setError(`Failed to create profile: ${createProfileError.message}`);
             toast.error('Failed to create profile');
             setIsLoading(false);
             return;
@@ -80,6 +90,7 @@ export const useProfileData = (userId?: string) => {
           
           setProfile(newProfile as UserProfile);
         } else {
+          setError('Profile not found');
           setIsLoading(false);
           return;
         }
@@ -120,6 +131,7 @@ export const useProfileData = (userId?: string) => {
       
     } catch (error) {
       console.error('Error in fetchProfile:', error);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
       toast.error('An error occurred while loading profile data');
     } finally {
       setIsLoading(false);
@@ -136,6 +148,7 @@ export const useProfileData = (userId?: string) => {
     isLoading,
     isCurrentUser,
     friendshipStatus,
-    refetchProfile: () => fetchProfile(userId)
+    refetchProfile: () => fetchProfile(userId),
+    error
   };
 };

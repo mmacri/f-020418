@@ -10,6 +10,7 @@ export interface ProfileState {
   isLoading: boolean;
   isCurrentUser: boolean;
   friendshipStatus: 'none' | 'pending' | 'accepted' | 'requested';
+  error: string | null; // Added error property
 }
 
 export interface ProfileActions {
