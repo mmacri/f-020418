@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { localStorageKeys, imageUrls } from '@/lib/constants';
 import { ImageWithFallback } from '@/lib/images';
-import FileUploadWithPreview from '@/components/FileUploadWithPreview';
+import FileUploadWithPreview from '@/components/file-upload/FileUploadWithPreview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const HeroImageSettings: React.FC = () => {

@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import FileUploadWithPreview from '@/components/FileUploadWithPreview';
+import FileUploadWithPreview from '@/components/file-upload/FileUploadWithPreview';
 
 interface UploadModeSelectorProps {
   uploadMode: string;
