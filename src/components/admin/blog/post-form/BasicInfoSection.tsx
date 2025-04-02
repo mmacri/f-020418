@@ -1,35 +1,39 @@
 
 import React from 'react';
+import { FileText } from 'lucide-react';
+import { useFormContext } from 'react-hook-form';
+import { BlogPostFormValues } from './schema';
+import { 
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage 
+} from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText } from 'lucide-react';
-import { BlogPostInput } from '@/services/blog';
 import RichTextEditor from '../RichTextEditor';
 import BlogImageUploader from '../BlogImageUploader';
 
-interface BasicInfoSectionProps {
-  formData: BlogPostInput;
-  onChange: (data: Partial<BlogPostInput>) => void;
-}
-
-export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ 
-  formData, 
-  onChange 
-}) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    onChange({ [name]: value });
-  };
+export const BasicInfoSection: React.FC = () => {
+  const { control, setValue, watch } = useFormContext<BlogPostFormValues>();
+  const content = watch('content');
 
   const handleContentChange = (value: string) => {
-    onChange({ content: value });
+    setValue('content', value, { 
+      shouldValidate: true,
+      shouldDirty: true
+    });
   };
 
   const handleImageInsert = (url: string) => {
     const imageMarkdown = `![Image](${url})`;
-    const newContent = formData.content + (formData.content.endsWith('\n') ? '' : '\n') + imageMarkdown + '\n';
-    onChange({ content: newContent });
+    const newContent = content + (content.endsWith('\n') ? '' : '\n') + imageMarkdown + '\n';
+    setValue('content', newContent, {
+      shouldValidate: true,
+      shouldDirty: true
+    });
   };
 
   return (
@@ -39,57 +43,81 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
       </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">Post Title</Label>
-          <Input
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
+        <FormField
+          control={control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Post Title</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
-        <div className="space-y-2">
-          <Label htmlFor="slug">Slug</Label>
-          <Input
-            id="slug"
-            name="slug"
-            value={formData.slug}
-            onChange={handleInputChange}
-            placeholder="auto-generated-if-left-empty"
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="excerpt">Excerpt</Label>
-        <Textarea
-          id="excerpt"
-          name="excerpt"
-          value={formData.excerpt}
-          onChange={handleInputChange}
-          rows={2}
-          placeholder="A brief summary of the post"
-          required
+        <FormField
+          control={control}
+          name="slug"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Slug</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="auto-generated-if-left-empty"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="content">Content</Label>
-        <div className="border rounded-md p-2 bg-card">
-          <RichTextEditor
-            value={formData.content}
-            onChange={handleContentChange}
-            rows={12}
-          />
-        </div>
-        <div className="flex justify-end mt-2">
-          <BlogImageUploader
-            onImageChange={() => {}}
-            insertIntoEditor={handleImageInsert}
-          />
-        </div>
+      <FormField
+        control={control}
+        name="excerpt"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Excerpt</FormLabel>
+            <FormControl>
+              <Textarea
+                {...field}
+                rows={2}
+                placeholder="A brief summary of the post"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="content"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Content</FormLabel>
+            <FormControl>
+              <div className="border rounded-md p-2 bg-card">
+                <RichTextEditor
+                  value={field.value}
+                  onChange={handleContentChange}
+                  rows={12}
+                />
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <div className="flex justify-end mt-2">
+        <BlogImageUploader
+          onImageChange={() => {}}
+          insertIntoEditor={handleImageInsert}
+        />
       </div>
     </div>
   );

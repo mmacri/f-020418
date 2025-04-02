@@ -1,30 +1,38 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
+import { useFormContext } from 'react-hook-form';
+import { BlogPostFormValues } from './schema';
+import { 
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormDescription 
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { BlogPostInput, generateSeoSuggestions } from '@/services/blog';
+import { generateSeoSuggestions } from '@/services/blog';
 import { useToast } from '@/hooks/use-toast';
 
-interface SeoSectionProps {
-  formData: BlogPostInput;
-  onChange: (data: Partial<BlogPostInput>) => void;
-}
-
-export const SeoSection: React.FC<SeoSectionProps> = ({ 
-  formData, 
-  onChange 
-}) => {
+export const SeoSection: React.FC = () => {
   const { toast } = useToast();
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    onChange({ [name]: value });
+  const { control, setValue, watch, getValues } = useFormContext<BlogPostFormValues>();
+  
+  const handleSeoKeywordsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k);
+    setValue('seoKeywords', keywords, {
+      shouldValidate: true,
+      shouldDirty: true
+    });
   };
 
   const handleGenerateSeoSuggestions = () => {
-    if (!formData.title || !formData.excerpt) {
+    const title = getValues('title');
+    const excerpt = getValues('excerpt');
+    
+    if (!title || !excerpt) {
       toast({
         title: 'Missing Info',
         description: 'Please add a title and excerpt before generating SEO suggestions.',
@@ -33,7 +41,7 @@ export const SeoSection: React.FC<SeoSectionProps> = ({
     }
 
     const tempPost = {
-      ...formData,
+      ...getValues(),
       id: 0,
       createdAt: '',
       updatedAt: '',
@@ -43,21 +51,23 @@ export const SeoSection: React.FC<SeoSectionProps> = ({
 
     const seoSuggestions = generateSeoSuggestions(tempPost);
     
-    onChange({
-      seoTitle: seoSuggestions.title,
-      seoDescription: seoSuggestions.description,
-      seoKeywords: seoSuggestions.keywords
+    setValue('seoTitle', seoSuggestions.title, {
+      shouldValidate: true,
+      shouldDirty: true
+    });
+    setValue('seoDescription', seoSuggestions.description, {
+      shouldValidate: true,
+      shouldDirty: true
+    });
+    setValue('seoKeywords', seoSuggestions.keywords, {
+      shouldValidate: true,
+      shouldDirty: true
     });
 
     toast({
       title: 'SEO Suggestions Generated',
       description: 'SEO title, description, and keywords have been updated.'
     });
-  };
-
-  const handleSeoKeywordsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k);
-    onChange({ seoKeywords: keywords });
   };
 
   return (
@@ -74,39 +84,64 @@ export const SeoSection: React.FC<SeoSectionProps> = ({
         </Button>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="seoTitle">SEO Title</Label>
-        <Input
-          id="seoTitle"
-          name="seoTitle"
-          value={formData.seoTitle || ''}
-          onChange={handleInputChange}
-          placeholder="SEO optimized title"
-        />
-      </div>
+      <FormField
+        control={control}
+        name="seoTitle"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>SEO Title</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                placeholder="SEO optimized title"
+              />
+            </FormControl>
+            <FormDescription>
+              Optimized title for search engines (defaults to post title if empty)
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
-      <div className="space-y-2">
-        <Label htmlFor="seoDescription">SEO Description</Label>
-        <Textarea
-          id="seoDescription"
-          name="seoDescription"
-          value={formData.seoDescription || ''}
-          onChange={handleInputChange}
-          rows={2}
-          placeholder="SEO optimized description"
-        />
-      </div>
+      <FormField
+        control={control}
+        name="seoDescription"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>SEO Description</FormLabel>
+            <FormControl>
+              <Textarea
+                {...field}
+                rows={2}
+                placeholder="SEO optimized description"
+              />
+            </FormControl>
+            <FormDescription>
+              Brief description for search engines (defaults to excerpt if empty)
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
-      <div className="space-y-2">
-        <Label htmlFor="seoKeywords">SEO Keywords (comma separated)</Label>
-        <Input
-          id="seoKeywords"
-          name="seoKeywords"
-          value={formData.seoKeywords?.join(', ') || ''}
-          onChange={handleSeoKeywordsChange}
-          placeholder="keyword1, keyword2, keyword3"
-        />
-      </div>
+      <FormField
+        control={control}
+        name="seoKeywords"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>SEO Keywords (comma separated)</FormLabel>
+            <FormControl>
+              <Input
+                value={field.value?.join(', ') || ''}
+                onChange={handleSeoKeywordsChange}
+                placeholder="keyword1, keyword2, keyword3"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 };

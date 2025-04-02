@@ -1,31 +1,40 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Image } from 'lucide-react';
-import { BlogPostInput } from '@/services/blog';
+import { useFormContext } from 'react-hook-form';
+import { BlogPostFormValues } from './schema';
+import { 
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage 
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { ImageWithFallback } from '@/lib/images';
 import BlogImageUploader from '../BlogImageUploader';
 
-interface FeaturedImageSectionProps {
-  formData: BlogPostInput;
-  onChange: (data: Partial<BlogPostInput>) => void;
-}
-
-export const FeaturedImageSection: React.FC<FeaturedImageSectionProps> = ({ 
-  formData, 
-  onChange 
-}) => {
+export const FeaturedImageSection: React.FC = () => {
+  const { control, setValue, watch } = useFormContext<BlogPostFormValues>();
+  const imageUrl = watch('image') || watch('image_url');
+  
   const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const tagsString = e.target.value;
     const tagsArray = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag);
-    onChange({ tags: tagsArray });
+    setValue('tags', tagsArray, {
+      shouldValidate: true,
+      shouldDirty: true
+    });
   };
 
-  const handleImageChange = (imageUrl: string) => {
-    onChange({ 
-      image: imageUrl,
-      image_url: imageUrl
+  const handleImageChange = (url: string) => {
+    setValue('image', url, {
+      shouldValidate: true,
+      shouldDirty: true
+    });
+    setValue('image_url', url, {
+      shouldValidate: true,
+      shouldDirty: true
     });
   };
 
@@ -36,17 +45,17 @@ export const FeaturedImageSection: React.FC<FeaturedImageSectionProps> = ({
       </h3>
       
       <div className="space-y-2">
-        <Label>Cover Image</Label>
+        <FormLabel>Cover Image</FormLabel>
         <div className="flex flex-col space-y-4">
           <BlogImageUploader
-            currentImage={formData.image || formData.image_url}
+            currentImage={imageUrl}
             onImageChange={handleImageChange}
           />
           
-          {(formData.image || formData.image_url) && (
+          {imageUrl && (
             <div className="aspect-video bg-muted/20 rounded-md overflow-hidden border">
               <ImageWithFallback
-                src={formData.image || formData.image_url || ''}
+                src={imageUrl}
                 alt="Featured image"
                 className="w-full h-full object-contain"
               />
@@ -55,16 +64,23 @@ export const FeaturedImageSection: React.FC<FeaturedImageSectionProps> = ({
         </div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="tags">Tags (comma separated)</Label>
-        <Input
-          id="tags"
-          name="tags"
-          value={formData.tags?.join(', ')}
-          onChange={handleTagsChange}
-          placeholder="tag1, tag2, tag3"
-        />
-      </div>
+      <FormField
+        control={control}
+        name="tags"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tags (comma separated)</FormLabel>
+            <FormControl>
+              <Input
+                value={field.value?.join(', ')}
+                onChange={handleTagsChange}
+                placeholder="tag1, tag2, tag3"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 };
