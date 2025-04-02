@@ -65,7 +65,8 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
     refetchBookmarks();
   });
 
-  // Friend actions - fix: only pass the friendshipStatus
+  // Friend actions
+  // Fix: Pass friendshipStatus as the first argument and the callback as the second
   const {
     sendFriendRequest,
     respondToFriendRequest
