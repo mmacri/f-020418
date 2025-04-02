@@ -65,7 +65,7 @@ export const useSocialProfile = (userId?: string): SocialProfileHook => {
     refetchBookmarks();
   });
 
-  // Friend actions - calling without arguments
+  // Friend actions
   const {
     sendFriendRequest,
     respondToFriendRequest
