@@ -7,7 +7,7 @@ import { useSocialProfile } from "@/hooks/useSocialProfile";
 import { ProfileHeader } from "@/components/social/ProfileHeader";
 import { ProfileSettings } from "@/components/social/ProfileSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Users, UserCircle, Bookmark } from "lucide-react";
+import { AlertCircle, MessageSquare, Users, UserCircle, Bookmark } from "lucide-react";
 import { UserProfile } from "@/types/social";
 import { ProfileLoadingSkeleton } from "@/components/social/ProfileLoadingSkeleton";
 import { ProfileNotFound } from "@/components/social/ProfileNotFound";
@@ -19,16 +19,18 @@ import { ProfileBookmarksTab } from "@/components/social/ProfileBookmarksTab";
 import { FileUpload } from "@/components/FileUpload";
 import { useEnsureAdminProfile } from "@/hooks/social/useEnsureAdminProfile";
 import { useAuthentication } from "@/hooks/useAuthentication";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState("posts");
   const [isEditing, setIsEditing] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const { isAdmin } = useAuthentication();
+  const { isAdmin, user } = useAuthentication();
   
-  // Ensure admin has a social profile if viewing their own profile
-  const { isCreating } = useEnsureAdminProfile();
+  // Ensure admin has a social profile
+  const { isCreating, isComplete, error: profileCreationError } = useEnsureAdminProfile();
   
   const {
     profile,
@@ -49,13 +51,28 @@ const ProfilePage = () => {
     respondToFriendRequest,
     bookmarkPost,
     isBookmarked,
-    deleteAccount
+    deleteAccount,
+    error: profileError
   } = useSocialProfile(id);
   
   // Reset avatar file when profile changes
   useEffect(() => {
     setAvatarFile(null);
   }, [profile]);
+  
+  // Debug logs
+  useEffect(() => {
+    if (isAdmin) {
+      console.log('Admin user detected:', user?.id);
+      console.log('Profile creation status:', { isCreating, isComplete, error: profileCreationError });
+    }
+    
+    if (profile) {
+      console.log('Profile loaded:', profile.id, profile.display_name);
+    } else if (!isLoading) {
+      console.log('No profile loaded and not loading');
+    }
+  }, [isAdmin, user, isCreating, isComplete, profileCreationError, profile, isLoading]);
   
   const handleCreatePost = async (content: string, imageFile?: File) => {
     return createPost(content, imageFile);
@@ -77,10 +94,33 @@ const ProfilePage = () => {
   // Combined loading state for both initial load and admin profile creation
   const combinedLoading = isLoading || isCreating;
   
+  // Error display for profile or creation errors
+  const hasError = (profileError || profileCreationError) && !combinedLoading;
+  
+  // Retry logic for admin profile creation
+  const handleRetryProfileCreation = async () => {
+    window.location.reload();
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-grow">
+        {hasError && (
+          <div className="container mx-auto px-4 py-8">
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error loading profile</AlertTitle>
+              <AlertDescription>
+                {profileError || profileCreationError || "Failed to load or create the profile."}
+              </AlertDescription>
+              <Button variant="outline" className="mt-4" onClick={handleRetryProfileCreation}>
+                Retry
+              </Button>
+            </Alert>
+          </div>
+        )}
+        
         {combinedLoading ? (
           <ProfileLoadingSkeleton />
         ) : !profile ? (
