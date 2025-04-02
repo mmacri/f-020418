@@ -17,12 +17,18 @@ import { ProfileFriendsTab } from "@/components/social/ProfileFriendsTab";
 import { ProfileAboutTab } from "@/components/social/ProfileAboutTab";
 import { ProfileBookmarksTab } from "@/components/social/ProfileBookmarksTab";
 import { FileUpload } from "@/components/FileUpload";
+import { useEnsureAdminProfile } from "@/hooks/social/useEnsureAdminProfile";
+import { useAuthentication } from "@/hooks/useAuthentication";
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState("posts");
   const [isEditing, setIsEditing] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const { isAdmin } = useAuthentication();
+  
+  // Ensure admin has a social profile if viewing their own profile
+  const { isCreating } = useEnsureAdminProfile();
   
   const {
     profile,
@@ -68,11 +74,14 @@ const ProfilePage = () => {
     setAvatarFile(file);
   };
   
+  // Combined loading state for both initial load and admin profile creation
+  const combinedLoading = isLoading || isCreating;
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-grow">
-        {isLoading ? (
+        {combinedLoading ? (
           <ProfileLoadingSkeleton />
         ) : !profile ? (
           <ProfileNotFound 
@@ -114,7 +123,7 @@ const ProfilePage = () => {
               isUploading={isUploading}
             />
           </div>
-        ) : !profile.is_public && !isCurrentUser && friendshipStatus !== 'accepted' ? (
+        ) : !profile.is_public && !isCurrentUser && friendshipStatus !== 'accepted' && !isAdmin ? (
           <PrivateProfileView 
             profile={profile} 
             friendshipStatus={friendshipStatus} 
@@ -143,7 +152,7 @@ const ProfilePage = () => {
                   <Users size={16} />
                   <span className="hidden sm:inline">Friends</span>
                 </TabsTrigger>
-                {isCurrentUser && (
+                {(isCurrentUser || isAdmin) && (
                   <TabsTrigger value="bookmarks" className="flex items-center gap-2">
                     <Bookmark size={16} />
                     <span className="hidden sm:inline">Bookmarks</span>
@@ -159,7 +168,7 @@ const ProfilePage = () => {
                 <ProfilePostsTab 
                   profile={profile}
                   posts={posts}
-                  isCurrentUser={isCurrentUser}
+                  isCurrentUser={isCurrentUser || isAdmin}
                   createPost={handleCreatePost}
                   addComment={addComment}
                   addReaction={addReaction}
@@ -175,12 +184,12 @@ const ProfilePage = () => {
                   profile={profile}
                   friends={friends}
                   pendingFriendRequests={pendingFriendRequests}
-                  isCurrentUser={isCurrentUser}
+                  isCurrentUser={isCurrentUser || isAdmin}
                   respondToFriendRequest={respondToFriendRequest}
                 />
               </TabsContent>
               
-              {isCurrentUser && (
+              {(isCurrentUser || isAdmin) && (
                 <TabsContent value="bookmarks">
                   <ProfileBookmarksTab 
                     profile={profile}
@@ -193,7 +202,7 @@ const ProfilePage = () => {
               )}
               
               <TabsContent value="about">
-                <ProfileAboutTab profile={profile} isCurrentUser={isCurrentUser} />
+                <ProfileAboutTab profile={profile} isCurrentUser={isCurrentUser || isAdmin} />
               </TabsContent>
             </Tabs>
           </div>
